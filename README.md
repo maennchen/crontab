@@ -1,6 +1,6 @@
 # Crontab
 
-**TODO: Add description**
+Parse Cron Format Strings, Write Cron Format Strings and Caluclate Execution Dates.
 
 ## Installation
 
@@ -22,3 +22,22 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
     end
     ```
 
+## Usage
+
+### Parse Cron Format Strings
+```elixir
+iex> Crontab.CronFormatParser.parse "* * * * *"
+{:ok,
+  %Crontab.CronInterval{day: [:*], hour: [:*], minute: [:*],
+  month: [:*], weekday: [:*], year: [:*]}}
+iex> Crontab.CronFormatParser.parse "fooo"
+{:error, "Can't parse fooo as interval minute."}
+```
+
+### Write Cron Format Strings
+```elixir
+iex> Crontab.CronFormatWriter.write %Crontab.CronInterval{}
+"* * * * * *"
+iex> Crontab.CronFormatWriter.write %Crontab.CronInterval{minute: [9, {:-, 4, 6}, {:/, 9}]}
+"9,4-6,*/9 * * * * *"
+```
