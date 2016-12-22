@@ -1,5 +1,7 @@
 # Crontab
 
+[![Build Status](https://travis-ci.org/sk-t/crontab.svg?branch=master)](https://travis-ci.org/sk-t/crontab)
+
 Parse Cron Format Strings, Write Cron Format Strings and Caluclate Execution Dates.
 
 ## Installation
