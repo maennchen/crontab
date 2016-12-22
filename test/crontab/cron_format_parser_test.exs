@@ -47,8 +47,8 @@ defmodule Crontab.CronFormatParserTest do
     assert parse("*") == {:ok, %Crontab.CronInterval{minute: [:*], hour: [:*], day: [:*], month: [:*], weekday: [:*], year: [:*]}}
   end
 
-  test "parse \"*/4,9,1-10\" gives [{:\"/\", 4}, 9, {:\"-\", 1, 10}]" do
-    assert parse("*/4,9,1-10") == {:ok, %Crontab.CronInterval{minute: [{:"/", 4}, 9, {:-, 1, 10}], hour: [:*], day: [:*], month: [:*], weekday: [:*], year: [:*]}}
+  test "parse \"*/4,9,1-10\" gives [{:\"/\", :*, 4}, 9, {:\"-\", 1, 10}]" do
+    assert parse("*/4,9,1-10") == {:ok, %Crontab.CronInterval{minute: [{:"/", :*, 4}, 9, {:-, 1, 10}], hour: [:*], day: [:*], month: [:*], weekday: [:*], year: [:*]}}
   end
 
   test "parse \"*/4,9,JAN-DEC\" gives error" do
