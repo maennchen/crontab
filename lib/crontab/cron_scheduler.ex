@@ -27,8 +27,6 @@ defmodule Crontab.CronScheduler do
   end
   def get_next_run_date(conditions, date, max_runs) when max_runs > 0 do
     {status, corrected_date} = search_and_correct_date(conditions, date);
-      #IO.puts "next"
-      #IO.inspect corrected_date
     case status do
       :found -> {:ok, corrected_date}
       _ -> get_next_run_date(conditions, corrected_date, max_runs - 1)
@@ -39,8 +37,6 @@ defmodule Crontab.CronScheduler do
   end
 
   defp search_and_correct_date([{interval, conditions} | tail], date) do
-    #IO.puts "search"
-    #IO.inspect date
     if matches_date(interval, conditions, date) do
       search_and_correct_date(tail, date)
     else
