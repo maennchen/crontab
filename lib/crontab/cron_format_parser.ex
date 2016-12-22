@@ -92,18 +92,11 @@ defmodule Crontab.CronFormatParser do
   end
 
   defp tokenize(_, "*"), do: {:ok, :*}
-  defp tokenize(_, "*/" <> divider) do
-    case Integer.parse(divider, 10) do
-      :error -> "Divider " <> divider <> " is not numeric."
-      {number, _} -> {:ok, {:"/", number}}
-    end
-  end
-  #defp tokenize(_, min <> "-" <> max), do: {:ok, {:-, min, max}}
   defp tokenize(interval, other) do
-    if Regex.match?(~r/^.+-.+$/, other) do
-      tokenize interval, :-, other
-    else
-      tokenize interval, :single_value, other
+    cond do
+      String.contains?(other, "/") -> tokenize interval, :complex_divider, other
+      Regex.match?(~r/^.+-.+$/, other) -> tokenize interval, :-, other
+      true -> tokenize interval, :single_value, other
     end
   end
   defp tokenize(interval, :-, whole_string) do
@@ -116,6 +109,15 @@ defmodule Crontab.CronFormatParser do
   end
   defp tokenize(interval, :single_value, value) do
     clean_value(interval, value)
+  end
+  defp tokenize(interval, :complex_divider, value) do
+    [base, divider] = String.split value, "/"
+
+    case {tokenize(interval, base), Integer.parse(divider, 10)} do
+      {{:ok, clean_base}, {clean_divider, _}} -> {:ok, {:/, clean_base, clean_divider}}
+      {_, :error} -> {:error, "Can't parse " <> value <> " as interval " <> Atom.to_string(interval) <> "."}
+      {error = {:error}, _} -> error
+    end
   end
 
   defp clean_value(:weekday, value) do

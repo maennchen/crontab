@@ -9,21 +9,21 @@ defmodule Crontab.CronDateChecker do
   Check a Crontab.CronInterval against a given date.
 
   ### Examples
-    iex> Crontab.CronDateChecker.matches_date :hour, [{:"/", 4}, 7], ~N[2004-04-16 04:07:08]
+    iex> Crontab.CronDateChecker.matches_date :hour, [{:"/", :*, 4}, 7], ~N[2004-04-16 04:07:08]
     true
 
     iex> Crontab.CronDateChecker.matches_date :hour, [8], ~N[2004-04-16 04:07:08]
     false
 
-    iex> Crontab.CronDateChecker.matches_date %Crontab.CronInterval{minute: [{:"/", 8}]}, ~N[2004-04-16 04:08:08]
+    iex> Crontab.CronDateChecker.matches_date %Crontab.CronInterval{minute: [{:"/", :*, 8}]}, ~N[2004-04-16 04:08:08]
     true
 
-    iex> Crontab.CronDateChecker.matches_date %Crontab.CronInterval{minute: [{:"/", 9}]}, ~N[2004-04-16 04:07:08]
+    iex> Crontab.CronDateChecker.matches_date %Crontab.CronInterval{minute: [{:"/", :*, 9}]}, ~N[2004-04-16 04:07:08]
     false
   """
   def matches_date(_, [:* | _], _), do: true
   def matches_date(_, [], _), do: false
-  def matches_date(interval, [condition = {:/, _} | tail], execution_date) do
+  def matches_date(interval, [condition = {:/, _, _} | tail], execution_date) do
     values = get_interval_value(interval, execution_date)
     if matches_specific_date(interval, values, condition) do
       true
@@ -58,6 +58,7 @@ defmodule Crontab.CronDateChecker do
   end
 
   defp matches_specific_date(_, [], _), do: false
+  defp matches_specific_date(_, _, :*), do: true
   defp matches_specific_date(interval, [head_value | tail_values], condition = {:-, from, to}) do
     cond do
       from > to && (head_value >= from || head_value <= to) -> true
@@ -65,11 +66,18 @@ defmodule Crontab.CronDateChecker do
       true -> matches_specific_date(interval, tail_values, condition)
     end
   end
-  defp matches_specific_date(:weekday, [0 | tail_values], condition = {:/, _}) do
+  defp matches_specific_date(:weekday, [0 | tail_values], condition = {:/, _, _}) do
     matches_specific_date(:weekday, tail_values, condition)
   end
-  defp matches_specific_date(interval, [head_value | tail_values], condition = {:/, divider}) do
-    if rem(head_value, divider) == 0 do
+  defp matches_specific_date(interval, values = [head_value | tail_values], condition = {:/, base = {:-, from, _}, divider}) do
+    if matches_specific_date(interval, values, base) && rem(head_value - from, divider) == 0 do
+      true
+    else
+      matches_specific_date(interval, tail_values, condition)
+    end
+  end
+  defp matches_specific_date(interval, values = [head_value | tail_values], condition = {:/, base, divider}) do
+    if matches_specific_date(interval, values, base) && rem(head_value, divider) == 0 do
       true
     else
       matches_specific_date(interval, tail_values, condition)

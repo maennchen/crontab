@@ -11,7 +11,7 @@ defmodule Crontab.CronFormatWriter do
   ### Examples
     iex> Crontab.CronFormatWriter.write %Crontab.CronInterval{}
     "* * * * * *"
-    iex> Crontab.CronFormatWriter.write %Crontab.CronInterval{minute: [9, {:-, 4, 6}, {:/, 9}]}
+    iex> Crontab.CronFormatWriter.write %Crontab.CronInterval{minute: [9, {:-, 4, 6}, {:/, :*, 9}]}
     "9,4-6,*/9 * * * * *"
   """
   def write(cron_interval = %Crontab.CronInterval{}) do
@@ -30,6 +30,6 @@ defmodule Crontab.CronFormatWriter do
   end
   def write(:*), do: "*"
   def write(number) when is_number(number), do: Integer.to_string(number)
-  def write({:/, divider}), do: "*/" <> Integer.to_string(divider)
+  def write({:/, base, divider}), do: write(base) <> "/" <> Integer.to_string(divider)
   def write({:-, min, max}), do: Integer.to_string(min) <> "-" <> Integer.to_string(max)
 end

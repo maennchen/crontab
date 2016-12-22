@@ -40,7 +40,7 @@ iex> Crontab.CronFormatParser.parse "fooo"
 ```elixir
 iex> Crontab.CronFormatWriter.write %Crontab.CronInterval{}
 "* * * * * *"
-iex> Crontab.CronFormatWriter.write %Crontab.CronInterval{minute: [9, {:-, 4, 6}, {:/, 9}]}
+iex> Crontab.CronFormatWriter.write %Crontab.CronInterval{minute: [9, {:-, 4, 6}, {:/, :*, 9}]}
 "9,4-6,*/9 * * * * *"
 ```
 
@@ -64,6 +64,6 @@ false
 iex> Crontab.CronScheduler.get_next_run_date(%Crontab.CronInterval{}, ~N[2002-01-13 23:00:07])
 {:ok, ~N[2002-01-13 23:00:00]}
 
-iex> Crontab.CronScheduler.get_next_run_date(%Crontab.CronInterval{year: [{:/, 9}]}, ~N[2002-01-13 23:00:07])
+iex> Crontab.CronScheduler.get_next_run_date(%Crontab.CronInterval{year: [{:/, :*, 9}]}, ~N[2002-01-13 23:00:07])
 {:ok, ~N[2007-01-01 00:00:00]}
 ```

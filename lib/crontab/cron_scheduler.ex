@@ -17,7 +17,7 @@ defmodule Crontab.CronScheduler do
     iex> Crontab.CronScheduler.get_next_run_date(%Crontab.CronInterval{}, ~N[2002-01-13 23:00:07])
     {:ok, ~N[2002-01-13 23:00:00]}
 
-    iex> Crontab.CronScheduler.get_next_run_date(%Crontab.CronInterval{year: [{:/, 9}]}, ~N[2002-01-13 23:00:07])
+    iex> Crontab.CronScheduler.get_next_run_date(%Crontab.CronInterval{year: [{:/, :*, 9}]}, ~N[2002-01-13 23:00:07])
     {:ok, ~N[2007-01-01 00:00:00]}
   """
   def get_next_run_date(cron_interval = %Crontab.CronInterval{}, date) do
