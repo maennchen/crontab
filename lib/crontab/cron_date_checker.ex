@@ -58,11 +58,11 @@ defmodule Crontab.CronDateChecker do
   end
 
   defp matches_specific_date(_, [], _), do: false
-  defp matches_specific_date(interval, [head_value | tail_values], condition = {:-, min, max}) do
-    if head_value >= min && head_value <= max do
-      true
-    else
-      matches_specific_date(interval, tail_values, condition)
+  defp matches_specific_date(interval, [head_value | tail_values], condition = {:-, from, to}) do
+    cond do
+      from > to && (head_value >= from || head_value <= to) -> true
+      from <= to && head_value >= from && head_value <= to -> true
+      true -> matches_specific_date(interval, tail_values, condition)
     end
   end
   defp matches_specific_date(:weekday, [0 | tail_values], condition = {:/, _}) do
