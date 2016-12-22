@@ -41,7 +41,7 @@ defmodule Crontab.Mixfile do
   defp package do
     [# These are the default files included in the package
      name: :crontab,
-     files: ["lib", "mix.exs", "README*", "readme*", "LICENSE*", "license*"],
+     files: ["lib", "mix.exs", "README*", "LICENSE*"],
      maintainers: ["Jonatan Männchen"],
      licenses: ["MIT"],
      links: %{"GitHub" => "https://github.com/sk-t/crontab",
