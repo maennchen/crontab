@@ -35,7 +35,8 @@ defmodule Crontab.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:timex, "~> 3.0"}]
+    [{:timex, "~> 3.0"},
+     {:ex_doc, ">= 0.0.0", only: :dev}]
   end
 
   defp package do
