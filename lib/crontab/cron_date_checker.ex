@@ -25,7 +25,7 @@ defmodule Crontab.CronDateChecker do
   def matches_date(_, [], _), do: false
   def matches_date(interval, [condition = {:/, _} | tail], execution_date) do
     values = get_interval_value(interval, execution_date)
-    if matches_specific_date(values, condition) do
+    if matches_specific_date(interval, values, condition) do
       true
     else
       matches_date(interval, tail, execution_date)
@@ -33,7 +33,7 @@ defmodule Crontab.CronDateChecker do
   end
   def matches_date(interval, [condition = {:-, _, _} | tail], execution_date) do
     values = get_interval_value(interval, execution_date)
-    if matches_specific_date(values, condition) do
+    if matches_specific_date(interval, values, condition) do
       true
     else
       matches_date(interval, tail, execution_date)
@@ -41,7 +41,7 @@ defmodule Crontab.CronDateChecker do
   end
   def matches_date(interval, [number | tail], execution_date) when is_integer(number) do
     values = get_interval_value(interval, execution_date)
-    if matches_specific_date(values, number) do
+    if matches_specific_date(interval, values, number) do
       true
     else
       matches_date(interval, tail, execution_date)
@@ -57,29 +57,29 @@ defmodule Crontab.CronDateChecker do
     matches_date(interval, conditions, execution_date) && matches_date(tail, execution_date)
   end
 
-  defp matches_specific_date([], _), do: false
-  defp matches_specific_date([head_value | tail_values], condition = {:-, min, max}) do
+  defp matches_specific_date(_, [], _), do: false
+  defp matches_specific_date(interval, [head_value | tail_values], condition = {:-, min, max}) do
     if head_value >= min && head_value <= max do
       true
     else
-      matches_specific_date(tail_values, condition)
+      matches_specific_date(interval, tail_values, condition)
     end
   end
-  defp matches_specific_date([0 | tail_values], condition = {:/, _}) do
-    matches_specific_date(tail_values, condition)
+  defp matches_specific_date(:weekday, [0 | tail_values], condition = {:/, _}) do
+    matches_specific_date(:weekday, tail_values, condition)
   end
-  defp matches_specific_date([head_value | tail_values], condition = {:/, divider}) do
+  defp matches_specific_date(interval, [head_value | tail_values], condition = {:/, divider}) do
     if rem(head_value, divider) == 0 do
       true
     else
-      matches_specific_date(tail_values, condition)
+      matches_specific_date(interval, tail_values, condition)
     end
   end
-  defp matches_specific_date([head_value | tail_values], number) when is_integer(number) do
+  defp matches_specific_date(interval, [head_value | tail_values], number) when is_integer(number) do
     if head_value == number do
       true
     else
-      matches_specific_date(tail_values, number)
+      matches_specific_date(interval, tail_values, number)
     end
   end
 
