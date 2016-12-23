@@ -23,6 +23,7 @@ defmodule Crontab do
       {:ok, ~N[2016-12-23 16:00:00.348751]}
 
   """
+  @spec get_next_run_date(binary, boolean) :: Crontab.CronScheduler.result
   def get_next_run_date(cron_expression, extended \\ false) do
     date = DateTime.to_naive(DateTime.utc_now)
     get_next_run_date_relative_to(cron_expression, date, extended)
@@ -44,9 +45,10 @@ defmodule Crontab do
       {:ok, ~N[2016-12-17 00:00:01]}
 
   """
+  @spec get_next_run_date_relative_to(binary, NaiveDateTime.t, boolean) :: Crontab.CronScheduler.result
   def get_next_run_date_relative_to(cron_expression, date, extended \\ false) do
     case Crontab.CronFormatParser.parse(cron_expression, extended) do
-      {:ok, cron_format} -> Crontab.CronScheduler.get_next_run_date(cron_format, date, extended)
+      {:ok, cron_format} -> Crontab.CronScheduler.get_next_run_date(cron_format, date)
       error = {:error, _} -> error
     end
   end
@@ -73,7 +75,8 @@ defmodule Crontab do
        {:ok, ~N[2016-12-23 16:02:00]}]
 
   """
-  def get_next_run_dates(n, cron_expression, extended \\ false) when is_boolean(extended) do
+  @spec get_next_run_dates(pos_integer, binary, boolean) :: [Crontab.CronScheduler.result]
+  def get_next_run_dates(n, cron_expression, extended \\ false) do
     date = DateTime.to_naive(DateTime.utc_now)
     get_next_run_dates_relative_to(n, cron_expression, date, extended)
   end
@@ -100,6 +103,7 @@ defmodule Crontab do
        {:ok, ~N[2016-12-17 00:02:00]}]
 
   """
+  @spec get_next_run_dates_relative_to(pos_integer, binary, NaiveDateTime.t, boolean) :: [Crontab.CronScheduler.result]
   def get_next_run_dates_relative_to(n, cron_expression, date, extended \\ false)
   def get_next_run_dates_relative_to(0, _, _, _), do: []
   def get_next_run_dates_relative_to(n, cron_expression, date, false) do
@@ -135,7 +139,8 @@ defmodule Crontab do
       {:ok, ~N[2016-12-23 16:00:00.348751]}
 
   """
-  def get_previous_run_date(cron_expression, extended \\ false) when is_boolean(extended) do
+  @spec get_previous_run_date(binary, boolean) :: Crontab.CronScheduler.result
+  def get_previous_run_date(cron_expression, extended \\ false) do
     date = DateTime.to_naive(DateTime.utc_now)
     get_previous_run_date_relative_to(cron_expression, date, extended)
   end
@@ -156,9 +161,10 @@ defmodule Crontab do
       {:ok, ~N[2016-12-17 00:00:00]}
 
   """
+  @spec get_previous_run_date_relative_to(binary, NaiveDateTime.t, boolean) :: Crontab.CronScheduler.result
   def get_previous_run_date_relative_to(cron_expression, date, extended \\ false) do
     case Crontab.CronFormatParser.parse(cron_expression, extended) do
-      {:ok, cron_format} -> Crontab.CronScheduler.get_previous_run_date(cron_format, date, extended)
+      {:ok, cron_format} -> Crontab.CronScheduler.get_previous_run_date(cron_format, date)
       error = {:error, _} -> error
     end
   end
@@ -185,7 +191,8 @@ defmodule Crontab do
        {:ok, ~N[2016-12-23 15:58:00]}]
 
   """
-  def get_previous_run_dates(n, cron_expression, extended \\ false) when is_boolean(extended) do
+  @spec get_previous_run_dates(pos_integer, binary, boolean) :: [Crontab.CronScheduler.result]
+  def get_previous_run_dates(n, cron_expression, extended \\ false) do
     date = DateTime.to_naive(DateTime.utc_now)
     get_previous_run_dates_relative_to(n, cron_expression, date, extended)
   end
@@ -212,6 +219,7 @@ defmodule Crontab do
        {:ok, ~N[2016-12-16 23:58:00]}]
 
   """
+  @spec get_previous_run_dates_relative_to(pos_integer, binary, NaiveDateTime.t, boolean) :: [Crontab.CronScheduler.result]
   def get_previous_run_dates_relative_to(n, cron_expression, date, extended \\ false)
   def get_previous_run_dates_relative_to(0, _, _, _), do: []
   def get_previous_run_dates_relative_to(n, cron_expression, date, false) do
@@ -250,7 +258,8 @@ defmodule Crontab do
       {:ok, false}
 
   """
-  def matches_date(cron_expression, extended \\ false) when is_boolean(extended) do
+  @spec matches_date(binary, boolean) :: {:ok, boolean} | Crontab.CronFormatParser.result
+  def matches_date(cron_expression, extended \\ false) do
     date = DateTime.to_naive(DateTime.utc_now)
     matches_date_relative_to(cron_expression, date, extended)
   end
@@ -274,6 +283,7 @@ defmodule Crontab do
       {:ok, false}
 
   """
+  @spec matches_date_relative_to(binary, NaiveDateTime.t, boolean) :: {:ok, boolean} | Crontab.CronFormatParser.result
   def matches_date_relative_to(cron_expression, date, extended \\ false) do
     case Crontab.CronFormatParser.parse(cron_expression, extended) do
       {:ok, cron_format} -> {:ok, Crontab.CronDateChecker.matches_date(cron_format, date)}

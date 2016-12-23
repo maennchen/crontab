@@ -39,7 +39,8 @@ defmodule Crontab.Mixfile do
     [{:timex, "~> 3.0"},
      {:ex_doc, ">= 0.0.0", only: :dev},
      {:inch_ex, only: :docs},
-     {:excoveralls, "~> 0.4", only: [:dev, :test]}]
+     {:excoveralls, "~> 0.4", only: [:dev, :test]},
+     {:dialyxir, "~> 0.4", only: [:dev], runtime: false}]
   end
 
   defp package do

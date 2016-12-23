@@ -18,6 +18,12 @@ defmodule Crontab.ExtendedCronInterval do
   """
   defstruct second: [:*], minute: [:*], hour: [:*], day: [:*], month: [:*], weekday: [:*], year: [:*]
 
+  @type t :: %Crontab.ExtendedCronInterval{}
+  @type all_t :: %Crontab.ExtendedCronInterval{} | Crontab.CronInterval.t
+  @type interval :: :second | Crontab.CronInterval.interval
+  @type condition :: {interval, [Crontab.CronInterval.value]}
+  @type condition_list :: [condition]
+
   @doc """
   Convert Crontab.ExtendedCronInterval struct to Tuple List
 
@@ -31,6 +37,7 @@ defmodule Crontab.ExtendedCronInterval do
         {:weekday, [5]},
         {:year, [6]}]
   """
+  @spec to_condition_list(t) :: condition_list
   def to_condition_list(%Crontab.ExtendedCronInterval{second: second, minute: minute, hour: hour, day: day, month: month, weekday: weekday, year: year}) do
     [ {:second, second},
       {:minute, minute},
