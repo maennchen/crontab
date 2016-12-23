@@ -68,9 +68,9 @@ defmodule Crontab.FunctionalTest do
     # Test the last month of a day
     {"* * * L", ~N[2011-07-01 00:00:00], ~N[2011-12-01 00:00:00], false},
     # # Test the hash symbol for the nth weekday of a given month
-    # {"* * * * 5#2", ~N[2011-07-01 00:00:00], ~N[2011-07-08 00:00:00], false},
-    # {"* * * * 5#1", ~N[2011-07-01 00:00:00], ~N[2011-07-01 00:00:00], true},
-    # {"* * * * 3#4", ~N[2011-07-01 00:00:00], ~N[2011-07-27 00:00:00], false},
+    {"* * * * 5#2", ~N[2011-07-01 00:00:00], ~N[2011-07-08 00:00:00], false},
+    {"* * * * 5#1", ~N[2011-07-01 00:00:00], ~N[2011-07-01 00:00:00], true},
+    {"* * * * 3#4", ~N[2011-07-01 00:00:00], ~N[2011-07-27 00:00:00], false},
   ]
 
   for {cron_expression, start_date, search_date, matches_now} <- tests_find_date do

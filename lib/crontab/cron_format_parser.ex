@@ -122,13 +122,21 @@ defmodule Crontab.CronFormatParser do
 
   defp clean_value(:weekday, "L"), do: {:ok, 7}
   defp clean_value(:weekday, value) do
-    if String.match?(value, ~r/L$/) do
-      case parse_week_day(binary_part(value, 0, byte_size(value) - 1)) do
-        {:ok, value} -> {:ok, {:L, value}}
-        error = {:error, _} -> error
-      end
-    else
-      parse_week_day(value)
+    cond do
+      String.match?(value, ~r/L$/) ->
+        case parse_week_day(binary_part(value, 0, byte_size(value) - 1)) do
+          {:ok, value} -> {:ok, {:L, value}}
+          error = {:error, _} -> error
+        end
+      String.match?(value, ~r/#\d+$/) ->
+        [weekday, n] = String.split value, "#"
+        case parse_week_day weekday do
+          {:ok, value} ->
+            {n_int, _} = Integer.parse(n)
+            {:ok, {:"#", value, n_int}}
+          error = {:error, _} -> error
+        end
+      true -> parse_week_day(value)
     end
   end
   defp clean_value(:month, "L"), do: {:ok, 12}
