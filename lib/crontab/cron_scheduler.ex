@@ -30,15 +30,15 @@ defmodule Crontab.CronScheduler do
       |> to_condition_list
       |> get_next_run_date(reset(date, :seconds), max_runs)
   end
-  def get_next_run_date(conditions, date, max_runs) when max_runs > 0 do
+  def get_next_run_date(_, _, 0) do
+    {:error, "No compliant date was found for your interval."}
+  end
+  def get_next_run_date(conditions, date, max_runs) do
     {status, corrected_date} = search_and_correct_date(conditions, date);
     case status do
       :found -> {:ok, corrected_date}
       _ -> get_next_run_date(conditions, corrected_date, max_runs - 1)
     end
-  end
-  def get_next_run_date(_, _, 0) do
-    {:error, "No compliant date was found for your interval."}
   end
 
   defp search_and_correct_date([{interval, conditions} | tail], date) do
