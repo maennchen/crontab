@@ -120,19 +120,34 @@ defmodule Crontab.CronFormatParser do
     end
   end
 
+  defp clean_value(:weekday, "L"), do: {:ok, 7}
   defp clean_value(:weekday, value) do
+    if String.match?(value, ~r/L$/) do
+      case parse_week_day(binary_part(value, 0, byte_size(value) - 1)) do
+        {:ok, value} -> {:ok, {:L, value}}
+        error = {:error, _} -> error
+      end
+    else
+      parse_week_day(value)
+    end
+  end
+  defp parse_week_day(value) do
     case {Map.fetch(@weekday_values, String.to_atom(String.upcase(value))), Integer.parse(value, 10)} do
       {:error, :error} -> {:error, "Can't parse " <> value <> " as interval weekday."}
       {{:ok, number}, :error} -> {:ok, number}
       {:error, {number, _}} -> {:ok, number}
     end
   end
+  defp clean_value(:month, "L"), do: {:ok, 12}
   defp clean_value(:month, value) do
     case {Map.fetch(@month_values, String.to_atom(String.upcase(value))), Integer.parse(value, 10)} do
       {:error, :error} -> {:error, "Can't parse " <> value <> " as interval month."}
       {{:ok, number}, :error} -> {:ok, number}
       {:error, {number, _}} -> {:ok, number}
     end
+  end
+  defp clean_value(:day, "L") do
+    {:ok, :L}
   end
   defp clean_value(interval, value) do
     case Integer.parse(value, 10) do
