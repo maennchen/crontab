@@ -73,6 +73,7 @@ defmodule Crontab.CronFormatParser do
 
   """
   @spec parse(binary, boolean) :: result
+  def parse(cron_format, extended \\ false)
   def parse("@" <> identifier, _) do
     special(String.to_atom(identifier))
   end
@@ -82,8 +83,6 @@ defmodule Crontab.CronFormatParser do
   def parse(cron_format, false) do
     interpret(String.split(cron_format, " "), @intervals, %Crontab.CronInterval{})
   end
-  @spec parse(binary) :: result
-  def parse(cron_format), do: parse cron_format, false
 
   @spec interpret([binary], [Crontab.ExtendedCronInterval.interval], Crontab.ExtendedCronInterval.all_t) :: Crontab.ExtendedCronInterval.all_t | {:error, binary}
   defp interpret([head_format | tail_format], [head_interval | tail_interval], cron_interval) do
