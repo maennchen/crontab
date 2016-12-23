@@ -22,9 +22,8 @@ defmodule Crontab.CronScheduler do
       iex> Crontab.CronScheduler.get_next_run_date(%Crontab.CronInterval{year: [{:/, :*, 9}]}, ~N[2002-01-13 23:00:07])
       {:ok, ~N[2007-01-01 00:00:00]}
   """
-  @spec get_next_run_date(Crontab.ExtendedCronInterval.all_t, NaiveDateTime.t) :: result
-  def get_next_run_date(cron_interval, date), do: get_next_run_date(cron_interval, date, @max_runs)
   @spec get_next_run_date(Crontab.ExtendedCronInterval.all_t, NaiveDateTime.t, integer) :: result
+  def get_next_run_date(cron_interval, date, max_runs \\ @max_runs)
   def get_next_run_date(cron_interval = %Crontab.CronInterval{}, date, max_runs) do
     get_run_date(cron_interval, date, max_runs, :increment)
   end
@@ -44,9 +43,8 @@ defmodule Crontab.CronScheduler do
       iex> Crontab.CronScheduler.get_previous_run_date(%Crontab.CronInterval{year: [{:/, :*, 9}]}, ~N[2002-01-13 23:00:07])
       {:ok, ~N[1998-12-31 23:59:00]}
   """
-  @spec get_previous_run_date(Crontab.ExtendedCronInterval.all_t, NaiveDateTime.t) :: result
-  def get_previous_run_date(cron_interval, date), do: get_previous_run_date(cron_interval, date, @max_runs)
   @spec get_previous_run_date(Crontab.ExtendedCronInterval.all_t, NaiveDateTime.t, integer) :: result
+  def get_previous_run_date(cron_interval, date, max_runs \\ @max_runs)
   def get_previous_run_date(cron_interval = %Crontab.CronInterval{}, date, max_runs) do
     get_run_date(cron_interval, date, max_runs, :decrement)
   end
