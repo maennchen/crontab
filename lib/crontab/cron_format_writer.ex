@@ -1,22 +1,34 @@
 defmodule Crontab.CronFormatWriter do
-  import Crontab.CronInterval
-
   @moduledoc """
-  Genrate from `%Crontab.CronInterval{}` to `* * * * * *`
+  Genrate from `%Crontab.CronInterval{}` or `%Crontab.ExtendedCronInterval{}`
+  to `* * * * * *`
   """
 
   @doc """
-  Genrate from `%Crontab.CronInterval{}` to `* * * * * *`
+  Genrate from `%Crontab.CronInterval{}` or `%Crontab.ExtendedCronInterval{}`
+  to `* * * * * *`
 
   ### Examples
+
       iex> Crontab.CronFormatWriter.write %Crontab.CronInterval{}
       "* * * * * *"
+
       iex> Crontab.CronFormatWriter.write %Crontab.CronInterval{minute: [9, {:-, 4, 6}, {:/, :*, 9}]}
       "9,4-6,*/9 * * * * *"
+
+      iex> Crontab.CronFormatWriter.write %Crontab.ExtendedCronInterval{minute: [9, {:-, 4, 6}, {:/, :*, 9}]}
+      "* 9,4-6,*/9 * * * * *"
+
   """
   def write(cron_interval = %Crontab.CronInterval{}) do
     cron_interval
-      |> to_condition_list
+      |> Crontab.CronInterval.to_condition_list
+      |> write
+      |> Enum.join(" ")
+  end
+  def write(cron_interval = %Crontab.ExtendedCronInterval{}) do
+    cron_interval
+      |> Crontab.ExtendedCronInterval.to_condition_list
       |> write
       |> Enum.join(" ")
   end

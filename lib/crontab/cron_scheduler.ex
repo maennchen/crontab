@@ -1,5 +1,4 @@
 defmodule Crontab.CronScheduler do
-  import Crontab.CronInterval
   import Crontab.CronDateChecker
 
   @moduledoc """
@@ -24,9 +23,15 @@ defmodule Crontab.CronScheduler do
   def get_next_run_date(cron_interval = %Crontab.CronInterval{}, date, max_runs) do
     get_run_date(cron_interval, date, max_runs, :increment)
   end
+  def get_next_run_date(cron_interval = %Crontab.ExtendedCronInterval{}, date, max_runs) do
+    get_run_date(cron_interval, date, max_runs, :increment)
+  end
 
   def get_previous_run_date(cron_interval, date), do: get_previous_run_date(cron_interval, date, @max_runs)
   def get_previous_run_date(cron_interval = %Crontab.CronInterval{}, date, max_runs) do
+    get_run_date(cron_interval, date, max_runs, :decrement)
+  end
+  def get_previous_run_date(cron_interval = %Crontab.ExtendedCronInterval{}, date, max_runs) do
     get_run_date(cron_interval, date, max_runs, :decrement)
   end
 
@@ -35,8 +40,13 @@ defmodule Crontab.CronScheduler do
   end
   defp get_run_date(cron_interval = %Crontab.CronInterval{}, date, max_runs, direction) do
     cron_interval
-      |> to_condition_list
+      |> Crontab.CronInterval.to_condition_list
       |> get_run_date(reset(date, :seconds), max_runs, direction)
+  end
+  defp get_run_date(cron_interval = %Crontab.ExtendedCronInterval{}, date, max_runs, direction) do
+    cron_interval
+      |> Crontab.ExtendedCronInterval.to_condition_list
+      |> get_run_date(reset(date, :microseconds), max_runs, direction)
   end
   defp get_run_date(conditions, date, max_runs, direction) do
     {status, corrected_date} = search_and_correct_date(conditions, date, direction);
@@ -59,20 +69,23 @@ defmodule Crontab.CronScheduler do
   end
   defp search_and_correct_date([], date, _), do: {:found, date}
 
-  defp correct_date(:minute, date, :increment), do: date |> Timex.shift(minutes: 1)
+  defp correct_date(:second, date, :increment), do: date |> Timex.shift(seconds: 1)
+  defp correct_date(:minute, date, :increment), do: date |> Timex.shift(minutes: 1) |> reset(:seconds)
   defp correct_date(:hour, date, :increment), do: date |> Timex.shift(hours: 1) |> reset(:minutes)
   defp correct_date(:day, date, :increment), do: date |> Timex.shift(days: 1) |> Timex.beginning_of_day
   defp correct_date(:month, date, :increment), do: date |> Timex.shift(months: 1) |> Timex.beginning_of_month
   defp correct_date(:weekday, date, :increment), do: date |> Timex.shift(days: 1) |> Timex.beginning_of_day
   defp correct_date(:year, date, :increment), do: date |> Timex.shift(years: 1) |> Timex.beginning_of_year
 
-  defp correct_date(:minute, date, :decrement), do: date |> Timex.shift(minutes: -1)
+  defp correct_date(:second, date, :decrement), do: date |> Timex.shift(seconds: -1)
+  defp correct_date(:minute, date, :decrement), do: date |> reset(:seconds) |> Timex.shift(minutes: -1)
   defp correct_date(:hour, date, :decrement), do: date |> reset(:minutes) |> Timex.shift(minutes: -1)
   defp correct_date(:day, date, :decrement), do: date |> Timex.beginning_of_day |> Timex.shift(minutes: -1)
   defp correct_date(:month, date, :decrement), do: date |> Timex.beginning_of_month |> Timex.shift(minutes: -1)
   defp correct_date(:weekday, date, :decrement), do: date |> Timex.beginning_of_day |> Timex.shift(minutes: -1)
   defp correct_date(:year, date, :decrement), do: date |> Timex.beginning_of_year |> Timex.shift(minutes: -1)
 
-  defp reset(date, :seconds), do: Timex.shift(date, seconds: 0 - date.second)
-  defp reset(date, :minutes), do: date |> reset(:seconds) |> Timex.shift(minutes: 0 - date.minute)
+  defp reset(date = %NaiveDateTime{}, :microseconds), do: Map.put(date, :microsecond, {0,0})
+  defp reset(date = %NaiveDateTime{second: second}, :seconds), do: date |> reset(:microseconds) |> Timex.shift(seconds: 0 - second)
+  defp reset(date = %NaiveDateTime{minute: minute}, :minutes), do: date |> reset(:seconds) |> Timex.shift(minutes: 0 - minute)
 end

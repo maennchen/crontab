@@ -97,4 +97,33 @@ defmodule Crontab.FunctionalTest do
       assert Crontab.CronDateChecker.matches_date(cron_interval, @start_date) == @matches_now
     end
   end
+
+  tests_find_date_extended = [
+    ###########################################################################################################################################
+    # To Parse              # To Write            # Relative Sate           # Next Search Date        # Previous Search Date    # Matches Now #
+    ###########################################################################################################################################
+
+    { "*/2 */2 * * * *",    "*/2 */2 * * * * *",  ~N[2015-08-10 21:47:27],  ~N[2015-08-10 21:48:00],  ~N[2015-08-10 21:46:00],  false         },
+    { "* * * * *",          "* * * * * * *",      ~N[2015-08-10 21:50:37],  ~N[2015-08-10 21:50:37],  ~N[2015-08-10 21:50:37],  true          },
+    { "*/4 * * * *",        "*/4 * * * * * *",    ~N[2016-12-17 00:00:03],  ~N[2016-12-17 00:00:04],  ~N[2016-12-17 00:00:00],  false         },
+  ]
+
+  for {cron_expression, written_cron_expression, start_date, next_search_date, previous_search_date, matches_now} <- tests_find_date_extended do
+    @cron_expression cron_expression
+    @written_cron_expression written_cron_expression
+    @start_date start_date
+    @next_search_date next_search_date
+    @previous_search_date previous_search_date
+    @matches_now matches_now
+    test "extended test " <> @cron_expression <> " from " <> NaiveDateTime.to_iso8601(@start_date) <> " equals " <> NaiveDateTime.to_iso8601(@next_search_date) do
+      {:ok, cron_interval} = Crontab.CronFormatParser.parse(@cron_expression, true)
+      assert Crontab.CronFormatWriter.write(cron_interval) == @written_cron_expression
+      assert Crontab.CronScheduler.get_next_run_date(cron_interval, @start_date) == {:ok, @next_search_date}
+      case @previous_search_date do
+        :none -> assert Crontab.CronScheduler.get_previous_run_date(cron_interval, @start_date) == {:error, "No compliant date was found for your interval."}
+        _ -> assert Crontab.CronScheduler.get_previous_run_date(cron_interval, @start_date) == {:ok, @previous_search_date}
+      end
+      assert Crontab.CronDateChecker.matches_date(cron_interval, @start_date) == @matches_now
+    end
+  end
 end

@@ -8,10 +8,6 @@
 
 Parse Cron Format Strings, Write Cron Format Strings and Caluclate Execution Dates.
 
-## Roadmap
- * Support cron expressions including seconds
- * Support `W` modifier
-
 ## Installation
 
   1. Add `crontab` to your list of dependencies in `mix.exs`:

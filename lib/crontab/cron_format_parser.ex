@@ -1,6 +1,6 @@
 defmodule Crontab.CronFormatParser do
   @moduledoc """
-  Parse string like `* * * * * *` to a `%Crontab.CronInterval{}`.
+  Parse string like `* * * * * *` to a `%Crontab.CronInterval{}` or `%Crontab.ExtendedCronInterval{}`.
   """
 
   @specials %{
@@ -11,6 +11,8 @@ defmodule Crontab.CronFormatParser do
     daily: %Crontab.CronInterval{minute: [0], hour: [0]},
     midnight: %Crontab.CronInterval{minute: [0], hour: [0]},
     hourly: %Crontab.CronInterval{minute: [0]},
+    minutely: %Crontab.CronInterval{},
+    secondly: %Crontab.ExtendedCronInterval{},
   }
 
   @intervals [
@@ -21,6 +23,8 @@ defmodule Crontab.CronFormatParser do
     :weekday,
     :year
   ]
+
+  @extended_intervals [:second | @intervals]
 
   @weekday_values %{
     "MON": 1,
@@ -57,16 +61,25 @@ defmodule Crontab.CronFormatParser do
         %Crontab.CronInterval{day: [:*], hour: [:*], minute: [:*],
         month: [:*], weekday: [:*], year: [:*]}}
 
+      iex> Crontab.CronFormatParser.parse "* * * * *", true
+      {:ok,
+        %Crontab.ExtendedCronInterval{day: [:*], hour: [:*], minute: [:*],
+        month: [:*], weekday: [:*], year: [:*], second: [:*]}}
+
       iex> Crontab.CronFormatParser.parse "fooo"
       {:error, "Can't parse fooo as interval minute."}
 
   """
-  def parse("@" <> identifier) do
+  def parse("@" <> identifier, _) do
     special(String.to_atom(identifier))
   end
-  def parse(cron_format) do
+  def parse(cron_format, true) do
+    interpret(String.split(cron_format, " "), @extended_intervals, %Crontab.ExtendedCronInterval{})
+  end
+  def parse(cron_format, false) do
     interpret(String.split(cron_format, " "), @intervals, %Crontab.CronInterval{})
   end
+  def parse(cron_format), do: parse cron_format, false
 
   defp interpret([head_format | tail_format], [head_interval | tail_interval], cron_interval) do
     conditions = interpret head_interval, head_format
