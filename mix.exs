@@ -9,7 +9,8 @@ defmodule Crontab.Mixfile do
      start_permanent: Mix.env == :prod,
      description: description(),
      package: package(),
-     deps: deps()]
+     deps: deps(),
+     test_coverage: [tool: ExCoveralls]]
   end
 
   # Configuration for the OTP application
@@ -36,7 +37,9 @@ defmodule Crontab.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [{:timex, "~> 3.0"},
-     {:ex_doc, ">= 0.0.0", only: :dev}]
+     {:ex_doc, ">= 0.0.0", only: :dev},
+     {:inch_ex, only: :docs},
+     {:excoveralls, "~> 0.4", only: [:dev, :test]}]
   end
 
   defp package do
