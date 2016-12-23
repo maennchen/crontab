@@ -35,6 +35,9 @@ The 'W' character is allowed for the day-of-month field. This character is used 
 
 The 'L' and 'W' characters can also be combined for the day-of-month expression to yield 'LW', which translates to "last weekday of the month".
 
+## Known Issues
+If a previous date is searched for a Complex Cron Expression, it sometimes maxes out. Contributions are welcome to fix that.
+
 ## Usage
 
 ### Helper Functions
