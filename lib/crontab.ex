@@ -132,8 +132,8 @@ defmodule Crontab do
 
       iex> Crontab.get_previous_run_dates(3, "* * * * *", ~N[2016-12-17 00:00:00])
       [{:ok, ~N[2016-12-17 00:00:00]},
-       {:ok, ~N[2016-12-17 00:01:00]},
-       {:ok, ~N[2016-12-17 00:02:00]}]
+       {:ok, ~N[2016-12-16 23:59:00]},
+       {:ok, ~N[2016-12-16 23:58:00]}]
 
   """
   def get_previous_run_dates(0, _, _), do: []
@@ -141,7 +141,7 @@ defmodule Crontab do
     case Crontab.CronFormatParser.parse(cron_expression) do
       {:ok, cron_format} ->
         result = {:ok, run_date} = Crontab.CronScheduler.get_previous_run_date(cron_format, date)
-        [result | get_previous_run_dates(n - 1, cron_expression, Timex.shift(run_date, minutes: 1))]
+        [result | get_previous_run_dates(n - 1, cron_expression, Timex.shift(run_date, minutes: -1))]
       error = {:error, _} -> error
     end
   end
