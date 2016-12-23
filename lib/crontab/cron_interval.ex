@@ -17,6 +17,19 @@ defmodule Crontab.CronInterval do
   """
   defstruct minute: [:*], hour: [:*], day: [:*], month: [:*], weekday: [:*], year: [:*]
 
+  @type t :: %Crontab.CronInterval{}
+  @type interval :: :minute | :hour | :day | :month | :weekday | :year
+  @type value :: time_unit | :* | :L | {:L, value} | {:/, value, integer} | {:-, integer, integer}
+  @type minute :: 0..59
+  @type hour :: 0..23
+  @type day :: 0..31
+  @type month :: 1..12
+  @type weekday :: 0..7
+  @type year :: integer
+  @type time_unit :: minute | hour | day | month | weekday | year
+  @type condition :: {interval, [value]}
+  @type condition_list :: [condition]
+
   @doc """
   Convert Crontab.CronInterval struct to Tuple List
 
@@ -29,6 +42,7 @@ defmodule Crontab.CronInterval do
         {:weekday, [5]},
         {:year, [6]}]
   """
+  @spec to_condition_list(t) :: condition_list
   def to_condition_list(%Crontab.CronInterval{minute: minute, hour: hour, day: day, month: month, weekday: weekday, year: year}) do
     [ {:minute, minute},
       {:hour, hour},

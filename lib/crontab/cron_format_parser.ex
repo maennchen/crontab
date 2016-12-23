@@ -3,6 +3,8 @@ defmodule Crontab.CronFormatParser do
   Parse string like `* * * * * *` to a `%Crontab.CronInterval{}` or `%Crontab.ExtendedCronInterval{}`.
   """
 
+  @type result :: {:ok, Crontab.ExtendedCronInterval.all_t} | {:error, binary}
+
   @specials %{
     yearly: %Crontab.CronInterval{minute: [0], hour: [0], day: [1], month: [1]},
     annually: %Crontab.CronInterval{minute: [0], hour: [0], day: [1], month: [1]},
@@ -70,6 +72,7 @@ defmodule Crontab.CronFormatParser do
       {:error, "Can't parse fooo as interval minute."}
 
   """
+  @spec parse(binary, boolean) :: result
   def parse("@" <> identifier, _) do
     special(String.to_atom(identifier))
   end
@@ -79,8 +82,10 @@ defmodule Crontab.CronFormatParser do
   def parse(cron_format, false) do
     interpret(String.split(cron_format, " "), @intervals, %Crontab.CronInterval{})
   end
+  @spec parse(binary) :: result
   def parse(cron_format), do: parse cron_format, false
 
+  @spec interpret([binary], [Crontab.ExtendedCronInterval.interval], Crontab.ExtendedCronInterval.all_t) :: Crontab.ExtendedCronInterval.all_t | {:error, binary}
   defp interpret([head_format | tail_format], [head_interval | tail_interval], cron_interval) do
     conditions = interpret head_interval, head_format
     case conditions do
@@ -91,6 +96,7 @@ defmodule Crontab.CronFormatParser do
   end
   defp interpret([], _, cron_interval), do: {:ok, cron_interval}
   defp interpret(_, [], _), do: {:error, "The Cron Format String contains to many parts."}
+  @spec interpret(Crontab.ExtendedCronInterval.interval, binary) :: {:ok, [Crontab.CronInterval.value]} | {:error, binary}
   defp interpret(interval, format) do
     parts = String.split(format, ",")
     tokens = Enum.map(parts, fn(part) -> tokenize interval, part end)
@@ -100,13 +106,16 @@ defmodule Crontab.CronFormatParser do
       {:ok, Enum.map(tokens, fn({:ok, token}) -> token end)}
     end
   end
+
+  @spec has_failed_tokens([{:error, binary}] | Crontab.CronInterval.value) :: boolean | binary
   defp has_failed_tokens(tokens) do
     Enum.find(tokens, fn(token) -> case token do
-      {:error, _} -> true
+      failed_token = {:error, _} -> failed_token
       _ -> false
     end end)
   end
 
+  @spec tokenize(Crontab.ExtendedCronInterval.interval, binary) :: {:ok, Crontab.CronInterval.value} | {:error, binary}
   defp tokenize(_, "*"), do: {:ok, :*}
   defp tokenize(interval, other) do
     cond do
@@ -115,6 +124,7 @@ defmodule Crontab.CronFormatParser do
       true -> tokenize interval, :single_value, other
     end
   end
+  @spec tokenize(Crontab.ExtendedCronInterval.interval, :- | :single_value | :complex_divider) :: {:ok, Crontab.CronInterval.value} | {:error, binary}
   defp tokenize(interval, :-, whole_string) do
     [min, max] = String.split(whole_string, "-")
     case {clean_value(interval, min), clean_value(interval, max)} do
@@ -132,10 +142,11 @@ defmodule Crontab.CronFormatParser do
     case {tokenize(interval, base), Integer.parse(divider, 10)} do
       {{:ok, clean_base}, {clean_divider, _}} -> {:ok, {:/, clean_base, clean_divider}}
       {_, :error} -> {:error, "Can't parse " <> value <> " as interval " <> Atom.to_string(interval) <> "."}
-      {error = {:error}, _} -> error
+      {error = {:error, _}, _} -> error
     end
   end
 
+  @spec clean_value(Crontab.ExtendedCronInterval.interval, binary) :: {:ok, Crontab.CronInterval.value} | {:error, binary}
   defp clean_value(:weekday, "L"), do: {:ok, 7}
   defp clean_value(:weekday, value) do
     cond do
@@ -173,6 +184,7 @@ defmodule Crontab.CronFormatParser do
     end
   end
 
+  @spec parse_week_day(binary) :: {:ok, Crontab.CronInterval.value} | {:error, binary}
   defp parse_week_day(value) do
     case {Map.fetch(@weekday_values, String.to_atom(String.upcase(value))), Integer.parse(value, 10)} do
       {:error, :error} -> {:error, "Can't parse " <> value <> " as interval weekday."}
@@ -181,6 +193,7 @@ defmodule Crontab.CronFormatParser do
     end
   end
 
+  @spec special(atom) :: result
   defp special(:reboot), do: {:error, "Special identifier @reboot is not supported."}
   defp special(identifier) do
     if Map.has_key?(@specials, identifier) do
