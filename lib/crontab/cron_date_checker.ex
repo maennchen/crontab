@@ -70,6 +70,9 @@ defmodule Crontab.CronDateChecker do
   defp matches_specific_date(:weekday, _, {:L, weekday}, execution_date) do
     last_weekday(execution_date, weekday) == execution_date.day
   end
+  defp matches_specific_date(:weekday, _, {:"#", weekday, n}, execution_date) do
+    nth_weekday(execution_date, weekday, n) == execution_date.day
+  end
   defp matches_specific_date(interval, values = [head_value | tail_values], condition = {:/, base, divider}, execution_date) do
     if matches_specific_date(interval, values, base, execution_date) && rem(head_value, divider) == 0 do
       true
@@ -95,6 +98,20 @@ defmodule Crontab.CronDateChecker do
       day
     else
       last_weekday(Timex.shift(date, days: -1), weekday, :end)
+    end
+  end
+
+  defp nth_weekday(date, weekday, n) do
+    date
+      |> Timex.beginning_of_month
+      |> nth_weekday(weekday, n, :start)
+  end
+  defp nth_weekday(date = %NaiveDateTime{}, _, 0, :start), do: Timex.shift(date, days: -1).day
+  defp nth_weekday(date = %NaiveDateTime{year: year, month: month, day: day}, weekday, n, :start) do
+    if :calendar.day_of_the_week(year, month, day) == weekday do
+      nth_weekday(Timex.shift(date, days: 1), weekday, n - 1, :start)
+    else
+      nth_weekday(Timex.shift(date, days: 1), weekday, n, :start)
     end
   end
 
