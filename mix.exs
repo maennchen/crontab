@@ -48,7 +48,6 @@ defmodule Crontab.Mixfile do
      files: ["lib", "mix.exs", "README*", "LICENSE*"],
      maintainers: ["Jonatan Männchen"],
      licenses: ["MIT"],
-     links: %{"GitHub" => "https://github.com/sk-t/crontab",
-              "Docs" => "https://github.com/sk-t/crontab"}]
+     links: %{"GitHub" => "https://github.com/sk-t/crontab"}]
   end
 end

@@ -4,26 +4,31 @@ defmodule Crontab.CronScheduler do
 
   @moduledoc """
   This module provides the functionality to retrieve the next run date or the
-  previous run date from a %Crontab.CronInterval{}.
+  previous run date from a `%Crontab.CronInterval{}`.
   """
 
   @max_runs Application.get_env(:crontab, :max_runs, 10000)
 
   @doc """
   This function provides the functionality to retrieve the next run date from a
-  %Crontab.CronInterval{}.
+  `%Crontab.CronInterval{}`.
 
   ### Examples
-    iex> Crontab.CronScheduler.get_next_run_date(%Crontab.CronInterval{}, ~N[2002-01-13 23:00:07])
-    {:ok, ~N[2002-01-13 23:00:00]}
+      iex> Crontab.CronScheduler.get_next_run_date(%Crontab.CronInterval{}, ~N[2002-01-13 23:00:07])
+      {:ok, ~N[2002-01-13 23:00:00]}
 
-    iex> Crontab.CronScheduler.get_next_run_date(%Crontab.CronInterval{year: [{:/, :*, 9}]}, ~N[2002-01-13 23:00:07])
-    {:ok, ~N[2007-01-01 00:00:00]}
+      iex> Crontab.CronScheduler.get_next_run_date(%Crontab.CronInterval{year: [{:/, :*, 9}]}, ~N[2002-01-13 23:00:07])
+      {:ok, ~N[2007-01-01 00:00:00]}
   """
   def get_next_run_date(cron_interval = %Crontab.CronInterval{}, date) do
     cron_interval
       |> to_condition_list
       |> get_next_run_date(reset(date, :seconds), @max_runs)
+  end
+  def get_next_run_date(cron_interval = %Crontab.CronInterval{}, date, max_runs) do
+    cron_interval
+      |> to_condition_list
+      |> get_next_run_date(reset(date, :seconds), max_runs)
   end
   def get_next_run_date(conditions, date, max_runs) when max_runs > 0 do
     {status, corrected_date} = search_and_correct_date(conditions, date);

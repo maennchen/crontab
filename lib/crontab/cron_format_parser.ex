@@ -1,6 +1,6 @@
 defmodule Crontab.CronFormatParser do
   @moduledoc """
-  Parse string like "* * * * * *" to a %Crontab.CronInterval{}.
+  Parse string like `* * * * * *` to a `%Crontab.CronInterval{}`.
   """
 
   @specials %{
@@ -48,15 +48,18 @@ defmodule Crontab.CronFormatParser do
   }
 
   @doc """
-  Parse string like "* * * * * *" to a %Crontab.CronInterval{}.
+  Parse string like `* * * * * *` to a `%Crontab.CronInterval{}`.
 
   ### Examples
-    iex> Crontab.CronFormatParser.parse "* * * * *"
-    {:ok,
-      %Crontab.CronInterval{day: [:*], hour: [:*], minute: [:*],
-      month: [:*], weekday: [:*], year: [:*]}}
-    iex> Crontab.CronFormatParser.parse "fooo"
-    {:error, "Can't parse fooo as interval minute."}
+
+      iex> Crontab.CronFormatParser.parse "* * * * *"
+      {:ok,
+        %Crontab.CronInterval{day: [:*], hour: [:*], minute: [:*],
+        month: [:*], weekday: [:*], year: [:*]}}
+
+      iex> Crontab.CronFormatParser.parse "fooo"
+      {:error, "Can't parse fooo as interval minute."}
+
   """
   def parse("@" <> identifier) do
     special(String.to_atom(identifier))

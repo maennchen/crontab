@@ -9,17 +9,19 @@ defmodule Crontab.CronDateChecker do
   Check a Crontab.CronInterval against a given date.
 
   ### Examples
-    iex> Crontab.CronDateChecker.matches_date :hour, [{:"/", :*, 4}, 7], ~N[2004-04-16 04:07:08]
-    true
 
-    iex> Crontab.CronDateChecker.matches_date :hour, [8], ~N[2004-04-16 04:07:08]
-    false
+      iex> Crontab.CronDateChecker.matches_date :hour, [{:"/", :*, 4}, 7], ~N[2004-04-16 04:07:08]
+      true
 
-    iex> Crontab.CronDateChecker.matches_date %Crontab.CronInterval{minute: [{:"/", :*, 8}]}, ~N[2004-04-16 04:08:08]
-    true
+      iex> Crontab.CronDateChecker.matches_date :hour, [8], ~N[2004-04-16 04:07:08]
+      false
 
-    iex> Crontab.CronDateChecker.matches_date %Crontab.CronInterval{minute: [{:"/", :*, 9}]}, ~N[2004-04-16 04:07:08]
-    false
+      iex> Crontab.CronDateChecker.matches_date %Crontab.CronInterval{minute: [{:"/", :*, 8}]}, ~N[2004-04-16 04:08:08]
+      true
+
+      iex> Crontab.CronDateChecker.matches_date %Crontab.CronInterval{minute: [{:"/", :*, 9}]}, ~N[2004-04-16 04:07:08]
+      false
+
   """
   def matches_date(_, [:* | _], _), do: true
   def matches_date(_, [], _), do: false
