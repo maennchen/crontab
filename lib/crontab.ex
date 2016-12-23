@@ -22,7 +22,7 @@ defmodule Crontab do
   end
 
   @doc """
-  Find the next execution date relativ to a given date for a string cron
+  Find the next execution date relative to a given date for a string cron
   expression.
 
   ### Examples
@@ -34,6 +34,44 @@ defmodule Crontab do
   def get_next_run_date(cron_expression, date) when is_binary(cron_expression) do
     case Crontab.CronFormatParser.parse(cron_expression) do
       {:ok, cron_format} -> Crontab.CronScheduler.get_next_run_date(cron_format, date)
+      error = {:error, _} -> error
+    end
+  end
+
+  @doc """
+  Find the next n execution dates relative to now for a string cron expression.
+
+  ### Examples
+
+      iex> Crontab.get_next_run_dates(3, "* * * * *")
+      [{:ok, ~N[2016-12-23 16:00:00]},
+       {:ok, ~N[2016-12-23 16:01:00]},
+       {:ok, ~N[2016-12-23 16:02:00]}]
+
+  """
+  def get_next_run_dates(n, cron_expression) when is_binary(cron_expression) do
+    date = DateTime.to_naive(DateTime.utc_now)
+    get_next_run_dates(n, cron_expression, date)
+  end
+
+  @doc """
+  Find the next n execution dates relative to a given date for a string cron
+  expression.
+
+  ### Examples
+
+      iex> Crontab.get_next_run_dates(3, "* * * * *", ~N[2016-12-17 00:00:00])
+      [{:ok, ~N[2016-12-17 00:00:00]},
+       {:ok, ~N[2016-12-17 00:01:00]},
+       {:ok, ~N[2016-12-17 00:02:00]}]
+
+  """
+  def get_next_run_dates(0, _, _), do: []
+  def get_next_run_dates(n, cron_expression, date) when is_binary(cron_expression) do
+    case Crontab.CronFormatParser.parse(cron_expression) do
+      {:ok, cron_format} ->
+        result = {:ok, run_date} = Crontab.CronScheduler.get_next_run_date(cron_format, date)
+        [result | get_next_run_dates(n - 1, cron_expression, Timex.shift(run_date, minutes: 1))]
       error = {:error, _} -> error
     end
   end
