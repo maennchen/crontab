@@ -37,6 +37,38 @@ The 'L' and 'W' characters can also be combined for the day-of-month expression 
 
 ## Usage
 
+### Helper Functions
+
+```elixir
+iex> Crontab.get_next_run_date("* * * * *")
+{:ok, ~N[2016-12-23 16:00:00.348751]}
+
+iex> Crontab.get_next_run_date("* * * * *", ~N[2016-12-17 00:00:00])
+{:ok, ~N[2016-12-17 00:00:00]}
+
+iex> Crontab.get_next_run_dates(3, "* * * * *")
+[{:ok, ~N[2016-12-23 16:00:00]},
+ {:ok, ~N[2016-12-23 16:01:00]},
+ {:ok, ~N[2016-12-23 16:02:00]}]
+
+iex> Crontab.get_next_run_dates(3, "* * * * *", ~N[2016-12-17 00:00:00])
+[{:ok, ~N[2016-12-17 00:00:00]},
+ {:ok, ~N[2016-12-17 00:01:00]},
+ {:ok, ~N[2016-12-17 00:02:00]}]
+
+iex> Crontab.matches_date("*/2 * * * *")
+{:ok, true}
+
+iex> Crontab.matches_date("*/7 * * * *")
+{:ok, false}
+
+iex> Crontab.matches_date("*/2 * * * *", ~N[2016-12-17 00:02:00])
+{:ok, true}
+
+iex> Crontab.matches_date("*/7 * * * *", ~N[2016-12-17 00:06:00])
+{:ok, false}
+```
+
 ### Parse Cron Format Strings
 ```elixir
 iex> Crontab.CronFormatParser.parse "* * * * *"
