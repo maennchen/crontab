@@ -59,6 +59,22 @@ iex> Crontab.get_next_run_dates(3, "* * * * *", ~N[2016-12-17 00:00:00])
  {:ok, ~N[2016-12-17 00:01:00]},
  {:ok, ~N[2016-12-17 00:02:00]}]
 
+iex> Crontab.get_previous_run_date("* * * * *")
+{:ok, ~N[2016-12-23 16:00:00.348751]}
+
+iex> Crontab.get_previous_run_date("* * * * *", ~N[2016-12-17 00:00:00])
+{:ok, ~N[2016-12-17 00:00:00]}
+
+iex> Crontab.get_previous_run_dates(3, "* * * * *")
+[{:ok, ~N[2016-12-23 16:00:00]},
+ {:ok, ~N[2016-12-23 15:59:00]},
+ {:ok, ~N[2016-12-23 15:58:00]}]
+
+iex> Crontab.get_previous_run_dates(3, "* * * * *", ~N[2016-12-17 00:00:00])
+[{:ok, ~N[2016-12-17 00:00:00]},
+ {:ok, ~N[2016-12-16 23:59:00]},
+ {:ok, ~N[2016-12-16 23:58:00]}]
+
 iex> Crontab.matches_date("*/2 * * * *")
 {:ok, true}
 
