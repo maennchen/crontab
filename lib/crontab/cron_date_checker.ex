@@ -1,6 +1,4 @@
 defmodule Crontab.CronDateChecker do
-  import Crontab.CronInterval
-
   @moduledoc """
   This Module is used to check a Crontab.CronInterval against a given date.
   """
@@ -35,7 +33,12 @@ defmodule Crontab.CronDateChecker do
   end
   def matches_date(cron_interval = %Crontab.CronInterval{}, execution_date) do
     cron_interval
-      |> to_condition_list
+      |> Crontab.CronInterval.to_condition_list
+      |> matches_date(execution_date)
+  end
+  def matches_date(cron_interval = %Crontab.ExtendedCronInterval{}, execution_date) do
+    cron_interval
+      |> Crontab.ExtendedCronInterval.to_condition_list
       |> matches_date(execution_date)
   end
   def matches_date([], _), do: true
@@ -117,6 +120,7 @@ defmodule Crontab.CronDateChecker do
     end
   end
 
+  defp get_interval_value(:second, %NaiveDateTime{second: second}), do: [second]
   defp get_interval_value(:minute, %NaiveDateTime{minute: minute}), do: [minute]
   defp get_interval_value(:hour, %NaiveDateTime{hour: hour}), do: [hour]
   defp get_interval_value(:day, %NaiveDateTime{day: day}), do: [day]
