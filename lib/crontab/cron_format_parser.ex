@@ -131,13 +131,6 @@ defmodule Crontab.CronFormatParser do
       parse_week_day(value)
     end
   end
-  defp parse_week_day(value) do
-    case {Map.fetch(@weekday_values, String.to_atom(String.upcase(value))), Integer.parse(value, 10)} do
-      {:error, :error} -> {:error, "Can't parse " <> value <> " as interval weekday."}
-      {{:ok, number}, :error} -> {:ok, number}
-      {:error, {number, _}} -> {:ok, number}
-    end
-  end
   defp clean_value(:month, "L"), do: {:ok, 12}
   defp clean_value(:month, value) do
     case {Map.fetch(@month_values, String.to_atom(String.upcase(value))), Integer.parse(value, 10)} do
@@ -156,6 +149,13 @@ defmodule Crontab.CronFormatParser do
     end
   end
 
+  defp parse_week_day(value) do
+    case {Map.fetch(@weekday_values, String.to_atom(String.upcase(value))), Integer.parse(value, 10)} do
+      {:error, :error} -> {:error, "Can't parse " <> value <> " as interval weekday."}
+      {{:ok, number}, :error} -> {:ok, number}
+      {:error, {number, _}} -> {:ok, number}
+    end
+  end
 
   defp special(:reboot), do: {:error, "Special identifier @reboot is not supported."}
   defp special(identifier) do
