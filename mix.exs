@@ -3,7 +3,7 @@ defmodule Crontab.Mixfile do
 
   def project do
     [app: :crontab,
-     version: "0.7.1",
+     version: "0.8.0",
      elixir: "~> 1.3",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
