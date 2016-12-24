@@ -173,8 +173,21 @@ defmodule Crontab.CronFormatParser do
       {:error, {number, _}} -> {:ok, number}
     end
   end
-  defp clean_value(:day, "L") do
-    {:ok, :L}
+  defp clean_value(:day, "L"), do: {:ok, :L}
+  defp clean_value(:day, "LW"), do: {:ok, {:W, :L}}
+  defp clean_value(:day, value) do
+    if String.match?(value, ~r/W$/) do
+      day = binary_part(value, 0, byte_size(value) - 1)
+      case Integer.parse(day, 10) do
+        {number, _} -> {:ok, {:W, number}}
+        :error -> {:error, "Can't parse " <> value <> " as interval day."}
+      end
+    else
+      case Integer.parse(value, 10) do
+        {number, _} -> {:ok, number}
+        :error -> {:error, "Can't parse " <> value <> " as interval day."}
+      end
+    end
   end
   defp clean_value(interval, value) do
     case Integer.parse(value, 10) do

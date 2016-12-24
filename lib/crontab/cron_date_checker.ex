@@ -99,6 +99,17 @@ defmodule Crontab.CronDateChecker do
   defp matches_specific_date(:weekday, _, {:"#", weekday, n}, execution_date) do
     nth_weekday(execution_date, weekday, n) == execution_date.day
   end
+  defp matches_specific_date(:day, _, {:W, :L}, execution_date) do
+    last_weekday_of_month(execution_date) === execution_date.day
+  end
+  defp matches_specific_date(:day, _, {:W, day}, execution_date) do
+    last_day = Timex.end_of_month(execution_date).day
+    specific_day = case last_day < day do
+      true -> Timex.end_of_month(execution_date)
+      false -> Map.put(execution_date, :day, day)
+    end
+    next_weekday_to(specific_day) === execution_date.day
+  end
   defp matches_specific_date(interval, values = [head_value | tail_values], condition = {:/, base, divider}, execution_date) do
     if matches_specific_date(interval, values, base, execution_date) && rem(head_value, divider) == 0 do
       true
@@ -141,6 +152,34 @@ defmodule Crontab.CronDateChecker do
       nth_weekday(Timex.shift(date, days: 1), weekday, n - 1, :start)
     else
       nth_weekday(Timex.shift(date, days: 1), weekday, n, :start)
+    end
+  end
+
+  @spec last_weekday_of_month(NaiveDateTime.t) :: Crontab.CronInterval.day
+  defp last_weekday_of_month(date) do
+    last_weekday_of_month(Timex.end_of_month(date), :end)
+  end
+  @spec last_weekday_of_month(NaiveDateTime.t, :end) :: Crontab.CronInterval.day
+  defp last_weekday_of_month(date = %NaiveDateTime{year: year, month: month, day: day}, :end) do
+    weekday = :calendar.day_of_the_week(year, month, day)
+    cond do
+      weekday > 5 -> last_weekday_of_month(Timex.shift(date, days: -1), :end)
+      true -> day
+    end
+  end
+
+  @spec next_weekday_to(NaiveDateTime.t) :: Crontab.CronInterval.day
+  defp next_weekday_to(date = %NaiveDateTime{year: year, month: month, day: day}) do
+    weekday = :calendar.day_of_the_week(year, month, day)
+    next_day = Timex.shift(date, days: 1)
+    previous_day = Timex.shift(date, days: -1)
+
+    cond do
+      weekday == 7 && next_day.month == date.month -> next_day.day
+      weekday == 7 -> Timex.shift(date, days: -2).day
+      weekday == 6 && previous_day.month == date.month -> previous_day.day
+      weekday == 6 -> Timex.shift(date, days: 2).day
+      true -> date.day
     end
   end
 

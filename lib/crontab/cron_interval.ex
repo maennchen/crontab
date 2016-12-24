@@ -19,7 +19,8 @@ defmodule Crontab.CronInterval do
 
   @type t :: %Crontab.CronInterval{}
   @type interval :: :minute | :hour | :day | :month | :weekday | :year
-  @type value :: time_unit | :* | :L | {:L, value} | {:/, value, integer} | {:-, integer, integer}
+  @type min_max :: {:-, time_unit, time_unit}
+  @type value :: time_unit | :* | :L | {:L, value } | {:/, time_unit | :* | min_max, pos_integer} | min_max | {:W, time_unit | :L}
   @type minute :: 0..59
   @type hour :: 0..23
   @type day :: 0..31
