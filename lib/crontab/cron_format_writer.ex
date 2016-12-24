@@ -45,6 +45,8 @@ defmodule Crontab.CronFormatWriter do
   @spec write_condition(Crontab.CronInterval.value) :: binary
   defp write_condition(:*), do: "*"
   defp write_condition(:L), do: "L"
+  defp write_condition(:W), do: "W"
+  defp write_condition({:W, base}), do: write_condition(base) <> "W"
   defp write_condition({:L, base}), do: write_condition(base) <> "L"
   defp write_condition({:"#", weekday, n}), do: write_condition(weekday) <> "#" <> write_condition(n)
   defp write_condition({:/, base, divider}), do: write_condition(base) <> "/" <> Integer.to_string(divider)
