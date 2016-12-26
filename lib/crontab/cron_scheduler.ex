@@ -25,7 +25,10 @@ defmodule Crontab.CronScheduler do
   @spec get_next_run_date(Crontab.ExtendedCronInterval.all_t, NaiveDateTime.t, integer) :: result
   def get_next_run_date(cron_interval, date, max_runs \\ @max_runs)
   def get_next_run_date(cron_interval = %Crontab.CronInterval{}, date, max_runs) do
-    get_run_date(cron_interval, date, max_runs, :increment)
+    case get_run_date(cron_interval, date, max_runs, :increment) do
+      {:ok, date} -> {:ok, reset(date, :seconds)}
+      error = {:error, _} -> error
+    end
   end
   def get_next_run_date(cron_interval = %Crontab.ExtendedCronInterval{}, date, max_runs) do
     get_run_date(cron_interval, date, max_runs, :increment)
@@ -46,7 +49,10 @@ defmodule Crontab.CronScheduler do
   @spec get_previous_run_date(Crontab.ExtendedCronInterval.all_t, NaiveDateTime.t, integer) :: result
   def get_previous_run_date(cron_interval, date, max_runs \\ @max_runs)
   def get_previous_run_date(cron_interval = %Crontab.CronInterval{}, date, max_runs) do
-    get_run_date(cron_interval, date, max_runs, :decrement)
+    case get_run_date(cron_interval, date, max_runs, :decrement) do
+      {:ok, date} -> {:ok, reset(date, :seconds)}
+      error = {:error, _} -> error
+    end
   end
   def get_previous_run_date(cron_interval = %Crontab.ExtendedCronInterval{}, date, max_runs) do
     get_run_date(cron_interval, date, max_runs, :decrement)
@@ -82,7 +88,9 @@ defmodule Crontab.CronScheduler do
       case correct_date(interval, date, direction) do
         # Prevent to reach lower bound (year 0)
         {:error, _} -> {:not_found, date}
-        corrected_date -> {:not_found, corrected_date}
+        corrected_date ->
+          #IO.inspect NaiveDateTime.to_iso8601(date)
+          {:not_found, corrected_date}
       end
     end
   end
@@ -98,16 +106,22 @@ defmodule Crontab.CronScheduler do
   defp correct_date(:weekday, date, :increment), do: date |> Timex.shift(days: 1) |> Timex.beginning_of_day
   defp correct_date(:year, date, :increment), do: date |> Timex.shift(years: 1) |> Timex.beginning_of_year
 
-  defp correct_date(:second, date, :decrement), do: date |> Timex.shift(seconds: -1)
-  defp correct_date(:minute, date, :decrement), do: date |> reset(:seconds) |> Timex.shift(minutes: -1)
-  defp correct_date(:hour, date, :decrement), do: date |> reset(:minutes) |> Timex.shift(minutes: -1)
-  defp correct_date(:day, date, :decrement), do: date |> Timex.beginning_of_day |> Timex.shift(minutes: -1)
-  defp correct_date(:month, date, :decrement), do: date |> Timex.beginning_of_month |> Timex.shift(minutes: -1)
-  defp correct_date(:weekday, date, :decrement), do: date |> Timex.beginning_of_day |> Timex.shift(minutes: -1)
-  defp correct_date(:year, date, :decrement), do: date |> Timex.beginning_of_year |> Timex.shift(minutes: -1)
+  defp correct_date(:second, date, :decrement), do: date |> Timex.shift(seconds: -1) |> reset(:microseconds)
+  defp correct_date(:minute, date, :decrement), do: date |> Timex.shift(minutes: -1) |> upper(:seconds) |> reset(:microseconds)
+  defp correct_date(:hour, date, :decrement), do: date |> Timex.shift(hours: -1) |> upper(:minutes) |> reset(:microseconds)
+  defp correct_date(:day, date, :decrement), do: date |> Timex.shift(days: -1) |> Timex.end_of_day |> reset(:microseconds)
+  defp correct_date(:month, date, :decrement), do: date |> Timex.shift(months: -1) |> Timex.end_of_month |> reset(:microseconds)
+  defp correct_date(:weekday, date, :decrement), do: date |> Timex.shift(days: -1) |> Timex.end_of_day |> reset(:microseconds)
+  defp correct_date(:year, date = %NaiveDateTime{year: 0}, :decrement), do: date
+  defp correct_date(:year, date, :decrement), do: date |> Timex.shift(years: -1) |> Timex.end_of_year |> reset(:microseconds)
 
   @spec reset(NaiveDateTime.t, :microseconds | :seconds | :minutes) :: NaiveDateTime.t
   defp reset(date = %NaiveDateTime{}, :microseconds), do: Map.put(date, :microsecond, {0,0})
   defp reset(date = %NaiveDateTime{second: second}, :seconds), do: date |> reset(:microseconds) |> Timex.shift(seconds: 0 - second)
   defp reset(date = %NaiveDateTime{minute: minute}, :minutes), do: date |> reset(:seconds) |> Timex.shift(minutes: 0 - minute)
+
+  @spec upper(NaiveDateTime.t, :microseconds | :seconds | :minutes) :: NaiveDateTime.t
+  defp upper(date = %NaiveDateTime{}, :microseconds), do: Map.put(date, :microsecond, {0,0})
+  defp upper(date = %NaiveDateTime{second: second}, :seconds), do: date |> reset(:microseconds) |> Timex.shift(seconds: 59 - second)
+  defp upper(date = %NaiveDateTime{minute: minute}, :minutes), do: date |> reset(:seconds) |> Timex.shift(minutes: 59 - minute)
 end
