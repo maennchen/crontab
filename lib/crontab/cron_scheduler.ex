@@ -63,9 +63,12 @@ defmodule Crontab.CronScheduler do
     {:error, "No compliant date was found for your interval."}
   end
   defp get_run_date(cron_interval = %Crontab.CronInterval{}, date, max_runs, direction) do
-    cron_interval
-      |> Crontab.CronInterval.to_condition_list
-      |> get_run_date(reset(date, :seconds), max_runs, direction)
+    condition_list = case direction do
+      :increment -> Crontab.CronInterval.to_condition_list(cron_interval)
+      :decrement -> Enum.reverse(Crontab.CronInterval.to_condition_list(cron_interval))
+    end
+
+    get_run_date(condition_list, reset(date, :seconds), max_runs, direction)
   end
   defp get_run_date(cron_interval = %Crontab.ExtendedCronInterval{}, date, max_runs, direction) do
     cron_interval
