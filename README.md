@@ -28,9 +28,6 @@ Parse Cron Format Strings, Write Cron Format Strings and Caluclate Execution Dat
 
 ## [Documentation](https://hexdocs.pm/crontab/)
 
-## Known Issues
-If a previous date is searched for a Complex Cron Expression, it sometimes maxes out. Contributions are welcome to fix that.
-
 ## Usage
 
 ### Helper Functions
