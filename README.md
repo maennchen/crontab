@@ -1,10 +1,10 @@
 # Crontab
 
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/sk-t/crontab/master/LICENSE)
-[![Build Status](https://travis-ci.org/sk-t/crontab.svg?branch=master)](https://travis-ci.org/sk-t/crontab)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/jshmrtn/crontab/master/LICENSE)
+[![Build Status](https://travis-ci.org/jshmrtn/crontab.svg?branch=master)](https://travis-ci.org/jshmrtn/crontab)
 [![Hex.pm Version](https://img.shields.io/hexpm/v/crontab.svg?style=flat)](https://hex.pm/packages/crontab)
-[![InchCI](https://inch-ci.org/github/sk-t/crontab.svg?branch=master)](https://inch-ci.org/github/sk-t/crontab)
-[![Coverage Status](https://coveralls.io/repos/github/sk-t/crontab/badge.svg?branch=master)](https://coveralls.io/github/sk-t/crontab?branch=master)
+[![InchCI](https://inch-ci.org/github/jshmrtn/crontab.svg?branch=master)](https://inch-ci.org/github/jshmrtn/crontab)
+[![Coverage Status](https://coveralls.io/repos/github/jshmrtn/crontab/badge.svg?branch=master)](https://coveralls.io/github/jshmrtn/crontab?branch=master)
 
 Parse Cron Format Strings, Write Cron Format Strings and Caluclate Execution Dates.
 
