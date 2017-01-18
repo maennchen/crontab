@@ -17,7 +17,7 @@ defmodule Crontab.CronScheduler do
 
   ### Examples
       iex> Crontab.CronScheduler.get_next_run_date(%Crontab.CronInterval{}, ~N[2002-01-13 23:00:07])
-      {:ok, ~N[2002-01-13 23:00:00]}
+      {:ok, ~N[2002-01-13 23:01:00]}
 
       iex> Crontab.CronScheduler.get_next_run_date(%Crontab.CronInterval{year: [{:/, :*, 9}]}, ~N[2002-01-13 23:00:07])
       {:ok, ~N[2007-01-01 00:00:00]}
@@ -25,13 +25,13 @@ defmodule Crontab.CronScheduler do
   @spec get_next_run_date(Crontab.ExtendedCronInterval.all_t, NaiveDateTime.t, integer) :: result
   def get_next_run_date(cron_interval, date, max_runs \\ @max_runs)
   def get_next_run_date(cron_interval = %Crontab.CronInterval{}, date, max_runs) do
-    case get_run_date(cron_interval, date, max_runs, :increment) do
-      {:ok, date} -> {:ok, reset(date, :seconds)}
+    case get_run_date(cron_interval, clean_date(date, :seconds), max_runs, :increment) do
+      {:ok, date} -> {:ok, date}
       error = {:error, _} -> error
     end
   end
   def get_next_run_date(cron_interval = %Crontab.ExtendedCronInterval{}, date, max_runs) do
-    get_run_date(cron_interval, date, max_runs, :increment)
+    get_run_date(cron_interval, clean_date(date, :microseconds), max_runs, :increment)
   end
 
 
@@ -127,4 +127,19 @@ defmodule Crontab.CronScheduler do
   defp upper(date = %NaiveDateTime{}, :microseconds), do: Map.put(date, :microsecond, {0,0})
   defp upper(date = %NaiveDateTime{second: second}, :seconds), do: date |> reset(:microseconds) |> Timex.shift(seconds: 59 - second)
   defp upper(date = %NaiveDateTime{minute: minute}, :minutes), do: date |> reset(:seconds) |> Timex.shift(minutes: 59 - minute)
+
+  @spec clean_date(NaiveDateTime.t, :seconds | :microseconds) :: NaiveDateTime.t
+  defp clean_date(date = %NaiveDateTime{microsecond: {0,0}}, :microseconds), do: date
+  defp clean_date(date = %NaiveDateTime{}, :microseconds) do
+    date
+      |> Map.put(:microsecond, {0,0})
+      |> Timex.shift(seconds: 1)
+  end
+  defp clean_date(date = %NaiveDateTime{}, :seconds) do
+    clean_microseconds = clean_date(date, :microseconds)
+    case clean_microseconds do
+       %NaiveDateTime{second: 0} -> clean_microseconds
+       _ -> Timex.shift(clean_microseconds, minutes: 1)
+    end
+  end
 end
