@@ -65,16 +65,16 @@ iex> Crontab.get_previous_run_dates(3, "* * * * *", ~N[2016-12-17 00:00:00])
  {:ok, ~N[2016-12-16 23:59:00]},
  {:ok, ~N[2016-12-16 23:58:00]}]
 
-iex> Crontab.matches_date("*/2 * * * *")
+iex> Crontab.matches_date?("*/2 * * * *")
 {:ok, true}
 
-iex> Crontab.matches_date("*/7 * * * *")
+iex> Crontab.matches_date?("*/7 * * * *")
 {:ok, false}
 
-iex> Crontab.matches_date("*/2 * * * *", ~N[2016-12-17 00:02:00])
+iex> Crontab.matches_date?("*/2 * * * *", ~N[2016-12-17 00:02:00])
 {:ok, true}
 
-iex> Crontab.matches_date("*/7 * * * *", ~N[2016-12-17 00:06:00])
+iex> Crontab.matches_date?("*/7 * * * *", ~N[2016-12-17 00:06:00])
 {:ok, false}
 ```
 
@@ -98,16 +98,16 @@ iex> Crontab.CronExpression.Composer.compose %Crontab.CronExpression{minute: [9,
 
 ### Check if Cron Interval matches Date
 ```elixir
-iex> Crontab.DateChecker.matches_date :hour, [{:"/", 4}, 7], ~N[2004-04-16 04:07:08]
+iex> Crontab.DateChecker.matches_date? :hour, [{:"/", 4}, 7], ~N[2004-04-16 04:07:08]
 true
 
-iex> Crontab.DateChecker.matches_date :hour, [8], ~N[2004-04-16 04:07:08]
+iex> Crontab.DateChecker.matches_date? :hour, [8], ~N[2004-04-16 04:07:08]
 false
 
-iex> Crontab.DateChecker.matches_date %Crontab.CronExpression{minute: [{:"/", 8}]}, ~N[2004-04-16 04:08:08]
+iex> Crontab.DateChecker.matches_date? %Crontab.CronExpression{minute: [{:"/", 8}]}, ~N[2004-04-16 04:08:08]
 true
 
-iex> Crontab.DateChecker.matches_date %Crontab.CronExpression{minute: [{:"/", 9}]}, ~N[2004-04-16 04:07:08]
+iex> Crontab.DateChecker.matches_date? %Crontab.CronExpression{minute: [{:"/", 9}]}, ~N[2004-04-16 04:07:08]
 false
 ```
 

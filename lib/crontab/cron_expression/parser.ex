@@ -86,6 +86,31 @@ defmodule Crontab.CronExpression.Parser do
     interpret(String.split(cron_format, " "), @intervals, %CronExpression{})
   end
 
+  @doc """
+  Parse string like `* * * * * *` to a `%CronExpression{}`.
+
+  ### Examples
+
+      iex> Crontab.CronExpression.Parser.parse! "* * * * *"
+      %Crontab.CronExpression{day: [:*], hour: [:*], minute: [:*],
+        month: [:*], weekday: [:*], year: [:*]}
+
+      iex> Crontab.CronExpression.Parser.parse! "* * * * *", true
+      %Crontab.CronExpression{extended: true, day: [:*], hour: [:*], minute: [:*],
+        month: [:*], weekday: [:*], year: [:*], second: [:*]}
+
+      iex> Crontab.CronExpression.Parser.parse! "fooo"
+      ** (RuntimeError) Can't parse fooo as interval minute.
+
+  """
+  @spec parse!(binary, boolean) :: CronExpression.t | no_return
+  def parse!(cron_format, extended \\ false) do
+    case parse(cron_format, extended) do
+      {:ok, result} -> result
+      {:error, error} -> raise error
+    end
+  end
+
   @spec interpret([binary], [CronExpression.interval], CronExpression.t) :: CronExpression.t | {:error, binary}
   defp interpret([head_format | tail_format], [head_interval | tail_interval], cron_interval) do
     conditions = interpret head_interval, head_format

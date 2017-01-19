@@ -17,11 +17,13 @@ defmodule Crontab.Scheduler do
   `%Crontab.CronExpression{}`.
 
   ### Examples
+
       iex> Crontab.Scheduler.get_next_run_date(%Crontab.CronExpression{}, ~N[2002-01-13 23:00:07])
       {:ok, ~N[2002-01-13 23:01:00]}
 
       iex> Crontab.Scheduler.get_next_run_date(%Crontab.CronExpression{year: [{:/, :*, 9}]}, ~N[2002-01-13 23:00:07])
       {:ok, ~N[2007-01-01 00:00:00]}
+
   """
   @spec get_next_run_date(CronExpression.t, NaiveDateTime.t, integer) :: result
   def get_next_run_date(cron_interval, date, max_runs \\ @max_runs)
@@ -33,6 +35,105 @@ defmodule Crontab.Scheduler do
   end
   def get_next_run_date(cron_interval = %CronExpression{extended: true}, date, max_runs) do
     get_run_date(cron_interval, clean_date(date, :microseconds), max_runs, :increment)
+  end
+
+  @doc """
+  This function provides the functionality to retrieve the next run date from a
+  `%Crontab.CronExpression{}`.
+
+  ### Examples
+
+      iex> Crontab.Scheduler.get_next_run_date!(%Crontab.CronExpression{}, ~N[2002-01-13 23:00:07])
+      ~N[2002-01-13 23:01:00]
+
+      iex> Crontab.Scheduler.get_next_run_date!(%Crontab.CronExpression{year: [1990]}, ~N[2002-01-13 23:00:07])
+      ** (RuntimeError) No compliant date was found for your interval.
+
+      iex> Crontab.Scheduler.get_next_run_date!(%Crontab.CronExpression{year: [{:/, :*, 9}]}, ~N[2002-01-13 23:00:07])
+      ~N[2007-01-01 00:00:00]
+
+  """
+  @spec get_next_run_date!(CronExpression.t, NaiveDateTime.t, integer) :: NaiveDateTime.t | no_return
+  def get_next_run_date!(cron_interval, date, max_runs \\ @max_runs) do
+    case get_next_run_date(cron_interval, date, max_runs) do
+      {:ok, result} -> result
+      {:error, error} -> raise error
+    end
+  end
+
+  @doc """
+  Find the next n execution dates relative to a given date from a `%CronExpression{}`.
+
+  ### Examples
+
+      iex> Crontab.Scheduler.get_next_run_dates(3, %Crontab.CronExpression{extended: true}, ~N[2016-12-17 00:00:00])
+      {:ok, [
+        ~N[2016-12-17 00:00:00],
+        ~N[2016-12-17 00:00:01],
+        ~N[2016-12-17 00:00:02]
+      ]}
+
+      iex> Crontab.Scheduler.get_next_run_dates(3, %Crontab.CronExpression{}, ~N[2016-12-17 00:00:00])
+      {:ok, [
+        ~N[2016-12-17 00:00:00],
+        ~N[2016-12-17 00:01:00],
+        ~N[2016-12-17 00:02:00]
+      ]}
+
+      iex> Crontab.Scheduler.get_next_run_dates(3, %Crontab.CronExpression{year: [2017], month: [1], day: [1], hour: [0], minute: [1]}, ~N[2016-12-17 00:00:00])
+      {:error, [~N[2017-01-01 00:01:00]], "No compliant date was found for your interval."}
+
+  """
+  @spec get_next_run_dates(pos_integer, CronExpression.t, NaiveDateTime.t) :: {:ok | :error, [NaiveDateTime.t], binary}
+  def get_next_run_dates(n, cron_expression, date \\ DateTime.to_naive(DateTime.utc_now))
+  def get_next_run_dates(n, cron_expression, date), do: _get_next_run_dates(n, cron_expression, date, [])
+
+
+  @doc """
+  Find the next n execution dates relative to a given date from a `%CronExpression{}`.
+
+  ### Examples
+
+      iex> Crontab.Scheduler.get_next_run_dates!(3, %Crontab.CronExpression{extended: true}, ~N[2016-12-17 00:00:00])
+      [
+        ~N[2016-12-17 00:00:00],
+        ~N[2016-12-17 00:00:01],
+        ~N[2016-12-17 00:00:02]
+      ]
+
+      iex> Crontab.Scheduler.get_next_run_dates!(3, %Crontab.CronExpression{}, ~N[2016-12-17 00:00:00])
+      [
+        ~N[2016-12-17 00:00:00],
+        ~N[2016-12-17 00:01:00],
+        ~N[2016-12-17 00:02:00]
+      ]
+
+      iex> Crontab.Scheduler.get_next_run_dates!(3, %Crontab.CronExpression{year: [2017], month: [1], day: [1], hour: [0], minute: [1]}, ~N[2016-12-17 00:00:00])
+      ** (RuntimeError) No compliant date was found for your interval.
+
+  """
+  @spec get_next_run_dates!(pos_integer, CronExpression.t, NaiveDateTime.t) :: [NaiveDateTime.t] | no_return
+  def get_next_run_dates!(n, cron_expression, date \\ DateTime.to_naive(DateTime.utc_now))
+  def get_next_run_dates!(n, cron_expression, date) do
+    case _get_next_run_dates(n, cron_expression, date, []) do
+      {:ok, list} -> list
+      {:error, _list, error} -> raise error
+    end
+  end
+
+  @spec _get_next_run_dates(pos_integer, CronExpression.t, NaiveDateTime.t, list) :: {:ok | :error, [NaiveDateTime.t], binary}
+  defp _get_next_run_dates(0, _, _, list), do: {:ok, Enum.reverse list}
+  defp _get_next_run_dates(n, cron_expression = %CronExpression{extended: false}, date, head) do
+    case get_next_run_date(cron_expression, date) do
+      {:ok, date} -> _get_next_run_dates(n - 1, cron_expression, Timex.shift(date, minutes: 1), [date | head])
+      {:error, error} -> {:error, head, error}
+    end
+  end
+  defp _get_next_run_dates(n, cron_expression = %CronExpression{extended: true}, date, head) do
+    case get_next_run_date(cron_expression, date) do
+      {:ok, date} -> _get_next_run_dates(n - 1, cron_expression, Timex.shift(date, seconds: 1), [date | head])
+      {:error, error} -> {:error, head, error}
+    end
   end
 
 
@@ -60,6 +161,108 @@ defmodule Crontab.Scheduler do
   end
   def get_previous_run_date(cron_interval = %CronExpression{extended: true}, date, max_runs) do
     get_run_date(cron_interval, date, max_runs, :decrement)
+  end
+
+
+  @doc """
+  This function provides the functionality to retrieve the previous run date
+  from a `%Crontab.CronExpression{}`.
+
+  ### Examples
+
+      iex> Crontab.Scheduler.get_previous_run_date! %Crontab.CronExpression{}, ~N[2002-01-13 23:00:07]
+      ~N[2002-01-13 23:00:00]
+
+      iex> Crontab.Scheduler.get_previous_run_date!(%Crontab.CronExpression{year: [2100]}, ~N[2002-01-13 23:00:07])
+      ** (RuntimeError) No compliant date was found for your interval.
+
+      iex> Crontab.Scheduler.get_previous_run_date! %Crontab.CronExpression{
+      ...> year: [{:/, :*, 9}]}, ~N[2002-01-13 23:00:07]
+      ~N[1998-12-31 23:59:00]
+
+
+  """
+  @spec get_previous_run_date!(CronExpression.t, NaiveDateTime.t, integer) :: NaiveDateTime.t | no_return
+  def get_previous_run_date!(cron_interval, date, max_runs \\ @max_runs) do
+    case get_previous_run_date(cron_interval, date, max_runs) do
+      {:ok, result} -> result
+      {:error, error} -> raise error
+    end
+  end
+
+  @doc """
+  Find the previous n execution dates relative to a given date from a `%CronExpression{}`.
+
+  ### Examples
+
+      iex> Crontab.Scheduler.get_previous_run_dates(3, %Crontab.CronExpression{extended: true}, ~N[2016-12-17 00:00:00])
+      {:ok, [
+        ~N[2016-12-17 00:00:00],
+        ~N[2016-12-16 23:59:59],
+        ~N[2016-12-16 23:59:58]
+      ]}
+
+      iex> Crontab.Scheduler.get_previous_run_dates(3, %Crontab.CronExpression{}, ~N[2016-12-17 00:00:00])
+      {:ok, [
+        ~N[2016-12-17 00:00:00],
+        ~N[2016-12-16 23:59:00],
+        ~N[2016-12-16 23:58:00]
+      ]}
+
+      iex> Crontab.Scheduler.get_previous_run_dates(3, %Crontab.CronExpression{year: [2016], month: [1], day: [1], hour: [0], minute: [1]}, ~N[2016-12-17 00:00:00])
+      {:error, [~N[2016-01-01 00:01:00]], "No compliant date was found for your interval."}
+
+  """
+  @spec get_previous_run_dates(pos_integer, CronExpression.t, NaiveDateTime.t) :: {:ok | :error, [NaiveDateTime.t], binary}
+  def get_previous_run_dates(n, cron_expression, date \\ DateTime.to_naive(DateTime.utc_now))
+  def get_previous_run_dates(n, cron_expression, date), do: _get_previous_run_dates(n, cron_expression, date, [])
+
+
+  @doc """
+  Find the previous n execution dates relative to a given date from a `%CronExpression{}`.
+
+  ### Examples
+
+      iex> Crontab.Scheduler.get_previous_run_dates!(3, %Crontab.CronExpression{extended: true}, ~N[2016-12-17 00:00:00])
+      [
+        ~N[2016-12-17 00:00:00],
+        ~N[2016-12-16 23:59:59],
+        ~N[2016-12-16 23:59:58]
+      ]
+
+      iex> Crontab.Scheduler.get_previous_run_dates!(3, %Crontab.CronExpression{}, ~N[2016-12-17 00:00:00])
+      [
+        ~N[2016-12-17 00:00:00],
+        ~N[2016-12-16 23:59:00],
+        ~N[2016-12-16 23:58:00]
+      ]
+
+      iex> Crontab.Scheduler.get_previous_run_dates!(3, %Crontab.CronExpression{year: [2017], month: [1], day: [1], hour: [0], minute: [1]}, ~N[2016-12-17 00:00:00])
+      ** (RuntimeError) No compliant date was found for your interval.
+
+  """
+  @spec get_previous_run_dates!(pos_integer, CronExpression.t, NaiveDateTime.t) :: [NaiveDateTime.t] | no_return
+  def get_previous_run_dates!(n, cron_expression, date \\ DateTime.to_naive(DateTime.utc_now))
+  def get_previous_run_dates!(n, cron_expression, date) do
+    case _get_previous_run_dates(n, cron_expression, date, []) do
+      {:ok, list} -> list
+      {:error, _list, error} -> raise error
+    end
+  end
+
+  @spec _get_previous_run_dates(pos_integer, CronExpression.t, NaiveDateTime.t, list) :: {:ok | :error, [NaiveDateTime.t], binary}
+  defp _get_previous_run_dates(0, _, _, list), do: {:ok, Enum.reverse list}
+  defp _get_previous_run_dates(n, cron_expression = %CronExpression{extended: false}, date, head) do
+    case get_previous_run_date(cron_expression, date) do
+      {:ok, date} -> _get_previous_run_dates(n - 1, cron_expression, Timex.shift(date, minutes: -1), [date | head])
+      {:error, error} -> {:error, head, error}
+    end
+  end
+  defp _get_previous_run_dates(n, cron_expression = %CronExpression{extended: true}, date, head) do
+    case get_previous_run_date(cron_expression, date) do
+      {:ok, date} -> _get_previous_run_dates(n - 1, cron_expression, Timex.shift(date, seconds: -1), [date | head])
+      {:error, error} -> {:error, head, error}
+    end
   end
 
   @spec get_run_date(CronExpression.t | CronExpression.condition_list,
@@ -91,15 +294,13 @@ defmodule Crontab.Scheduler do
   @spec search_and_correct_date(CronExpression.condition_list, NaiveDateTime.t, direction)
     :: NaiveDateTime.t | {:not_found, NaiveDateTime.t}
   defp search_and_correct_date([{interval, conditions} | tail], date, direction) do
-    if matches_date(interval, conditions, date) do
+    if matches_date?(interval, conditions, date) do
       search_and_correct_date(tail, date, direction)
     else
       case correct_date(interval, date, direction) do
+        corrected_date = %NaiveDateTime{} -> {:not_found, corrected_date}
         # Prevent to reach lower bound (year 0)
-        {:error, _} -> {:not_found, date}
-        corrected_date ->
-          #IO.inspect NaiveDateTime.to_iso8601(date)
-          {:not_found, corrected_date}
+        _ -> {:not_found, date}
       end
     end
   end
@@ -113,6 +314,7 @@ defmodule Crontab.Scheduler do
   defp correct_date(:day, date, :increment), do: date |> Timex.shift(days: 1) |> Timex.beginning_of_day
   defp correct_date(:month, date, :increment), do: date |> Timex.shift(months: 1) |> Timex.beginning_of_month
   defp correct_date(:weekday, date, :increment), do: date |> Timex.shift(days: 1) |> Timex.beginning_of_day
+  defp correct_date(:year, %NaiveDateTime{year: 9_999}, :increment), do: {:error, :upper_bound}
   defp correct_date(:year, date, :increment), do: date |> Timex.shift(years: 1) |> Timex.beginning_of_year
 
   defp correct_date(:second, date, :decrement), do: date |> Timex.shift(seconds: -1) |> reset(:microseconds)
