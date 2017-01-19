@@ -1,5 +1,5 @@
 defmodule Crontab.DateCheckerTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   doctest Crontab.DateChecker
   import Crontab.DateChecker
 

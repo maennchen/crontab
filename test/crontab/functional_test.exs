@@ -1,5 +1,5 @@
 defmodule Crontab.FunctionalTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   tests_find_date = [
     ###########################################################################################################################################
