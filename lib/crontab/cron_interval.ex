@@ -1,6 +1,6 @@
-defmodule Crontab.CronInterval do
+defmodule Crontab.CronExpression do
   @moduledoc """
-  This is the Crontab.CronInterval module / struct.
+  This is the Crontab.CronExpression module / struct.
   """
 
   @doc """
@@ -20,7 +20,7 @@ defmodule Crontab.CronInterval do
   """
   defstruct extended: false, second: [:*], minute: [:*], hour: [:*], day: [:*], month: [:*], weekday: [:*], year: [:*]
 
-  @type t :: %Crontab.CronInterval{}
+  @type t :: %Crontab.CronExpression{}
   @type interval :: :minute | :hour | :day | :month | :weekday | :year
   @type min_max :: {:-, time_unit, time_unit}
   @type value :: time_unit | :* | :L | {:L, value} | {:/, time_unit | :*
@@ -36,11 +36,11 @@ defmodule Crontab.CronInterval do
   @type condition_list :: [condition]
 
   @doc """
-  Convert Crontab.CronInterval struct to Tuple List
+  Convert Crontab.CronExpression struct to Tuple List
 
   ### Examples
 
-      iex> Crontab.CronInterval.to_condition_list %Crontab.CronInterval{
+      iex> Crontab.CronExpression.to_condition_list %Crontab.CronExpression{
       ...> minute: [1], hour: [2], day: [3], month: [4], weekday: [5], year: [6]}
       [ {:minute, [1]},
         {:hour, [2]},
@@ -49,7 +49,7 @@ defmodule Crontab.CronInterval do
         {:weekday, [5]},
         {:year, [6]}]
 
-      iex> Crontab.CronInterval.to_condition_list %Crontab.CronInterval{
+      iex> Crontab.CronExpression.to_condition_list %Crontab.CronExpression{
       ...> extended: true, second: [0], minute: [1], hour: [2], day: [3], month: [4], weekday: [5], year: [6]}
       [ {:second, [0]},
         {:minute, [1]},
@@ -60,7 +60,7 @@ defmodule Crontab.CronInterval do
         {:year, [6]}]
   """
   @spec to_condition_list(t) :: condition_list
-  def to_condition_list(interval = %Crontab.CronInterval{extended: false}) do
+  def to_condition_list(interval = %Crontab.CronExpression{extended: false}) do
     [{:minute, interval.minute},
      {:hour, interval.hour},
      {:day, interval.day},
@@ -68,7 +68,7 @@ defmodule Crontab.CronInterval do
      {:weekday, interval.weekday},
      {:year, interval.year}]
   end
-  def to_condition_list(interval = %Crontab.CronInterval{}) do
+  def to_condition_list(interval = %Crontab.CronExpression{}) do
     [{:second, interval.second} | to_condition_list(%{interval | extended: false})]
   end
 end
