@@ -20,7 +20,8 @@ defmodule Crontab.CronInterval do
   @type t :: %Crontab.CronInterval{}
   @type interval :: :minute | :hour | :day | :month | :weekday | :year
   @type min_max :: {:-, time_unit, time_unit}
-  @type value :: time_unit | :* | :L | {:L, value } | {:/, time_unit | :* | min_max, pos_integer} | min_max | {:W, time_unit | :L}
+  @type value :: time_unit | :* | :L | {:L, value} | {:/, time_unit | :*
+    | min_max, pos_integer} | min_max | {:W, time_unit | :L}
   @type minute :: 0..59
   @type hour :: 0..23
   @type day :: 0..31
@@ -35,7 +36,8 @@ defmodule Crontab.CronInterval do
   Convert Crontab.CronInterval struct to Tuple List
 
   ### Examples
-      iex> Crontab.CronInterval.to_condition_list %Crontab.CronInterval{minute: [1], hour: [2], day: [3], month: [4], weekday: [5], year: [6]}
+      iex> Crontab.CronInterval.to_condition_list %Crontab.CronInterval{
+      ...> minute: [1], hour: [2], day: [3], month: [4], weekday: [5], year: [6]}
       [ {:minute, [1]},
         {:hour, [2]},
         {:day, [3]},
@@ -44,12 +46,12 @@ defmodule Crontab.CronInterval do
         {:year, [6]}]
   """
   @spec to_condition_list(t) :: condition_list
-  def to_condition_list(%Crontab.CronInterval{minute: minute, hour: hour, day: day, month: month, weekday: weekday, year: year}) do
-    [ {:minute, minute},
-      {:hour, hour},
-      {:day, day},
-      {:month, month},
-      {:weekday, weekday},
-      {:year, year}]
+  def to_condition_list(interval = %Crontab.CronInterval{}) do
+    [{:minute, interval.minute},
+     {:hour, interval.hour},
+     {:day, interval.day},
+     {:month, interval.month},
+     {:weekday, interval.weekday},
+     {:year, interval.year}]
   end
 end

@@ -40,7 +40,8 @@ defmodule Crontab.Mixfile do
      {:ex_doc, ">= 0.0.0", only: :dev},
      {:inch_ex, only: :docs},
      {:excoveralls, "~> 0.4", only: [:dev, :test]},
-     {:dialyxir, "~> 0.4", only: [:dev], runtime: false}]
+     {:dialyxir, "~> 0.4", only: [:dev], runtime: false},
+     {:credo, "~> 0.5", only: [:dev, :test]}]
   end
 
   defp package do

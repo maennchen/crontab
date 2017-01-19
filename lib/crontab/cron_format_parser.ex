@@ -3,18 +3,21 @@ defmodule Crontab.CronFormatParser do
   Parse string like `* * * * * *` to a `%Crontab.CronInterval{}` or `%Crontab.ExtendedCronInterval{}`.
   """
 
-  @type result :: {:ok, Crontab.ExtendedCronInterval.all_t} | {:error, binary}
+  alias Crontab.ExtendedCronInterval
+  alias Crontab.CronInterval
+
+  @type result :: {:ok, ExtendedCronInterval.all_t} | {:error, binary}
 
   @specials %{
-    yearly: %Crontab.CronInterval{minute: [0], hour: [0], day: [1], month: [1]},
-    annually: %Crontab.CronInterval{minute: [0], hour: [0], day: [1], month: [1]},
-    monthly: %Crontab.CronInterval{minute: [0], hour: [0], day: [1]},
-    weekly: %Crontab.CronInterval{minute: [0], hour: [0], weekday: [0]},
-    daily: %Crontab.CronInterval{minute: [0], hour: [0]},
-    midnight: %Crontab.CronInterval{minute: [0], hour: [0]},
-    hourly: %Crontab.CronInterval{minute: [0]},
-    minutely: %Crontab.CronInterval{},
-    secondly: %Crontab.ExtendedCronInterval{},
+    yearly: %CronInterval{minute: [0], hour: [0], day: [1], month: [1]},
+    annually: %CronInterval{minute: [0], hour: [0], day: [1], month: [1]},
+    monthly: %CronInterval{minute: [0], hour: [0], day: [1]},
+    weekly: %CronInterval{minute: [0], hour: [0], weekday: [0]},
+    daily: %CronInterval{minute: [0], hour: [0]},
+    midnight: %CronInterval{minute: [0], hour: [0]},
+    hourly: %CronInterval{minute: [0]},
+    minutely: %CronInterval{},
+    secondly: %ExtendedCronInterval{},
   }
 
   @intervals [
@@ -54,7 +57,7 @@ defmodule Crontab.CronFormatParser do
   }
 
   @doc """
-  Parse string like `* * * * * *` to a `%Crontab.CronInterval{}`.
+  Parse string like `* * * * * *` to a `%CronInterval{}`.
 
   ### Examples
 
@@ -78,13 +81,14 @@ defmodule Crontab.CronFormatParser do
     special(String.to_atom(identifier))
   end
   def parse(cron_format, true) do
-    interpret(String.split(cron_format, " "), @extended_intervals, %Crontab.ExtendedCronInterval{})
+    interpret(String.split(cron_format, " "), @extended_intervals, %ExtendedCronInterval{})
   end
   def parse(cron_format, false) do
-    interpret(String.split(cron_format, " "), @intervals, %Crontab.CronInterval{})
+    interpret(String.split(cron_format, " "), @intervals, %CronInterval{})
   end
 
-  @spec interpret([binary], [Crontab.ExtendedCronInterval.interval], Crontab.ExtendedCronInterval.all_t) :: Crontab.ExtendedCronInterval.all_t | {:error, binary}
+  @spec interpret([binary], [ExtendedCronInterval.interval], ExtendedCronInterval.all_t)
+    :: ExtendedCronInterval.all_t | {:error, binary}
   defp interpret([head_format | tail_format], [head_interval | tail_interval], cron_interval) do
     conditions = interpret head_interval, head_format
     case conditions do
@@ -95,7 +99,7 @@ defmodule Crontab.CronFormatParser do
   end
   defp interpret([], _, cron_interval), do: {:ok, cron_interval}
   defp interpret(_, [], _), do: {:error, "The Cron Format String contains to many parts."}
-  @spec interpret(Crontab.ExtendedCronInterval.interval, binary) :: {:ok, [Crontab.CronInterval.value]} | {:error, binary}
+  @spec interpret(ExtendedCronInterval.interval, binary) :: {:ok, [CronInterval.value]} | {:error, binary}
   defp interpret(interval, format) do
     parts = String.split(format, ",")
     tokens = Enum.map(parts, fn(part) -> tokenize interval, part end)
@@ -106,7 +110,7 @@ defmodule Crontab.CronFormatParser do
     end
   end
 
-  @spec has_failed_tokens([{:error, binary}] | Crontab.CronInterval.value) :: boolean | binary
+  @spec has_failed_tokens([{:error, binary}] | CronInterval.value) :: boolean | binary
   defp has_failed_tokens(tokens) do
     Enum.find(tokens, fn(token) -> case token do
       failed_token = {:error, _} -> failed_token
@@ -114,7 +118,7 @@ defmodule Crontab.CronFormatParser do
     end end)
   end
 
-  @spec tokenize(Crontab.ExtendedCronInterval.interval, binary) :: {:ok, Crontab.CronInterval.value} | {:error, binary}
+  @spec tokenize(ExtendedCronInterval.interval, binary) :: {:ok, CronInterval.value} | {:error, binary}
   defp tokenize(_, "*"), do: {:ok, :*}
   defp tokenize(interval, other) do
     cond do
@@ -123,7 +127,8 @@ defmodule Crontab.CronFormatParser do
       true -> tokenize interval, :single_value, other
     end
   end
-  @spec tokenize(Crontab.ExtendedCronInterval.interval, :- | :single_value | :complex_divider) :: {:ok, Crontab.CronInterval.value} | {:error, binary}
+  @spec tokenize(ExtendedCronInterval.interval, :- | :single_value | :complex_divider)
+    :: {:ok, CronInterval.value} | {:error, binary}
   defp tokenize(interval, :-, whole_string) do
     [min, max] = String.split(whole_string, "-")
     case {clean_value(interval, min), clean_value(interval, max)} do
@@ -145,7 +150,7 @@ defmodule Crontab.CronFormatParser do
     end
   end
 
-  @spec clean_value(Crontab.ExtendedCronInterval.interval, binary) :: {:ok, Crontab.CronInterval.value} | {:error, binary}
+  @spec clean_value(ExtendedCronInterval.interval, binary) :: {:ok, CronInterval.value} | {:error, binary}
   defp clean_value(:weekday, "L"), do: {:ok, 7}
   defp clean_value(:weekday, value) do
     cond do
@@ -196,7 +201,7 @@ defmodule Crontab.CronFormatParser do
     end
   end
 
-  @spec parse_week_day(binary) :: {:ok, Crontab.CronInterval.value} | {:error, binary}
+  @spec parse_week_day(binary) :: {:ok, CronInterval.value} | {:error, binary}
   defp parse_week_day(value) do
     case {Map.fetch(@weekday_values, String.to_atom(String.upcase(value))), Integer.parse(value, 10)} do
       {:error, :error} -> {:error, "Can't parse " <> value <> " as interval weekday."}
