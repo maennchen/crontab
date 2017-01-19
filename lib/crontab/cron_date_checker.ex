@@ -1,26 +1,26 @@
 defmodule Crontab.CronDateChecker do
   @moduledoc """
-  This Module is used to check a CronInterval against a given date.
+  This Module is used to check a CronExpression against a given date.
   """
 
-  alias Crontab.CronInterval
+  alias Crontab.CronExpression
 
   @doc """
-  Check a CronInterval against a given date.
+  Check a CronExpression against a given date.
 
   ### Examples
 
-      iex> Crontab.CronDateChecker.matches_date %CronInterval{minute: [{:"/", :*, 8}]}, ~N[2004-04-16 04:08:08]
+      iex> Crontab.CronDateChecker.matches_date %CronExpression{minute: [{:"/", :*, 8}]}, ~N[2004-04-16 04:08:08]
       true
 
-      iex> Crontab.CronDateChecker.matches_date %CronInterval{minute: [{:"/", :*, 9}]}, ~N[2004-04-16 04:07:08]
+      iex> Crontab.CronDateChecker.matches_date %CronExpression{minute: [{:"/", :*, 9}]}, ~N[2004-04-16 04:07:08]
       false
 
   """
-  @spec matches_date(CronInterval.t, NaiveDateTime.t) :: boolean
-  def matches_date(cron_interval = %CronInterval{}, execution_date) do
+  @spec matches_date(CronExpression.t, NaiveDateTime.t) :: boolean
+  def matches_date(cron_interval = %CronExpression{}, execution_date) do
     cron_interval
-      |> CronInterval.to_condition_list
+      |> CronExpression.to_condition_list
       |> matches_date(execution_date)
   end
 
@@ -32,7 +32,7 @@ defmodule Crontab.CronDateChecker do
       iex> Crontab.CronDateChecker.matches_date [{:hour, [{:"/", :*, 4}, 7]}], ~N[2004-04-16 04:07:08]
       true
   """
-  @spec matches_date(CronInterval.condition_list, NaiveDateTime.t) :: boolean
+  @spec matches_date(CronExpression.condition_list, NaiveDateTime.t) :: boolean
   def matches_date([], _), do: true
   def matches_date([{interval, conditions} | tail], execution_date) do
     matches_date(interval, conditions, execution_date) && matches_date(tail, execution_date)
@@ -51,7 +51,7 @@ defmodule Crontab.CronDateChecker do
       false
 
   """
-  @spec matches_date(CronInterval.interval, CronInterval.condition_list, NaiveDateTime.t) :: boolean
+  @spec matches_date(CronExpression.interval, CronExpression.condition_list, NaiveDateTime.t) :: boolean
   def matches_date(_, [:* | _], _), do: true
   def matches_date(_, [], _), do: false
   def matches_date(interval, [condition | tail], execution_date) do
@@ -63,7 +63,7 @@ defmodule Crontab.CronDateChecker do
     end
   end
 
-  @spec matches_specific_date(CronInterval.interval, [integer], CronInterval.value, NaiveDateTime.t) :: boolean
+  @spec matches_specific_date(CronExpression.interval, [integer], CronExpression.value, NaiveDateTime.t) :: boolean
   defp matches_specific_date(_, [], _, _), do: false
   defp matches_specific_date(_, _, :*, _), do: true
   defp matches_specific_date(interval, [head_value | tail_values], condition = {:-, from, to}, execution_date) do
@@ -122,7 +122,7 @@ defmodule Crontab.CronDateChecker do
     end
   end
 
-  @spec last_weekday(NaiveDateTime.t, CronInterval.weekday) :: CronInterval.day
+  @spec last_weekday(NaiveDateTime.t, CronExpression.weekday) :: CronExpression.day
   defp last_weekday(date, weekday) do
     date
       |> Timex.end_of_month
@@ -136,13 +136,13 @@ defmodule Crontab.CronDateChecker do
     end
   end
 
-  @spec nth_weekday(NaiveDateTime.t, CronInterval.weekday, integer) :: CronInterval.day
+  @spec nth_weekday(NaiveDateTime.t, CronExpression.weekday, integer) :: CronExpression.day
   defp nth_weekday(date, weekday, n) do
     date
       |> Timex.beginning_of_month
       |> nth_weekday(weekday, n, :start)
   end
-  @spec nth_weekday(NaiveDateTime.t, CronInterval.weekday, :start) :: boolean
+  @spec nth_weekday(NaiveDateTime.t, CronExpression.weekday, :start) :: boolean
   defp nth_weekday(date = %NaiveDateTime{}, _, 0, :start), do: Timex.shift(date, days: -1).day
   defp nth_weekday(date = %NaiveDateTime{year: year, month: month, day: day}, weekday, n, :start) do
     if :calendar.day_of_the_week(year, month, day) == weekday do
@@ -152,11 +152,11 @@ defmodule Crontab.CronDateChecker do
     end
   end
 
-  @spec last_weekday_of_month(NaiveDateTime.t) :: CronInterval.day
+  @spec last_weekday_of_month(NaiveDateTime.t) :: CronExpression.day
   defp last_weekday_of_month(date) do
     last_weekday_of_month(Timex.end_of_month(date), :end)
   end
-  @spec last_weekday_of_month(NaiveDateTime.t, :end) :: CronInterval.day
+  @spec last_weekday_of_month(NaiveDateTime.t, :end) :: CronExpression.day
   defp last_weekday_of_month(date = %NaiveDateTime{year: year, month: month, day: day}, :end) do
     weekday = :calendar.day_of_the_week(year, month, day)
     if weekday > 5 do
@@ -166,7 +166,7 @@ defmodule Crontab.CronDateChecker do
     end
   end
 
-  @spec next_weekday_to(NaiveDateTime.t) :: CronInterval.day
+  @spec next_weekday_to(NaiveDateTime.t) :: CronExpression.day
   defp next_weekday_to(date = %NaiveDateTime{year: year, month: month, day: day}) do
     weekday = :calendar.day_of_the_week(year, month, day)
     next_day = Timex.shift(date, days: 1)
@@ -181,7 +181,7 @@ defmodule Crontab.CronDateChecker do
     end
   end
 
-  @spec get_interval_value(CronInterval.interval, NaiveDateTime.t) :: [CronInterval.time_unit]
+  @spec get_interval_value(CronExpression.interval, NaiveDateTime.t) :: [CronExpression.time_unit]
   defp get_interval_value(:second, %NaiveDateTime{second: second}), do: [second]
   defp get_interval_value(:minute, %NaiveDateTime{minute: minute}), do: [minute]
   defp get_interval_value(:hour, %NaiveDateTime{hour: hour}), do: [hour]

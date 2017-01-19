@@ -1,32 +1,32 @@
 defmodule Crontab.CronFormatWriter do
   @moduledoc """
-  Genrate from `%CronInterval{}`
+  Genrate from `%CronExpression{}`
   to `* * * * * *`
   """
 
-  alias Crontab.CronInterval
+  alias Crontab.CronExpression
 
   @doc """
-  Genrate from `%Crontab.CronInterval{}`
+  Genrate from `%Crontab.CronExpression{}`
   to `* * * * * *`
 
   ### Examples
 
-      iex> Crontab.CronFormatWriter.write %Crontab.CronInterval{}
+      iex> Crontab.CronFormatWriter.write %Crontab.CronExpression{}
       "* * * * * *"
 
-      iex> Crontab.CronFormatWriter.write %Crontab.CronInterval{minute: [9, {:-, 4, 6}, {:/, :*, 9}]}
+      iex> Crontab.CronFormatWriter.write %Crontab.CronExpression{minute: [9, {:-, 4, 6}, {:/, :*, 9}]}
       "9,4-6,*/9 * * * * *"
 
   """
-  @spec write(CronInterval.t) :: binary
-  def write(cron_interval = %CronInterval{}) do
+  @spec write(CronExpression.t) :: binary
+  def write(cron_interval = %CronExpression{}) do
     cron_interval
-      |> CronInterval.to_condition_list
+      |> CronExpression.to_condition_list
       |> write_interval
       |> Enum.join(" ")
   end
-  @spec write_interval(CronInterval.condition_list) :: [binary]
+  @spec write_interval(CronExpression.condition_list) :: [binary]
   defp write_interval([{_, conditions} | tail]) do
     part = conditions
       |> Enum.map(fn(condition) -> write_condition(condition) end)
@@ -35,7 +35,7 @@ defmodule Crontab.CronFormatWriter do
   end
   defp write_interval([]), do: []
 
-  @spec write_condition(CronInterval.value) :: binary
+  @spec write_condition(CronExpression.value) :: binary
   defp write_condition(:*), do: "*"
   defp write_condition(:L), do: "L"
   defp write_condition(:W), do: "W"

@@ -12,31 +12,31 @@ defmodule Crontab.CronFormatParserTest do
   end
 
   test "parse \"@yearly\" gives yearly" do
-    assert parse("@yearly") == {:ok, %Crontab.CronInterval{minute: [0], hour: [0], day: [1], month: [1], weekday: [:*], year: [:*]}}
+    assert parse("@yearly") == {:ok, %Crontab.CronExpression{minute: [0], hour: [0], day: [1], month: [1], weekday: [:*], year: [:*]}}
   end
 
   test "parse \"@annually\" gives yearly" do
-    assert parse("@annually") == {:ok, %Crontab.CronInterval{minute: [0], hour: [0], day: [1], month: [1], weekday: [:*], year: [:*]}}
+    assert parse("@annually") == {:ok, %Crontab.CronExpression{minute: [0], hour: [0], day: [1], month: [1], weekday: [:*], year: [:*]}}
   end
 
   test "parse \"@monthly\" gives monthly" do
-    assert parse("@monthly") == {:ok, %Crontab.CronInterval{minute: [0], hour: [0], day: [1], month: [:*], weekday: [:*], year: [:*]}}
+    assert parse("@monthly") == {:ok, %Crontab.CronExpression{minute: [0], hour: [0], day: [1], month: [:*], weekday: [:*], year: [:*]}}
   end
 
   test "parse \"@weekly\" gives weekly" do
-    assert parse("@weekly") == {:ok, %Crontab.CronInterval{minute: [0], hour: [0], day: [:*], month: [:*], weekday: [0], year: [:*]}}
+    assert parse("@weekly") == {:ok, %Crontab.CronExpression{minute: [0], hour: [0], day: [:*], month: [:*], weekday: [0], year: [:*]}}
   end
 
   test "parse \"@daily\" gives daily" do
-    assert parse("@daily") == {:ok, %Crontab.CronInterval{minute: [0], hour: [0], day: [:*], month: [:*], weekday: [:*], year: [:*]}}
+    assert parse("@daily") == {:ok, %Crontab.CronExpression{minute: [0], hour: [0], day: [:*], month: [:*], weekday: [:*], year: [:*]}}
   end
 
   test "parse \"@midnight\" gives daily" do
-    assert parse("@midnight") == {:ok, %Crontab.CronInterval{minute: [0], hour: [0], day: [:*], month: [:*], weekday: [:*], year: [:*]}}
+    assert parse("@midnight") == {:ok, %Crontab.CronExpression{minute: [0], hour: [0], day: [:*], month: [:*], weekday: [:*], year: [:*]}}
   end
 
   test "parse \"@hourly\" gives hourly" do
-    assert parse("@hourly") == {:ok, %Crontab.CronInterval{minute: [0], hour: [:*], day: [:*], month: [:*], weekday: [:*], year: [:*]}}
+    assert parse("@hourly") == {:ok, %Crontab.CronExpression{minute: [0], hour: [:*], day: [:*], month: [:*], weekday: [:*], year: [:*]}}
   end
 
   test "parse \"1 2 3 4 5 6 7\" gives error" do
@@ -44,11 +44,11 @@ defmodule Crontab.CronFormatParserTest do
   end
 
   test "parse \"*\" gives minutely" do
-    assert parse("*") == {:ok, %Crontab.CronInterval{minute: [:*], hour: [:*], day: [:*], month: [:*], weekday: [:*], year: [:*]}}
+    assert parse("*") == {:ok, %Crontab.CronExpression{minute: [:*], hour: [:*], day: [:*], month: [:*], weekday: [:*], year: [:*]}}
   end
 
   test "parse \"*/4,9,1-10\" gives [{:\"/\", :*, 4}, 9, {:\"-\", 1, 10}]" do
-    assert parse("*/4,9,1-10") == {:ok, %Crontab.CronInterval{minute: [{:"/", :*, 4}, 9, {:-, 1, 10}], hour: [:*], day: [:*], month: [:*], weekday: [:*], year: [:*]}}
+    assert parse("*/4,9,1-10") == {:ok, %Crontab.CronExpression{minute: [{:"/", :*, 4}, 9, {:-, 1, 10}], hour: [:*], day: [:*], month: [:*], weekday: [:*], year: [:*]}}
   end
 
   test "parse \"*/4,9,JAN-DEC\" gives error" do
@@ -56,10 +56,10 @@ defmodule Crontab.CronFormatParserTest do
   end
 
   test "parse \"* * * JAN-DEC\" gives [{:-, 1, 12}]" do
-    assert parse("* * * JAN-DEC") == {:ok, %Crontab.CronInterval{day: [:*], hour: [:*], minute: [:*], month: [{:-, 1, 12}], weekday: [:*], year: [:*]}}
+    assert parse("* * * JAN-DEC") == {:ok, %Crontab.CronExpression{day: [:*], hour: [:*], minute: [:*], month: [{:-, 1, 12}], weekday: [:*], year: [:*]}}
   end
 
   test "parse \"* * * MON-TUE\" gives [{:-, 1, 2}]" do
-    assert parse("* * * * MON-TUE") == {:ok, %Crontab.CronInterval{day: [:*], hour: [:*], minute: [:*], month: [:*], weekday: [{:-, 1, 2}], year: [:*]}}
+    assert parse("* * * * MON-TUE") == {:ok, %Crontab.CronExpression{day: [:*], hour: [:*], minute: [:*], month: [:*], weekday: [{:-, 1, 2}], year: [:*]}}
   end
 end
