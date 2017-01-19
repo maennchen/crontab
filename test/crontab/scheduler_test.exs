@@ -1,7 +1,7 @@
-defmodule Crontab.CronSchedulerTest do
+defmodule Crontab.SchedulerTest do
   use ExUnit.Case
-  doctest Crontab.CronScheduler
-  import Crontab.CronScheduler
+  doctest Crontab.Scheduler
+  import Crontab.Scheduler
 
   test "check cron expression for year" do
     assert get_next_run_date(%Crontab.CronExpression{year: [{:/, :*, 9}]}, ~N[2002-01-13 23:00:07]) == {:ok, ~N[2007-01-01 00:00:00]}

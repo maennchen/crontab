@@ -1,5 +1,5 @@
-defmodule Crontab.CronScheduler do
-  import Crontab.CronDateChecker
+defmodule Crontab.Scheduler do
+  import Crontab.DateChecker
   alias Crontab.CronExpression
 
   @type direction :: :increment | :decrement
@@ -17,10 +17,10 @@ defmodule Crontab.CronScheduler do
   `%Crontab.CronExpression{}`.
 
   ### Examples
-      iex> Crontab.CronScheduler.get_next_run_date(%Crontab.CronExpression{}, ~N[2002-01-13 23:00:07])
+      iex> Crontab.Scheduler.get_next_run_date(%Crontab.CronExpression{}, ~N[2002-01-13 23:00:07])
       {:ok, ~N[2002-01-13 23:01:00]}
 
-      iex> Crontab.CronScheduler.get_next_run_date(%Crontab.CronExpression{year: [{:/, :*, 9}]}, ~N[2002-01-13 23:00:07])
+      iex> Crontab.Scheduler.get_next_run_date(%Crontab.CronExpression{year: [{:/, :*, 9}]}, ~N[2002-01-13 23:00:07])
       {:ok, ~N[2007-01-01 00:00:00]}
   """
   @spec get_next_run_date(CronExpression.t, NaiveDateTime.t, integer) :: result
@@ -42,10 +42,10 @@ defmodule Crontab.CronScheduler do
 
   ### Examples
 
-      iex> Crontab.CronScheduler.get_previous_run_date %Crontab.CronExpression{}, ~N[2002-01-13 23:00:07]
+      iex> Crontab.Scheduler.get_previous_run_date %Crontab.CronExpression{}, ~N[2002-01-13 23:00:07]
       {:ok, ~N[2002-01-13 23:00:00]}
 
-      iex> Crontab.CronScheduler.get_previous_run_date %Crontab.CronExpression{
+      iex> Crontab.Scheduler.get_previous_run_date %Crontab.CronExpression{
       ...> year: [{:/, :*, 9}]}, ~N[2002-01-13 23:00:07]
       {:ok, ~N[1998-12-31 23:59:00]}
 

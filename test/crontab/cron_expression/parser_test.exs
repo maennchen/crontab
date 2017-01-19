@@ -1,7 +1,7 @@
-defmodule Crontab.CronFormatParserTest do
+defmodule Crontab.CronExpression.ParserTest do
   use ExUnit.Case
-  doctest Crontab.CronFormatParser
-  import Crontab.CronFormatParser
+  doctest Crontab.CronExpression.Parser
+  import Crontab.CronExpression.Parser
 
   test "parse \"@reboot\" gives error" do
     assert parse("@reboot") == {:error, "Special identifier @reboot is not supported."}
