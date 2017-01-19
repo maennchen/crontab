@@ -4,7 +4,6 @@ defmodule Crontab.CronDateChecker do
   """
 
   alias Crontab.CronInterval
-  alias Crontab.ExtendedCronInterval
 
   @doc """
   Check a CronInterval against a given date.
@@ -18,15 +17,10 @@ defmodule Crontab.CronDateChecker do
       false
 
   """
-  @spec matches_date(ExtendedCronInterval.all_t, NaiveDateTime.t) :: boolean
+  @spec matches_date(CronInterval.t, NaiveDateTime.t) :: boolean
   def matches_date(cron_interval = %CronInterval{}, execution_date) do
     cron_interval
       |> CronInterval.to_condition_list
-      |> matches_date(execution_date)
-  end
-  def matches_date(cron_interval = %ExtendedCronInterval{}, execution_date) do
-    cron_interval
-      |> ExtendedCronInterval.to_condition_list
       |> matches_date(execution_date)
   end
 
@@ -38,7 +32,7 @@ defmodule Crontab.CronDateChecker do
       iex> Crontab.CronDateChecker.matches_date [{:hour, [{:"/", :*, 4}, 7]}], ~N[2004-04-16 04:07:08]
       true
   """
-  @spec matches_date(ExtendedCronInterval.condition_list, NaiveDateTime.t) :: boolean
+  @spec matches_date(CronInterval.condition_list, NaiveDateTime.t) :: boolean
   def matches_date([], _), do: true
   def matches_date([{interval, conditions} | tail], execution_date) do
     matches_date(interval, conditions, execution_date) && matches_date(tail, execution_date)
@@ -57,7 +51,7 @@ defmodule Crontab.CronDateChecker do
       false
 
   """
-  @spec matches_date(ExtendedCronInterval.interval, ExtendedCronInterval.condition_list, NaiveDateTime.t) :: boolean
+  @spec matches_date(CronInterval.interval, CronInterval.condition_list, NaiveDateTime.t) :: boolean
   def matches_date(_, [:* | _], _), do: true
   def matches_date(_, [], _), do: false
   def matches_date(interval, [condition | tail], execution_date) do
@@ -69,7 +63,7 @@ defmodule Crontab.CronDateChecker do
     end
   end
 
-  @spec matches_specific_date(ExtendedCronInterval.interval, [integer], CronInterval.value, NaiveDateTime.t) :: boolean
+  @spec matches_specific_date(CronInterval.interval, [integer], CronInterval.value, NaiveDateTime.t) :: boolean
   defp matches_specific_date(_, [], _, _), do: false
   defp matches_specific_date(_, _, :*, _), do: true
   defp matches_specific_date(interval, [head_value | tail_values], condition = {:-, from, to}, execution_date) do
