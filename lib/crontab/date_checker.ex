@@ -1,4 +1,4 @@
-defmodule Crontab.CronDateChecker do
+defmodule Crontab.DateChecker do
   @moduledoc """
   This Module is used to check a CronExpression against a given date.
   """
@@ -10,10 +10,10 @@ defmodule Crontab.CronDateChecker do
 
   ### Examples
 
-      iex> Crontab.CronDateChecker.matches_date %CronExpression{minute: [{:"/", :*, 8}]}, ~N[2004-04-16 04:08:08]
+      iex> Crontab.DateChecker.matches_date %CronExpression{minute: [{:"/", :*, 8}]}, ~N[2004-04-16 04:08:08]
       true
 
-      iex> Crontab.CronDateChecker.matches_date %CronExpression{minute: [{:"/", :*, 9}]}, ~N[2004-04-16 04:07:08]
+      iex> Crontab.DateChecker.matches_date %CronExpression{minute: [{:"/", :*, 9}]}, ~N[2004-04-16 04:07:08]
       false
 
   """
@@ -29,7 +29,7 @@ defmodule Crontab.CronDateChecker do
 
   ### Examples
 
-      iex> Crontab.CronDateChecker.matches_date [{:hour, [{:"/", :*, 4}, 7]}], ~N[2004-04-16 04:07:08]
+      iex> Crontab.DateChecker.matches_date [{:hour, [{:"/", :*, 4}, 7]}], ~N[2004-04-16 04:07:08]
       true
   """
   @spec matches_date(CronExpression.condition_list, NaiveDateTime.t) :: boolean
@@ -44,10 +44,10 @@ defmodule Crontab.CronDateChecker do
 
   ### Examples
 
-      iex> Crontab.CronDateChecker.matches_date :hour, [{:"/", :*, 4}, 7], ~N[2004-04-16 04:07:08]
+      iex> Crontab.DateChecker.matches_date :hour, [{:"/", :*, 4}, 7], ~N[2004-04-16 04:07:08]
       true
 
-      iex> Crontab.CronDateChecker.matches_date :hour, [8], ~N[2004-04-16 04:07:08]
+      iex> Crontab.DateChecker.matches_date :hour, [8], ~N[2004-04-16 04:07:08]
       false
 
   """

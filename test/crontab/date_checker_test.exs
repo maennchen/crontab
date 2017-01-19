@@ -1,7 +1,7 @@
-defmodule Crontab.CronDateCheckerTest do
+defmodule Crontab.DateCheckerTest do
   use ExUnit.Case
-  doctest Crontab.CronDateChecker
-  import Crontab.CronDateChecker
+  doctest Crontab.DateChecker
+  import Crontab.DateChecker
 
   test "2002-01-13 23:00:07 matches * * * * *" do
     base_date = ~N[2002-01-13 23:00:07]

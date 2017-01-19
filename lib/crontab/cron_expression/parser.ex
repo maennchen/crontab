@@ -1,4 +1,4 @@
-defmodule Crontab.CronFormatParser do
+defmodule Crontab.CronExpression.Parser do
   @moduledoc """
   Parse string like `* * * * * *` to a `%Crontab.CronExpression{}`.
   """
@@ -60,17 +60,17 @@ defmodule Crontab.CronFormatParser do
 
   ### Examples
 
-      iex> Crontab.CronFormatParser.parse "* * * * *"
+      iex> Crontab.CronExpression.Parser.parse "* * * * *"
       {:ok,
         %Crontab.CronExpression{day: [:*], hour: [:*], minute: [:*],
         month: [:*], weekday: [:*], year: [:*]}}
 
-      iex> Crontab.CronFormatParser.parse "* * * * *", true
+      iex> Crontab.CronExpression.Parser.parse "* * * * *", true
       {:ok,
         %Crontab.CronExpression{extended: true, day: [:*], hour: [:*], minute: [:*],
         month: [:*], weekday: [:*], year: [:*], second: [:*]}}
 
-      iex> Crontab.CronFormatParser.parse "fooo"
+      iex> Crontab.CronExpression.Parser.parse "fooo"
       {:error, "Can't parse fooo as interval minute."}
 
   """
