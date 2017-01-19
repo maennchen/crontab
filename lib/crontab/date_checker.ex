@@ -10,18 +10,18 @@ defmodule Crontab.DateChecker do
 
   ### Examples
 
-      iex> Crontab.DateChecker.matches_date %CronExpression{minute: [{:"/", :*, 8}]}, ~N[2004-04-16 04:08:08]
+      iex> Crontab.DateChecker.matches_date? %CronExpression{minute: [{:"/", :*, 8}]}, ~N[2004-04-16 04:08:08]
       true
 
-      iex> Crontab.DateChecker.matches_date %CronExpression{minute: [{:"/", :*, 9}]}, ~N[2004-04-16 04:07:08]
+      iex> Crontab.DateChecker.matches_date? %CronExpression{minute: [{:"/", :*, 9}]}, ~N[2004-04-16 04:07:08]
       false
 
   """
-  @spec matches_date(CronExpression.t, NaiveDateTime.t) :: boolean
-  def matches_date(cron_interval = %CronExpression{}, execution_date) do
+  @spec matches_date?(CronExpression.t, NaiveDateTime.t) :: boolean
+  def matches_date?(cron_interval = %CronExpression{}, execution_date) do
     cron_interval
       |> CronExpression.to_condition_list
-      |> matches_date(execution_date)
+      |> matches_date?(execution_date)
   end
 
   @doc """
@@ -29,13 +29,13 @@ defmodule Crontab.DateChecker do
 
   ### Examples
 
-      iex> Crontab.DateChecker.matches_date [{:hour, [{:"/", :*, 4}, 7]}], ~N[2004-04-16 04:07:08]
+      iex> Crontab.DateChecker.matches_date? [{:hour, [{:"/", :*, 4}, 7]}], ~N[2004-04-16 04:07:08]
       true
   """
-  @spec matches_date(CronExpression.condition_list, NaiveDateTime.t) :: boolean
-  def matches_date([], _), do: true
-  def matches_date([{interval, conditions} | tail], execution_date) do
-    matches_date(interval, conditions, execution_date) && matches_date(tail, execution_date)
+  @spec matches_date?(CronExpression.condition_list, NaiveDateTime.t) :: boolean
+  def matches_date?([], _), do: true
+  def matches_date?([{interval, conditions} | tail], execution_date) do
+    matches_date?(interval, conditions, execution_date) && matches_date?(tail, execution_date)
   end
 
 
@@ -44,62 +44,62 @@ defmodule Crontab.DateChecker do
 
   ### Examples
 
-      iex> Crontab.DateChecker.matches_date :hour, [{:"/", :*, 4}, 7], ~N[2004-04-16 04:07:08]
+      iex> Crontab.DateChecker.matches_date? :hour, [{:"/", :*, 4}, 7], ~N[2004-04-16 04:07:08]
       true
 
-      iex> Crontab.DateChecker.matches_date :hour, [8], ~N[2004-04-16 04:07:08]
+      iex> Crontab.DateChecker.matches_date? :hour, [8], ~N[2004-04-16 04:07:08]
       false
 
   """
-  @spec matches_date(CronExpression.interval, CronExpression.condition_list, NaiveDateTime.t) :: boolean
-  def matches_date(_, [:* | _], _), do: true
-  def matches_date(_, [], _), do: false
-  def matches_date(interval, [condition | tail], execution_date) do
+  @spec matches_date?(CronExpression.interval, CronExpression.condition_list, NaiveDateTime.t) :: boolean
+  def matches_date?(_, [:* | _], _), do: true
+  def matches_date?(_, [], _), do: false
+  def matches_date?(interval, [condition | tail], execution_date) do
     values = get_interval_value(interval, execution_date)
-    if matches_specific_date(interval, values, condition, execution_date) do
+    if matches_specific_date?(interval, values, condition, execution_date) do
       true
     else
-      matches_date(interval, tail, execution_date)
+      matches_date?(interval, tail, execution_date)
     end
   end
 
-  @spec matches_specific_date(CronExpression.interval, [integer], CronExpression.value, NaiveDateTime.t) :: boolean
-  defp matches_specific_date(_, [], _, _), do: false
-  defp matches_specific_date(_, _, :*, _), do: true
-  defp matches_specific_date(interval, [head_value | tail_values], condition = {:-, from, to}, execution_date) do
+  @spec matches_specific_date?(CronExpression.interval, [integer], CronExpression.value, NaiveDateTime.t) :: boolean
+  defp matches_specific_date?(_, [], _, _), do: false
+  defp matches_specific_date?(_, _, :*, _), do: true
+  defp matches_specific_date?(interval, [head_value | tail_values], condition = {:-, from, to}, execution_date) do
     cond do
       from > to && (head_value >= from || head_value <= to) -> true
       from <= to && head_value >= from && head_value <= to -> true
-      true -> matches_specific_date(interval, tail_values, condition, execution_date)
+      true -> matches_specific_date?(interval, tail_values, condition, execution_date)
     end
   end
-  defp matches_specific_date(:weekday, [0 | tail_values], condition = {:/, _, _}, execution_date) do
-    matches_specific_date(:weekday, tail_values, condition, execution_date)
+  defp matches_specific_date?(:weekday, [0 | tail_values], condition = {:/, _, _}, execution_date) do
+    matches_specific_date?(:weekday, tail_values, condition, execution_date)
   end
-  defp matches_specific_date(interval, values = [head_value | tail_values], condition = {:/, base = {:-, from, _}, divider}, execution_date) do
-    if matches_specific_date(interval, values, base, execution_date) && rem(head_value - from, divider) == 0 do
+  defp matches_specific_date?(interval, values = [head_value | tail_values], condition = {:/, base = {:-, from, _}, divider}, execution_date) do
+    if matches_specific_date?(interval, values, base, execution_date) && rem(head_value - from, divider) == 0 do
       true
     else
-      matches_specific_date(interval, tail_values, condition, execution_date)
+      matches_specific_date?(interval, tail_values, condition, execution_date)
     end
   end
-  defp matches_specific_date(:day, [head_value | tail_values], :L, execution_date) do
+  defp matches_specific_date?(:day, [head_value | tail_values], :L, execution_date) do
     if Timex.end_of_month(execution_date).day == head_value do
       true
     else
-      matches_specific_date(:day, tail_values, :L, execution_date)
+      matches_specific_date?(:day, tail_values, :L, execution_date)
     end
   end
-  defp matches_specific_date(:weekday, _, {:L, weekday}, execution_date) do
+  defp matches_specific_date?(:weekday, _, {:L, weekday}, execution_date) do
     last_weekday(execution_date, weekday) == execution_date.day
   end
-  defp matches_specific_date(:weekday, _, {:"#", weekday, n}, execution_date) do
+  defp matches_specific_date?(:weekday, _, {:"#", weekday, n}, execution_date) do
     nth_weekday(execution_date, weekday, n) == execution_date.day
   end
-  defp matches_specific_date(:day, _, {:W, :L}, execution_date) do
+  defp matches_specific_date?(:day, _, {:W, :L}, execution_date) do
     last_weekday_of_month(execution_date) === execution_date.day
   end
-  defp matches_specific_date(:day, _, {:W, day}, execution_date) do
+  defp matches_specific_date?(:day, _, {:W, day}, execution_date) do
     last_day = Timex.end_of_month(execution_date).day
     specific_day = case last_day < day do
       true -> Timex.end_of_month(execution_date)
@@ -107,18 +107,18 @@ defmodule Crontab.DateChecker do
     end
     next_weekday_to(specific_day) === execution_date.day
   end
-  defp matches_specific_date(interval, values = [head_value | tail_values], condition = {:/, base, divider}, execution_date) do
-    if matches_specific_date(interval, values, base, execution_date) && rem(head_value, divider) == 0 do
+  defp matches_specific_date?(interval, values = [head_value | tail_values], condition = {:/, base, divider}, execution_date) do
+    if matches_specific_date?(interval, values, base, execution_date) && rem(head_value, divider) == 0 do
       true
     else
-      matches_specific_date(interval, tail_values, condition, execution_date)
+      matches_specific_date?(interval, tail_values, condition, execution_date)
     end
   end
-  defp matches_specific_date(interval, [head_value | tail_values], number, execution_date) when is_integer(number) do
+  defp matches_specific_date?(interval, [head_value | tail_values], number, execution_date) when is_integer(number) do
     if head_value == number do
       true
     else
-      matches_specific_date(interval, tail_values, number, execution_date)
+      matches_specific_date?(interval, tail_values, number, execution_date)
     end
   end
 

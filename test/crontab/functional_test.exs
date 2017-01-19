@@ -93,7 +93,7 @@ defmodule Crontab.FunctionalTest do
         :none -> assert Crontab.Scheduler.get_previous_run_date(cron_interval, @start_date) == {:error, "No compliant date was found for your interval."}
         _ -> assert Crontab.Scheduler.get_previous_run_date(cron_interval, @start_date) == {:ok, @previous_search_date}
       end
-      assert Crontab.DateChecker.matches_date(cron_interval, @start_date) == @matches_now
+      assert Crontab.DateChecker.matches_date?(cron_interval, @start_date) == @matches_now
     end
   end
 
@@ -123,7 +123,7 @@ defmodule Crontab.FunctionalTest do
         :none -> assert Crontab.Scheduler.get_previous_run_date(cron_interval, @start_date) == {:error, "No compliant date was found for your interval."}
         _ -> assert Crontab.Scheduler.get_previous_run_date(cron_interval, @start_date) == {:ok, @previous_search_date}
       end
-      assert Crontab.DateChecker.matches_date(cron_interval, @start_date) == @matches_now
+      assert Crontab.DateChecker.matches_date?(cron_interval, @start_date) == @matches_now
     end
   end
 end
