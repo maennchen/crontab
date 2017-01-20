@@ -20,8 +20,8 @@ defmodule Crontab.CronExpression.Composer do
 
   """
   @spec compose(CronExpression.t) :: binary
-  def compose(cron_interval = %CronExpression{}) do
-    cron_interval
+  def compose(cron_expression = %CronExpression{}) do
+    cron_expression
       |> CronExpression.to_condition_list
       |> compose_interval
       |> Enum.join(" ")
