@@ -3,6 +3,8 @@ defmodule Crontab.CronExpression do
   This is the Crontab.CronExpression module / struct.
   """
 
+  alias Crontab.CronExpression.Parser
+
   @type t :: %Crontab.CronExpression{}
   @type interval :: :minute | :hour | :day | :month | :weekday | :year
   @type min_max :: {:-, time_unit, time_unit}
@@ -75,8 +77,8 @@ defmodule Crontab.CronExpression do
   """
   @spec sigil_e(binary, charlist) :: t
   def sigil_e(cron_expression, options)
-  def sigil_e(cron_expression, [?e]), do: Crontab.CronExpression.Parser.parse!(cron_expression, true)
-  def sigil_e(cron_expression, _options), do: Crontab.CronExpression.Parser.parse!(cron_expression, false)
+  def sigil_e(cron_expression, [?e]), do: Parser.parse!(cron_expression, true)
+  def sigil_e(cron_expression, _options), do: Parser.parse!(cron_expression, false)
 
   @doc """
   Convert Crontab.CronExpression struct to Tuple List
@@ -103,7 +105,7 @@ defmodule Crontab.CronExpression do
         {:year, [6]}]
   """
   @spec to_condition_list(t) :: condition_list
-  def to_condition_list(interval = %Crontab.CronExpression{extended: false}) do
+  def to_condition_list(interval = %__struct__{extended: false}) do
     [{:minute, interval.minute},
      {:hour, interval.hour},
      {:day, interval.day},
@@ -111,11 +113,14 @@ defmodule Crontab.CronExpression do
      {:weekday, interval.weekday},
      {:year, interval.year}]
   end
-  def to_condition_list(interval = %Crontab.CronExpression{}) do
+  def to_condition_list(interval = %__struct__{}) do
     [{:second, interval.second} | to_condition_list(%{interval | extended: false})]
   end
 
   defimpl Inspect do
+    alias Crontab.CronExpression.Composer
+    alias Crontab.CronExpression
+
     @doc """
     Pretty Print Cron Expressions
 
@@ -129,12 +134,12 @@ defmodule Crontab.CronExpression do
         ~e[* * * * * * *]e
 
     """
-    @spec inspect(Crontab.CronExpression.t, any) :: String.t
-    def inspect(cron_expression = %Crontab.CronExpression{extended: false}, _options) do
-      "~e[" <> Crontab.CronExpression.Composer.compose(cron_expression) <> "]"
+    @spec inspect(CronExpression.t, any) :: String.t
+    def inspect(cron_expression = %__struct__{extended: false}, _options) do
+      "~e[" <> Composer.compose(cron_expression) <> "]"
     end
-    def inspect(cron_expression = %Crontab.CronExpression{extended: true}, _options) do
-      "~e[" <> Crontab.CronExpression.Composer.compose(cron_expression) <> "]e"
+    def inspect(cron_expression = %__struct__{extended: true}, _options) do
+      "~e[" <> Composer.compose(cron_expression) <> "]e"
     end
   end
 end

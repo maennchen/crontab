@@ -80,7 +80,8 @@ defmodule Crontab.Scheduler do
         ~N[2016-12-17 00:02:00]
       ]}
 
-      iex> Crontab.Scheduler.get_next_run_dates(3, %Crontab.CronExpression{year: [2017], month: [1], day: [1], hour: [0], minute: [1]}, ~N[2016-12-17 00:00:00])
+      iex> Crontab.Scheduler.get_next_run_dates(3,
+      ...> %Crontab.CronExpression{year: [2017], month: [1], day: [1], hour: [0], minute: [1]}, ~N[2016-12-17 00:00:00])
       {:error, [~N[2017-01-01 00:01:00]], "No compliant date was found for your interval."}
 
   """
@@ -108,7 +109,8 @@ defmodule Crontab.Scheduler do
         ~N[2016-12-17 00:02:00]
       ]
 
-      iex> Crontab.Scheduler.get_next_run_dates!(3, %Crontab.CronExpression{year: [2017], month: [1], day: [1], hour: [0], minute: [1]}, ~N[2016-12-17 00:00:00])
+      iex> Crontab.Scheduler.get_next_run_dates!(3,
+      ...> %Crontab.CronExpression{year: [2017], month: [1], day: [1], hour: [0], minute: [1]}, ~N[2016-12-17 00:00:00])
       ** (RuntimeError) No compliant date was found for your interval.
 
   """
@@ -121,7 +123,8 @@ defmodule Crontab.Scheduler do
     end
   end
 
-  @spec _get_next_run_dates(pos_integer, CronExpression.t, NaiveDateTime.t, list) :: {:ok | :error, [NaiveDateTime.t], binary}
+  @spec _get_next_run_dates(pos_integer, CronExpression.t, NaiveDateTime.t, list) ::
+    {:ok | :error, [NaiveDateTime.t], binary}
   defp _get_next_run_dates(0, _, _, list), do: {:ok, Enum.reverse list}
   defp _get_next_run_dates(n, cron_expression = %CronExpression{extended: false}, date, head) do
     case get_next_run_date(cron_expression, date) do
@@ -209,11 +212,13 @@ defmodule Crontab.Scheduler do
         ~N[2016-12-16 23:58:00]
       ]}
 
-      iex> Crontab.Scheduler.get_previous_run_dates(3, %Crontab.CronExpression{year: [2016], month: [1], day: [1], hour: [0], minute: [1]}, ~N[2016-12-17 00:00:00])
+      iex> Crontab.Scheduler.get_previous_run_dates(3,
+      ...> %Crontab.CronExpression{year: [2016], month: [1], day: [1], hour: [0], minute: [1]}, ~N[2016-12-17 00:00:00])
       {:error, [~N[2016-01-01 00:01:00]], "No compliant date was found for your interval."}
 
   """
-  @spec get_previous_run_dates(pos_integer, CronExpression.t, NaiveDateTime.t) :: {:ok | :error, [NaiveDateTime.t], binary}
+  @spec get_previous_run_dates(pos_integer, CronExpression.t, NaiveDateTime.t) ::
+    {:ok | :error, [NaiveDateTime.t], binary}
   def get_previous_run_dates(n, cron_expression, date \\ DateTime.to_naive(DateTime.utc_now))
   def get_previous_run_dates(n, cron_expression, date), do: _get_previous_run_dates(n, cron_expression, date, [])
 
@@ -223,7 +228,8 @@ defmodule Crontab.Scheduler do
 
   ### Examples
 
-      iex> Crontab.Scheduler.get_previous_run_dates!(3, %Crontab.CronExpression{extended: true}, ~N[2016-12-17 00:00:00])
+      iex> Crontab.Scheduler.get_previous_run_dates!(3,
+      ...> %Crontab.CronExpression{extended: true}, ~N[2016-12-17 00:00:00])
       [
         ~N[2016-12-17 00:00:00],
         ~N[2016-12-16 23:59:59],
@@ -237,7 +243,8 @@ defmodule Crontab.Scheduler do
         ~N[2016-12-16 23:58:00]
       ]
 
-      iex> Crontab.Scheduler.get_previous_run_dates!(3, %Crontab.CronExpression{year: [2017], month: [1], day: [1], hour: [0], minute: [1]}, ~N[2016-12-17 00:00:00])
+      iex> Crontab.Scheduler.get_previous_run_dates!(3,
+      ...> %Crontab.CronExpression{year: [2017], month: [1], day: [1], hour: [0], minute: [1]}, ~N[2016-12-17 00:00:00])
       ** (RuntimeError) No compliant date was found for your interval.
 
   """
@@ -250,7 +257,8 @@ defmodule Crontab.Scheduler do
     end
   end
 
-  @spec _get_previous_run_dates(pos_integer, CronExpression.t, NaiveDateTime.t, list) :: {:ok | :error, [NaiveDateTime.t], binary}
+  @spec _get_previous_run_dates(pos_integer, CronExpression.t, NaiveDateTime.t, list) ::
+    {:ok | :error, [NaiveDateTime.t], binary}
   defp _get_previous_run_dates(0, _, _, list), do: {:ok, Enum.reverse list}
   defp _get_previous_run_dates(n, cron_expression = %CronExpression{extended: false}, date, head) do
     case get_previous_run_date(cron_expression, date) do
