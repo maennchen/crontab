@@ -18,8 +18,8 @@ defmodule Crontab.DateChecker do
 
   """
   @spec matches_date?(CronExpression.t, NaiveDateTime.t) :: boolean
-  def matches_date?(cron_interval = %CronExpression{}, execution_date) do
-    cron_interval
+  def matches_date?(cron_expression = %CronExpression{}, execution_date) do
+    cron_expression
       |> CronExpression.to_condition_list
       |> matches_date?(execution_date)
   end

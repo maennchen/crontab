@@ -75,15 +75,15 @@ defmodule Crontab.CronExpression.Parser do
 
   """
   @spec parse(binary, boolean) :: result
-  def parse(cron_format, extended \\ false)
+  def parse(cron_expression, extended \\ false)
   def parse("@" <> identifier, _) do
     special(String.to_atom(identifier))
   end
-  def parse(cron_format, true) do
-    interpret(String.split(cron_format, " "), @extended_intervals, %CronExpression{extended: true})
+  def parse(cron_expression, true) do
+    interpret(String.split(cron_expression, " "), @extended_intervals, %CronExpression{extended: true})
   end
-  def parse(cron_format, false) do
-    interpret(String.split(cron_format, " "), @intervals, %CronExpression{})
+  def parse(cron_expression, false) do
+    interpret(String.split(cron_expression, " "), @intervals, %CronExpression{})
   end
 
   @doc """
@@ -104,23 +104,23 @@ defmodule Crontab.CronExpression.Parser do
 
   """
   @spec parse!(binary, boolean) :: CronExpression.t | no_return
-  def parse!(cron_format, extended \\ false) do
-    case parse(cron_format, extended) do
+  def parse!(cron_expression, extended \\ false) do
+    case parse(cron_expression, extended) do
       {:ok, result} -> result
       {:error, error} -> raise error
     end
   end
 
   @spec interpret([binary], [CronExpression.interval], CronExpression.t) :: CronExpression.t | {:error, binary}
-  defp interpret([head_format | tail_format], [head_interval | tail_interval], cron_interval) do
-    conditions = interpret head_interval, head_format
+  defp interpret([head_format | tail_format], [head_expression | tail_expression], cron_expression) do
+    conditions = interpret head_expression, head_format
     case conditions do
-      {:ok, ok_conditions} -> patched_cron_interval = Map.put(cron_interval, head_interval, ok_conditions)
-        interpret(tail_format, tail_interval, patched_cron_interval)
+      {:ok, ok_conditions} -> patched_cron_expression = Map.put(cron_expression, head_expression, ok_conditions)
+        interpret(tail_format, tail_expression, patched_cron_expression)
       _ -> conditions
     end
   end
-  defp interpret([], _, cron_interval), do: {:ok, cron_interval}
+  defp interpret([], _, cron_expression), do: {:ok, cron_expression}
   defp interpret(_, [], _), do: {:error, "The Cron Format String contains to many parts."}
   @spec interpret(CronExpression.interval, binary) :: {:ok, [CronExpression.value]} | {:error, binary}
   defp interpret(interval, format) do
