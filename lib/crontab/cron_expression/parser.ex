@@ -122,6 +122,7 @@ defmodule Crontab.CronExpression.Parser do
   end
   defp interpret([], _, cron_expression), do: {:ok, cron_expression}
   defp interpret(_, [], _), do: {:error, "The Cron Format String contains to many parts."}
+
   @spec interpret(CronExpression.interval, binary) :: {:ok, [CronExpression.value]} | {:error, binary}
   defp interpret(interval, format) do
     parts = String.split(format, ",")

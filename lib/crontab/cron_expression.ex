@@ -5,8 +5,17 @@ defmodule Crontab.CronExpression do
 
   alias Crontab.CronExpression.Parser
 
-  @type t :: %Crontab.CronExpression{}
-  @type interval :: :minute | :hour | :day | :month | :weekday | :year
+  @type t :: %Crontab.CronExpression{
+    extended: boolean,
+    second: value,
+    minute: value,
+    hour: value,
+    day: value,
+    month: value,
+    weekday: value,
+    year: value
+  }
+  @type interval :: :second | :minute | :hour | :day | :month | :weekday | :year
   @type min_max :: {:-, time_unit, time_unit}
   @type value :: time_unit | :* | :L | {:L, value} | {:/, time_unit | :*
     | min_max, pos_integer} | min_max | {:W, time_unit | :L}
