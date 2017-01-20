@@ -33,6 +33,7 @@ defmodule Crontab.DateChecker do
       true
   """
   @spec matches_date?(CronExpression.condition_list, NaiveDateTime.t) :: boolean
+  def matches_date?(condition_list, date)
   def matches_date?([], _), do: true
   def matches_date?([{interval, conditions} | tail], execution_date) do
     matches_date?(interval, conditions, execution_date) && matches_date?(tail, execution_date)

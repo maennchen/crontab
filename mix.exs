@@ -1,15 +1,18 @@
 defmodule Crontab.Mixfile do
   use Mix.Project
 
+  @version "0.8.5"
+
   def project do
     [app: :crontab,
-     version: "0.8.5",
+     version: @version,
      elixir: "~> 1.3",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      description: description(),
      package: package(),
      deps: deps(),
+     docs: docs(),
      test_coverage: [tool: ExCoveralls]]
   end
 
@@ -51,5 +54,16 @@ defmodule Crontab.Mixfile do
      maintainers: ["Jonatan Männchen"],
      licenses: ["MIT"],
      links: %{"GitHub" => "https://github.com/jshmrtn/crontab"}]
+  end
+
+  defp docs do
+    [main: "getting-started",
+     source_ref: "v" <> @version,
+     source_url: "https://github.com/jshmrtn/crontab",
+     extras: [
+       "pages/Getting Started.md",
+       "CHANGELOG.md",
+       "pages/Basic Usage.md"
+    ]]
   end
 end
