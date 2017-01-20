@@ -44,4 +44,11 @@ defmodule Crontab.DateCheckerTest do
     assert matches_date?(:weekday, [{:"/", :*, 3}], base_date) == false
     assert matches_date?(:year, [{:"/", :*, 3}], base_date) == false
   end
+
+  test "fail on @reboot" do
+    base_date = ~N[2003-04-17 04:04:08]
+    assert_raise RuntimeError, "Special identifier @reboot is not supported.", fn ->
+      matches_date?(%Crontab.CronExpression{reboot: true}, base_date)
+    end
+  end
 end

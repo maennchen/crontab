@@ -7,6 +7,7 @@ defmodule Crontab.CronExpression do
 
   @type t :: %Crontab.CronExpression{
     extended: boolean,
+    reboot: boolean,
     second: value,
     minute: value,
     hour: value,
@@ -44,7 +45,8 @@ defmodule Crontab.CronExpression do
 
   The :extended attribute defines if the second is taken into account.
   """
-  defstruct extended: false, second: [:*], minute: [:*], hour: [:*], day: [:*], month: [:*], weekday: [:*], year: [:*]
+  defstruct extended: false, reboot: false, second: [:*], minute: [:*], hour: [:*], day: [:*], month: [:*],
+    weekday: [:*], year: [:*]
 
   @doc """
   Create a `%Crontab.CronExpression{}` via sigil.

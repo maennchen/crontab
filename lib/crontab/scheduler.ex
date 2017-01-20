@@ -24,9 +24,13 @@ defmodule Crontab.Scheduler do
       iex> Crontab.Scheduler.get_next_run_date(%Crontab.CronExpression{year: [{:/, :*, 9}]}, ~N[2002-01-13 23:00:07])
       {:ok, ~N[2007-01-01 00:00:00]}
 
+      iex> Crontab.Scheduler.get_next_run_date %Crontab.CronExpression{reboot: true}
+      ** (RuntimeError) Special identifier @reboot is not supported.
+
   """
   @spec get_next_run_date(CronExpression.t, NaiveDateTime.t, integer) :: result
-  def get_next_run_date(cron_expression, date, max_runs \\ @max_runs)
+  def get_next_run_date(cron_expression, date \\ DateTime.to_naive(DateTime.utc_now), max_runs \\ @max_runs)
+  def get_next_run_date(%CronExpression{reboot: true}, _, _), do: raise "Special identifier @reboot is not supported."
   def get_next_run_date(cron_expression = %CronExpression{extended: false}, date, max_runs) do
     case get_run_date(cron_expression, clean_date(date, :seconds), max_runs, :increment) do
       {:ok, date} -> {:ok, date}
@@ -52,9 +56,12 @@ defmodule Crontab.Scheduler do
       iex> Crontab.Scheduler.get_next_run_date!(%Crontab.CronExpression{year: [{:/, :*, 9}]}, ~N[2002-01-13 23:00:07])
       ~N[2007-01-01 00:00:00]
 
+      iex> Crontab.Scheduler.get_next_run_date! %Crontab.CronExpression{reboot: true}
+      ** (RuntimeError) Special identifier @reboot is not supported.
+
   """
   @spec get_next_run_date!(CronExpression.t, NaiveDateTime.t, integer) :: NaiveDateTime.t | no_return
-  def get_next_run_date!(cron_expression, date, max_runs \\ @max_runs) do
+  def get_next_run_date!(cron_expression, date \\ DateTime.to_naive(DateTime.utc_now), max_runs \\ @max_runs) do
     case get_next_run_date(cron_expression, date, max_runs) do
       {:ok, result} -> result
       {:error, error} -> raise error
@@ -84,6 +91,9 @@ defmodule Crontab.Scheduler do
       ...> %Crontab.CronExpression{year: [2017], month: [1], day: [1], hour: [0], minute: [1]}, ~N[2016-12-17 00:00:00])
       {:error, [~N[2017-01-01 00:01:00]], "No compliant date was found for your interval."}
 
+      iex> Crontab.Scheduler.get_next_run_dates(3, %Crontab.CronExpression{reboot: true})
+      ** (RuntimeError) Special identifier @reboot is not supported.
+
   """
   @spec get_next_run_dates(pos_integer, CronExpression.t, NaiveDateTime.t) :: {:ok | :error, [NaiveDateTime.t], binary}
   def get_next_run_dates(n, cron_expression, date \\ DateTime.to_naive(DateTime.utc_now))
@@ -112,6 +122,9 @@ defmodule Crontab.Scheduler do
       iex> Crontab.Scheduler.get_next_run_dates!(3,
       ...> %Crontab.CronExpression{year: [2017], month: [1], day: [1], hour: [0], minute: [1]}, ~N[2016-12-17 00:00:00])
       ** (RuntimeError) No compliant date was found for your interval.
+
+      iex> Crontab.Scheduler.get_next_run_dates!(3, %Crontab.CronExpression{reboot: true})
+      ** (RuntimeError) Special identifier @reboot is not supported.
 
   """
   @spec get_next_run_dates!(pos_integer, CronExpression.t, NaiveDateTime.t) :: [NaiveDateTime.t] | no_return
@@ -153,9 +166,13 @@ defmodule Crontab.Scheduler do
       ...> year: [{:/, :*, 9}]}, ~N[2002-01-13 23:00:07]
       {:ok, ~N[1998-12-31 23:59:00]}
 
+      iex> Crontab.Scheduler.get_previous_run_date %Crontab.CronExpression{reboot: true}
+      ** (RuntimeError) Special identifier @reboot is not supported.
+
   """
   @spec get_previous_run_date(CronExpression.t, NaiveDateTime.t, integer) :: result
-  def get_previous_run_date(cron_expression, date, max_runs \\ @max_runs)
+  def get_previous_run_date(cron_expression, date \\ DateTime.to_naive(DateTime.utc_now), max_runs \\ @max_runs)
+  def get_previous_run_date(%CronExpression{reboot: true}, _, _), do: raise "Special identifier @reboot is not supported."
   def get_previous_run_date(cron_expression = %CronExpression{extended: false}, date, max_runs) do
     case get_run_date(cron_expression, date, max_runs, :decrement) do
       {:ok, date} -> {:ok, reset(date, :seconds)}
@@ -183,10 +200,13 @@ defmodule Crontab.Scheduler do
       ...> year: [{:/, :*, 9}]}, ~N[2002-01-13 23:00:07]
       ~N[1998-12-31 23:59:00]
 
+      iex> Crontab.Scheduler.get_previous_run_date! %Crontab.CronExpression{reboot: true}
+      ** (RuntimeError) Special identifier @reboot is not supported.
+
 
   """
   @spec get_previous_run_date!(CronExpression.t, NaiveDateTime.t, integer) :: NaiveDateTime.t | no_return
-  def get_previous_run_date!(cron_expression, date, max_runs \\ @max_runs) do
+  def get_previous_run_date!(cron_expression, date \\ DateTime.to_naive(DateTime.utc_now), max_runs \\ @max_runs) do
     case get_previous_run_date(cron_expression, date, max_runs) do
       {:ok, result} -> result
       {:error, error} -> raise error
@@ -215,6 +235,9 @@ defmodule Crontab.Scheduler do
       iex> Crontab.Scheduler.get_previous_run_dates(3,
       ...> %Crontab.CronExpression{year: [2016], month: [1], day: [1], hour: [0], minute: [1]}, ~N[2016-12-17 00:00:00])
       {:error, [~N[2016-01-01 00:01:00]], "No compliant date was found for your interval."}
+
+      iex> Crontab.Scheduler.get_previous_run_dates(3, %Crontab.CronExpression{reboot: true})
+      ** (RuntimeError) Special identifier @reboot is not supported.
 
   """
   @spec get_previous_run_dates(pos_integer, CronExpression.t, NaiveDateTime.t) ::
@@ -246,6 +269,9 @@ defmodule Crontab.Scheduler do
       iex> Crontab.Scheduler.get_previous_run_dates!(3,
       ...> %Crontab.CronExpression{year: [2017], month: [1], day: [1], hour: [0], minute: [1]}, ~N[2016-12-17 00:00:00])
       ** (RuntimeError) No compliant date was found for your interval.
+
+      iex> Crontab.Scheduler.get_previous_run_dates!(3, %Crontab.CronExpression{reboot: true})
+      ** (RuntimeError) Special identifier @reboot is not supported.
 
   """
   @spec get_previous_run_dates!(pos_integer, CronExpression.t, NaiveDateTime.t) :: [NaiveDateTime.t] | no_return

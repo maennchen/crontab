@@ -18,14 +18,21 @@ defmodule Crontab.CronExpression.Composer do
       iex> Crontab.CronExpression.Composer.compose %Crontab.CronExpression{minute: [9, {:-, 4, 6}, {:/, :*, 9}]}
       "9,4-6,*/9 * * * * *"
 
+      iex> Crontab.CronExpression.Composer.compose %Crontab.CronExpression{reboot: true}
+      "@reboot"
+
   """
   @spec compose(CronExpression.t) :: binary
+  def compose(%CronExpression{reboot: true}) do
+    "@reboot"
+  end
   def compose(cron_expression = %CronExpression{}) do
     cron_expression
       |> CronExpression.to_condition_list
       |> compose_interval
       |> Enum.join(" ")
   end
+
   @spec compose_interval(CronExpression.condition_list) :: [binary]
   defp compose_interval([{_, conditions} | tail]) do
     part = conditions
