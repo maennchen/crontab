@@ -1,5 +1,5 @@
 defmodule Crontab.CronExpression.ParserTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   doctest Crontab.CronExpression.Parser
   import Crontab.CronExpression.Parser
 

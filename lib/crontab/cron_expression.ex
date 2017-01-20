@@ -3,6 +3,21 @@ defmodule Crontab.CronExpression do
   This is the Crontab.CronExpression module / struct.
   """
 
+  @type t :: %Crontab.CronExpression{}
+  @type interval :: :minute | :hour | :day | :month | :weekday | :year
+  @type min_max :: {:-, time_unit, time_unit}
+  @type value :: time_unit | :* | :L | {:L, value} | {:/, time_unit | :*
+    | min_max, pos_integer} | min_max | {:W, time_unit | :L}
+  @type minute :: 0..59
+  @type hour :: 0..23
+  @type day :: 0..31
+  @type month :: 1..12
+  @type weekday :: 0..7
+  @type year :: integer
+  @type time_unit :: minute | hour | day | month | weekday | year
+  @type condition :: {interval, [value]}
+  @type condition_list :: [condition]
+
   @doc """
   Defines the Cron Interval
 
@@ -20,20 +35,48 @@ defmodule Crontab.CronExpression do
   """
   defstruct extended: false, second: [:*], minute: [:*], hour: [:*], day: [:*], month: [:*], weekday: [:*], year: [:*]
 
-  @type t :: %Crontab.CronExpression{}
-  @type interval :: :minute | :hour | :day | :month | :weekday | :year
-  @type min_max :: {:-, time_unit, time_unit}
-  @type value :: time_unit | :* | :L | {:L, value} | {:/, time_unit | :*
-    | min_max, pos_integer} | min_max | {:W, time_unit | :L}
-  @type minute :: 0..59
-  @type hour :: 0..23
-  @type day :: 0..31
-  @type month :: 1..12
-  @type weekday :: 0..7
-  @type year :: integer
-  @type time_unit :: minute | hour | day | month | weekday | year
-  @type condition :: {interval, [value]}
-  @type condition_list :: [condition]
+  @doc """
+  Create a `%Crontab.CronExpression{}` via sigil.
+
+  ### Examples
+
+      iex> ~e[*]
+      %Crontab.CronExpression{
+        extended: false,
+        second: [:*],
+        minute: [:*],
+        hour: [:*],
+        day: [:*],
+        month: [:*],
+        weekday: [:*],
+        year: [:*]}
+
+      iex> ~e[*]e
+      %Crontab.CronExpression{
+        extended: true,
+        second: [:*],
+        minute: [:*],
+        hour: [:*],
+        day: [:*],
+        month: [:*],
+        weekday: [:*],
+        year: [:*]}
+
+      iex> ~e[1 2 3 4 5 6 7]e
+      %Crontab.CronExpression{
+        extended: true,
+        second: [1],
+        minute: [2],
+        hour: [3],
+        day: [4],
+        month: [5],
+        weekday: [6],
+        year: [7]}
+  """
+  @spec sigil_e(binary, charlist) :: t
+  def sigil_e(cron_expression, options)
+  def sigil_e(cron_expression, [?e]), do: Crontab.CronExpression.Parser.parse!(cron_expression, true)
+  def sigil_e(cron_expression, _options), do: Crontab.CronExpression.Parser.parse!(cron_expression, false)
 
   @doc """
   Convert Crontab.CronExpression struct to Tuple List
@@ -70,5 +113,28 @@ defmodule Crontab.CronExpression do
   end
   def to_condition_list(interval = %Crontab.CronExpression{}) do
     [{:second, interval.second} | to_condition_list(%{interval | extended: false})]
+  end
+
+  defimpl Inspect do
+    @doc """
+    Pretty Print Cron Expressions
+
+    ### Examples:
+
+        iex> IO.inspect %Crontab.CronExpression{}
+        ~e[* * * * * *]
+
+        iex> import Crontab.CronExpression
+        iex> IO.inspect %Crontab.CronExpression{extended: true}
+        ~e[* * * * * * *]e
+
+    """
+    @spec inspect(Crontab.CronExpression.t, any) :: String.t
+    def inspect(cron_expression = %Crontab.CronExpression{extended: false}, _options) do
+      "~e[" <> Crontab.CronExpression.Composer.compose(cron_expression) <> "]"
+    end
+    def inspect(cron_expression = %Crontab.CronExpression{extended: true}, _options) do
+      "~e[" <> Crontab.CronExpression.Composer.compose(cron_expression) <> "]e"
+    end
   end
 end
