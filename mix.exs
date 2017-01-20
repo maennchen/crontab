@@ -1,7 +1,7 @@
 defmodule Crontab.Mixfile do
   use Mix.Project
 
-  @version "0.8.5"
+  @version "1.0.0-beta.2"
 
   def project do
     [app: :crontab,

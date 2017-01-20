@@ -14,7 +14,7 @@ Parse Cron Format Strings, Write Cron Format Strings and Caluclate Execution Dat
 
     ```elixir
     def deps do
-      [{:crontab, "~> 1.0.0-beta.1"}]
+      [{:crontab, "~> 1.0.0-beta.2"}]
     end
     ```
 
