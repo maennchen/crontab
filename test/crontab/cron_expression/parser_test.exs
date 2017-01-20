@@ -3,8 +3,12 @@ defmodule Crontab.CronExpression.ParserTest do
   doctest Crontab.CronExpression.Parser
   import Crontab.CronExpression.Parser
 
-  test "parse \"@reboot\" gives error" do
-    assert parse("@reboot") == {:error, "Special identifier @reboot is not supported."}
+  test "parse \"@reboot\" gives reboot" do
+    assert parse("@reboot") == {:ok, %Crontab.CronExpression{reboot: true, extended: false, minute: [:*], hour: [:*], day: [:*], month: [:*], weekday: [:*], year: [:*]}}
+  end
+
+  test "parse \"@REBOOT\" gives reboot" do
+    assert parse("@REBOOT") == {:ok, %Crontab.CronExpression{reboot: true, extended: false, minute: [:*], hour: [:*], day: [:*], month: [:*], weekday: [:*], year: [:*]}}
   end
 
   test "parse \"@unknown\" gives error" do

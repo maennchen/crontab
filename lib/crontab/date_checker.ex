@@ -6,32 +6,30 @@ defmodule Crontab.DateChecker do
   alias Crontab.CronExpression
 
   @doc """
-  Check a CronExpression against a given date.
+  Check a condition list against a given date.
 
   ### Examples
 
-      iex> Crontab.DateChecker.matches_date? %CronExpression{minute: [{:"/", :*, 8}]}, ~N[2004-04-16 04:08:08]
+      iex> Crontab.DateChecker.matches_date? %Crontab.CronExpression{minute: [{:"/", :*, 8}]}, ~N[2004-04-16 04:08:08]
       true
 
-      iex> Crontab.DateChecker.matches_date? %CronExpression{minute: [{:"/", :*, 9}]}, ~N[2004-04-16 04:07:08]
+      iex> Crontab.DateChecker.matches_date? %Crontab.CronExpression{minute: [{:"/", :*, 9}]}, ~N[2004-04-16 04:07:08]
       false
 
+      iex> Crontab.DateChecker.matches_date? %Crontab.CronExpression{reboot: true}, ~N[2004-04-16 04:07:08]
+      ** (RuntimeError) Special identifier @reboot is not supported.
+
+      iex> Crontab.DateChecker.matches_date? [{:hour, [{:"/", :*, 4}, 7]}], ~N[2004-04-16 04:07:08]
+      true
+
   """
-  @spec matches_date?(CronExpression.t, NaiveDateTime.t) :: boolean
+  @spec matches_date?(CronExpression.t, NaiveDateTime.t) :: boolean | no_return
+  def matches_date?(%CronExpression{reboot: true}, _), do: raise "Special identifier @reboot is not supported."
   def matches_date?(cron_expression = %CronExpression{}, execution_date) do
     cron_expression
       |> CronExpression.to_condition_list
       |> matches_date?(execution_date)
   end
-
-  @doc """
-  Check a condition list against a given date.
-
-  ### Examples
-
-      iex> Crontab.DateChecker.matches_date? [{:hour, [{:"/", :*, 4}, 7]}], ~N[2004-04-16 04:07:08]
-      true
-  """
   @spec matches_date?(CronExpression.condition_list, NaiveDateTime.t) :: boolean
   def matches_date?(condition_list, date)
   def matches_date?([], _), do: true

@@ -8,6 +8,7 @@ defmodule Crontab.CronExpression.Parser do
   @type result :: {:ok, CronExpression.t} | {:error, binary}
 
   @specials %{
+    reboot: %CronExpression{reboot: true},
     yearly: %CronExpression{minute: [0], hour: [0], day: [1], month: [1]},
     annually: %CronExpression{minute: [0], hour: [0], day: [1], month: [1]},
     monthly: %CronExpression{minute: [0], hour: [0], day: [1]},
@@ -77,7 +78,7 @@ defmodule Crontab.CronExpression.Parser do
   @spec parse(binary, boolean) :: result
   def parse(cron_expression, extended \\ false)
   def parse("@" <> identifier, _) do
-    special(String.to_atom(identifier))
+    special(String.to_atom(String.downcase(identifier)))
   end
   def parse(cron_expression, true) do
     interpret(String.split(cron_expression, " "), @extended_intervals, %CronExpression{extended: true})
@@ -235,7 +236,6 @@ defmodule Crontab.CronExpression.Parser do
   end
 
   @spec special(atom) :: result
-  defp special(:reboot), do: {:error, "Special identifier @reboot is not supported."}
   defp special(identifier) do
     if Map.has_key?(@specials, identifier) do
       {:ok, Map.fetch!(@specials, identifier)}
