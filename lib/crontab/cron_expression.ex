@@ -8,13 +8,13 @@ defmodule Crontab.CronExpression do
   @type t :: %Crontab.CronExpression{
     extended: boolean,
     reboot: boolean,
-    second: value,
-    minute: value,
-    hour: value,
-    day: value,
-    month: value,
-    weekday: value,
-    year: value
+    second: [value],
+    minute: [value],
+    hour: [value],
+    day: [value],
+    month: [value],
+    weekday: [value],
+    year: [value]
   }
   @type interval :: :second | :minute | :hour | :day | :month | :weekday | :year
   @type min_max :: {:-, time_unit, time_unit}

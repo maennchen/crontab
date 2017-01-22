@@ -112,7 +112,7 @@ defmodule Crontab.CronExpression.Parser do
     end
   end
 
-  @spec interpret([binary], [CronExpression.interval], CronExpression.t) :: CronExpression.t | {:error, binary}
+  @spec interpret([binary], [CronExpression.interval], CronExpression.t) :: {:ok, CronExpression.t} | {:error, binary}
   defp interpret([head_format | tail_format], [head_expression | tail_expression], cron_expression) do
     conditions = interpret head_expression, head_format
     case conditions do
@@ -128,17 +128,17 @@ defmodule Crontab.CronExpression.Parser do
   defp interpret(interval, format) do
     parts = String.split(format, ",")
     tokens = Enum.map(parts, fn(part) -> tokenize interval, part end)
-    if has_failed_tokens(tokens) do
-      has_failed_tokens(tokens)
+    if get_failed_token(tokens) do
+      get_failed_token(tokens)
     else
       {:ok, Enum.map(tokens, fn({:ok, token}) -> token end)}
     end
   end
 
-  @spec has_failed_tokens([{:error, binary}] | CronExpression.value) :: boolean | binary
-  defp has_failed_tokens(tokens) do
+  @spec get_failed_token([{:error, binary}] | CronExpression.value) :: {:error, binary} | nil
+  defp get_failed_token(tokens) do
     Enum.find(tokens, fn(token) -> case token do
-      failed_token = {:error, _} -> failed_token
+      {:error, _} -> true
       _ -> false
     end end)
   end
