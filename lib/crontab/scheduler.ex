@@ -290,7 +290,6 @@ defmodule Crontab.Scheduler do
   defp reset(date = %NaiveDateTime{minute: minute}, :minutes), do: date |> reset(:seconds) |> Timex.shift(minutes: 0 - minute)
 
   @spec upper(NaiveDateTime.t, :microseconds | :seconds | :minutes) :: NaiveDateTime.t
-  defp upper(date = %NaiveDateTime{}, :microseconds), do: Map.put(date, :microsecond, {0,0})
   defp upper(date = %NaiveDateTime{second: second}, :seconds), do: date |> reset(:microseconds) |> Timex.shift(seconds: 59 - second)
   defp upper(date = %NaiveDateTime{minute: minute}, :minutes), do: date |> reset(:seconds) |> Timex.shift(minutes: 59 - minute)
 
