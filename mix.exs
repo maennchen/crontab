@@ -25,7 +25,7 @@ defmodule Crontab.Mixfile do
 
   defp description do
     """
-    Parse Cron Format Strings, Write Cron Format Strings and Caluclate Execution Dates.
+    Parse Cron Format Strings, Write Cron Format Strings and Calculate Execution Dates.
     """
   end
 
