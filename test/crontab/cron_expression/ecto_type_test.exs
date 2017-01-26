@@ -27,6 +27,7 @@ if Code.ensure_compiled?(Ecto.Type) do
       assert Type.load(%{extended: false, expression: "* * * * *"}) == {:ok, ~e[*]}
       assert Type.load(%{extended: true, expression: "* * * * * *"}) == {:ok, ~e[*]e}
       assert Type.load(%{extended: false, expression: "*/9"}) == {:ok, ~e[*/9]}
+      assert Type.load(%{"extended" => false, "expression" => "*/9"}) == {:ok, ~e[*/9]}
     end
 
     test "load/1 other" do
