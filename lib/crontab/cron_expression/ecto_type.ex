@@ -51,6 +51,9 @@ if Code.ensure_compiled?(Ecto.Type) do
     def cast(_), do: :error
 
     @spec load(any) :: {:ok, CronExpression.t} | :error
+    def load(%{"extended" => extended, "expression" => expression}) do
+      load(%{extended: extended, expression: expression})
+    end
     def load(%{extended: extended, expression: expression}) do
       case Parser.parse(expression, extended) do
         result = {:ok, _} -> result
