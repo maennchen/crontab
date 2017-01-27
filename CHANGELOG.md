@@ -7,3 +7,4 @@
  * Renamed Modules to a better name
  * Introduction of `~e[CRON_EXPRESSION]` sigil
  * Renamed function to conventions. (`?` for booleans, `!` for functions that raise errors)
+ * Introduced Ecto Type
