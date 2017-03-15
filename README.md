@@ -12,19 +12,19 @@ Parse Cron Format Strings, Write Cron Format Strings and Caluclate Execution Dat
 
   1. Add `crontab` to your list of dependencies in `mix.exs`:
 
-    ```elixir
-    def deps do
-      [{:crontab, "~> 1.0.0"}]
-    end
-    ```
+```elixir
+def deps do
+  [{:crontab, "~> 1.0.0"}]
+end
+```
 
   2. Ensure `crontab` is started before your application:
 
-    ```elixir
-    def application do
-      [applications: [:crontab]]
-    end
-    ```
+```elixir
+def application do
+  [applications: [:crontab]]
+end
+```
 
 ## Usage
 
