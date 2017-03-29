@@ -1,6 +1,10 @@
 # CHANGELOG
 
-## v1
+## v1.1.0
+
+* Date Library independent
+
+## v1.0.0
 
  * Removed Helper Functions in Module `Crontab`
  * Moved `get_[next|previous]_run_dates` to `Crontab.Scheduler`

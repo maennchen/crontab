@@ -14,7 +14,8 @@ Parse Cron Format Strings, Write Cron Format Strings and Caluclate Execution Dat
 
 ```elixir
 def deps do
-  [{:crontab, "~> 1.0.0"}]
+  [{:crontab, "~> 1.0.0"},
+   {:timex, "~> 3.0"}]
 end
 ```
 
@@ -22,7 +23,7 @@ end
 
 ```elixir
 def application do
-  [applications: [:crontab]]
+  [applications: [:crontab, :timex]]
 end
 ```
 
