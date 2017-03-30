@@ -2,6 +2,8 @@ defmodule Crontab.Scheduler do
   import Crontab.DateChecker
   alias Crontab.CronExpression
 
+  @date_library Application.get_env(:crontab, :date_library, Crontab.DateLibrary.Timex)
+
   @type direction :: :increment | :decrement
   @type result :: {:error, any} | {:ok, NaiveDateTime.t}
 
@@ -100,10 +102,10 @@ defmodule Crontab.Scheduler do
   @spec get_next_run_dates(CronExpression.t, NaiveDateTime.t) :: Enumerable.t
   def get_next_run_dates(cron_expression, date \\ DateTime.to_naive(DateTime.utc_now))
   def get_next_run_dates(cron_expression = %CronExpression{extended: false}, date) do
-    _get_next_run_dates(cron_expression, date, fn date -> Timex.shift(date, minutes: 1) end)
+    _get_next_run_dates(cron_expression, date, fn date -> @date_library.shift(date, 1, :minutes) end)
   end
   def get_next_run_dates(cron_expression = %CronExpression{extended: true}, date) do
-    _get_next_run_dates(cron_expression, date, fn date -> Timex.shift(date, seconds: 1) end)
+    _get_next_run_dates(cron_expression, date, fn date -> @date_library.shift(date, 1, :seconds) end)
   end
 
   @spec _get_next_run_dates(CronExpression.t, NaiveDateTime.t, function) :: Enumerable.t
@@ -208,10 +210,10 @@ defmodule Crontab.Scheduler do
   @spec get_previous_run_dates(CronExpression.t, NaiveDateTime.t) :: Enumerable.t
   def get_previous_run_dates(cron_expression, date \\ DateTime.to_naive(DateTime.utc_now))
   def get_previous_run_dates(cron_expression = %CronExpression{extended: false}, date) do
-    _get_previous_run_dates(cron_expression, date, fn date -> Timex.shift(date, minutes: -1) end)
+    _get_previous_run_dates(cron_expression, date, fn date -> @date_library.shift(date, -1, :minutes) end)
   end
   def get_previous_run_dates(cron_expression = %CronExpression{extended: true}, date) do
-    _get_previous_run_dates(cron_expression, date, fn date -> Timex.shift(date, seconds: -1) end)
+    _get_previous_run_dates(cron_expression, date, fn date -> @date_library.shift(date, -1, :seconds) end)
   end
 
   @spec _get_previous_run_dates(CronExpression.t, NaiveDateTime.t, function) :: Enumerable.t
@@ -266,23 +268,23 @@ defmodule Crontab.Scheduler do
 
   @spec correct_date(CronExpression.interval, NaiveDateTime.t, direction) :: NaiveDateTime.t | {:error, any}
 
-  defp correct_date(:second, date, :increment), do: date |> Timex.shift(seconds: 1)
-  defp correct_date(:minute, date, :increment), do: date |> Timex.shift(minutes: 1) |> reset(:seconds)
-  defp correct_date(:hour, date, :increment), do: date |> Timex.shift(hours: 1) |> reset(:minutes)
-  defp correct_date(:day, date, :increment), do: date |> Timex.shift(days: 1) |> Timex.beginning_of_day
-  defp correct_date(:month, date, :increment), do: date |> Timex.shift(months: 1) |> Timex.beginning_of_month
-  defp correct_date(:weekday, date, :increment), do: date |> Timex.shift(days: 1) |> Timex.beginning_of_day
+  defp correct_date(:second, date, :increment), do: date |> @date_library.shift(1, :seconds)
+  defp correct_date(:minute, date, :increment), do: date |> @date_library.shift(1, :minutes) |> reset(:seconds)
+  defp correct_date(:hour, date, :increment), do: date |> @date_library.shift(1, :hours) |> reset(:minutes)
+  defp correct_date(:day, date, :increment), do: date |> @date_library.shift(1, :days) |> @date_library.beginning_of_day
+  defp correct_date(:month, date, :increment), do: date |> @date_library.shift(1, :months) |> @date_library.beginning_of_month
+  defp correct_date(:weekday, date, :increment), do: date |> @date_library.shift(1, :days) |> @date_library.beginning_of_day
   defp correct_date(:year, %NaiveDateTime{year: 9_999}, :increment), do: {:error, :upper_bound}
-  defp correct_date(:year, date, :increment), do: date |> Timex.shift(years: 1) |> Timex.beginning_of_year
+  defp correct_date(:year, date, :increment), do: date |> @date_library.shift(1, :years) |> @date_library.beginning_of_year
 
-  defp correct_date(:second, date, :decrement), do: date |> Timex.shift(seconds: -1) |> reset(:microseconds)
-  defp correct_date(:minute, date, :decrement), do: date |> Timex.shift(minutes: -1) |> upper(:seconds) |> reset(:microseconds)
-  defp correct_date(:hour, date, :decrement), do: date |> Timex.shift(hours: -1) |> upper(:minutes) |> reset(:microseconds)
-  defp correct_date(:day, date, :decrement), do: date |> Timex.shift(days: -1) |> Timex.end_of_day |> reset(:microseconds)
-  defp correct_date(:month, date, :decrement), do: date |> Timex.shift(months: -1) |> Timex.end_of_month |> reset(:microseconds)
-  defp correct_date(:weekday, date, :decrement), do: date |> Timex.shift(days: -1) |> Timex.end_of_day |> reset(:microseconds)
+  defp correct_date(:second, date, :decrement), do: date |> @date_library.shift(-1, :seconds) |> reset(:microseconds)
+  defp correct_date(:minute, date, :decrement), do: date |> @date_library.shift(-1, :minutes) |> upper(:seconds) |> reset(:microseconds)
+  defp correct_date(:hour, date, :decrement), do: date |> @date_library.shift(-1, :hours) |> upper(:minutes) |> reset(:microseconds)
+  defp correct_date(:day, date, :decrement), do: date |> @date_library.shift(-1, :days) |> @date_library.end_of_day |> reset(:microseconds)
+  defp correct_date(:month, date, :decrement), do: date |> @date_library.shift(-1, :months) |> @date_library.end_of_month |> reset(:microseconds)
+  defp correct_date(:weekday, date, :decrement), do: date |> @date_library.shift(-1, :days) |> @date_library.end_of_day |> reset(:microseconds)
   defp correct_date(:year, date = %NaiveDateTime{year: 0}, :decrement), do: date
-  defp correct_date(:year, date, :decrement), do: date |> Timex.shift(years: -1) |> Timex.end_of_year |> reset(:microseconds)
+  defp correct_date(:year, date, :decrement), do: date |> @date_library.shift(-1, :years) |> @date_library.end_of_year |> reset(:microseconds)
 
   @spec reset(NaiveDateTime.t, :microseconds | :seconds | :minutes) :: NaiveDateTime.t
   defp reset(date = %NaiveDateTime{}, :microseconds), do: Map.put(date, :microsecond, {0,0})
@@ -298,7 +300,7 @@ defmodule Crontab.Scheduler do
   defp clean_date(date = %NaiveDateTime{}, :microseconds) do
     date
       |> Map.put(:microsecond, {0,0})
-      |> Timex.shift(seconds: 1)
+      |> @date_library.shift(1, :seconds)
   end
   defp clean_date(date = %NaiveDateTime{}, :seconds) do
     clean_microseconds = clean_date(date, :microseconds)

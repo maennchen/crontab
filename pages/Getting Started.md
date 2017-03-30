@@ -5,7 +5,8 @@
 
     ```elixir
     def deps do
-      [{:crontab, "~> 0.8.5"}]
+      [{:crontab, "~> 0.8.5"},
+       {:timex, "~> 3.0"}]
     end
     ```
 
@@ -13,7 +14,7 @@
 
     ```elixir
     def application do
-      [applications: [:crontab]]
+      [applications: [:crontab, :timex]]
     end
     ```
 

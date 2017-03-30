@@ -5,6 +5,8 @@ defmodule Crontab.DateChecker do
 
   alias Crontab.CronExpression
 
+  @date_library Application.get_env(:crontab, :date_library, Crontab.DateLibrary.Timex)
+
   @doc """
   Check a condition list against a given date.
 
@@ -83,7 +85,7 @@ defmodule Crontab.DateChecker do
     end
   end
   defp matches_specific_date?(:day, [head_value | tail_values], :L, execution_date) do
-    if Timex.end_of_month(execution_date).day == head_value do
+    if @date_library.end_of_month(execution_date).day == head_value do
       true
     else
       matches_specific_date?(:day, tail_values, :L, execution_date)
@@ -99,9 +101,9 @@ defmodule Crontab.DateChecker do
     last_weekday_of_month(execution_date) === execution_date.day
   end
   defp matches_specific_date?(:day, _, {:W, day}, execution_date) do
-    last_day = Timex.end_of_month(execution_date).day
+    last_day = @date_library.end_of_month(execution_date).day
     specific_day = case last_day < day do
-      true -> Timex.end_of_month(execution_date)
+      true -> @date_library.end_of_month(execution_date)
       false -> Map.put(execution_date, :day, day)
     end
     next_weekday_to(specific_day) === execution_date.day
@@ -124,42 +126,42 @@ defmodule Crontab.DateChecker do
   @spec last_weekday(NaiveDateTime.t, CronExpression.weekday) :: CronExpression.day
   defp last_weekday(date, weekday) do
     date
-      |> Timex.end_of_month
+      |> @date_library.end_of_month
       |> last_weekday(weekday, :end)
   end
   defp last_weekday(date = %NaiveDateTime{year: year, month: month, day: day}, weekday, :end) do
     if :calendar.day_of_the_week(year, month, day) == weekday do
       day
     else
-      last_weekday(Timex.shift(date, days: -1), weekday, :end)
+      last_weekday(@date_library.shift(date, -1, :days), weekday, :end)
     end
   end
 
   @spec nth_weekday(NaiveDateTime.t, CronExpression.weekday, integer) :: CronExpression.day
   defp nth_weekday(date, weekday, n) do
     date
-      |> Timex.beginning_of_month
+      |> @date_library.beginning_of_month
       |> nth_weekday(weekday, n, :start)
   end
   @spec nth_weekday(NaiveDateTime.t, CronExpression.weekday, :start) :: boolean
-  defp nth_weekday(date = %NaiveDateTime{}, _, 0, :start), do: Timex.shift(date, days: -1).day
+  defp nth_weekday(date = %NaiveDateTime{}, _, 0, :start), do: @date_library.shift(date, -1, :days).day
   defp nth_weekday(date = %NaiveDateTime{year: year, month: month, day: day}, weekday, n, :start) do
     if :calendar.day_of_the_week(year, month, day) == weekday do
-      nth_weekday(Timex.shift(date, days: 1), weekday, n - 1, :start)
+      nth_weekday(@date_library.shift(date, 1, :days), weekday, n - 1, :start)
     else
-      nth_weekday(Timex.shift(date, days: 1), weekday, n, :start)
+      nth_weekday(@date_library.shift(date, 1, :days), weekday, n, :start)
     end
   end
 
   @spec last_weekday_of_month(NaiveDateTime.t) :: CronExpression.day
   defp last_weekday_of_month(date) do
-    last_weekday_of_month(Timex.end_of_month(date), :end)
+    last_weekday_of_month(@date_library.end_of_month(date), :end)
   end
   @spec last_weekday_of_month(NaiveDateTime.t, :end) :: CronExpression.day
   defp last_weekday_of_month(date = %NaiveDateTime{year: year, month: month, day: day}, :end) do
     weekday = :calendar.day_of_the_week(year, month, day)
     if weekday > 5 do
-      last_weekday_of_month(Timex.shift(date, days: -1), :end)
+      last_weekday_of_month(@date_library.shift(date, -1, :days), :end)
     else
       day
     end
@@ -168,14 +170,14 @@ defmodule Crontab.DateChecker do
   @spec next_weekday_to(NaiveDateTime.t) :: CronExpression.day
   defp next_weekday_to(date = %NaiveDateTime{year: year, month: month, day: day}) do
     weekday = :calendar.day_of_the_week(year, month, day)
-    next_day = Timex.shift(date, days: 1)
-    previous_day = Timex.shift(date, days: -1)
+    next_day = @date_library.shift(date, 1, :days)
+    previous_day = @date_library.shift(date, -1, :days)
 
     cond do
       weekday == 7 && next_day.month == date.month -> next_day.day
-      weekday == 7 -> Timex.shift(date, days: -2).day
+      weekday == 7 -> @date_library.shift(date, -2, :days).day
       weekday == 6 && previous_day.month == date.month -> previous_day.day
-      weekday == 6 -> Timex.shift(date, days: 2).day
+      weekday == 6 -> @date_library.shift(date, 2, :days).day
       true -> date.day
     end
   end
