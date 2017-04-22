@@ -34,59 +34,5 @@ defmodule Crontab.DateLibraryTest do
         end
       end
     end
-
-    describe Atom.to_string(module) <> ".beginning_of_year/1" do
-      test "yields correct result" do
-        date = ~N[2016-01-01 01:01:01]
-        |> @module.beginning_of_year
-        |> Map.put(:microsecond, {0,0})
-        assert date == ~N[2016-01-01 00:00:00]
-      end
-    end
-
-    describe Atom.to_string(module) <> ".end_of_year/1" do
-      test "yields correct result" do
-        date = ~N[2016-01-01 01:01:01]
-        |> @module.end_of_year
-        |> Map.put(:microsecond, {0,0})
-        assert date == ~N[2016-12-31 23:59:59]
-      end
-    end
-
-    describe Atom.to_string(module) <> ".beginning_of_month/1" do
-      test "yields correct result" do
-        date = ~N[2016-01-01 01:01:01]
-        |> @module.beginning_of_month
-        |> Map.put(:microsecond, {0,0})
-        assert date == ~N[2016-01-01 00:00:00]
-      end
-    end
-
-    describe Atom.to_string(module) <> ".end_of_month/1" do
-      test "yields correct result" do
-        date = ~N[2016-01-01 01:01:01]
-        |> @module.end_of_month
-        |> Map.put(:microsecond, {0,0})
-        assert date == ~N[2016-01-31 23:59:59]
-      end
-    end
-
-    describe Atom.to_string(module) <> ".beginning_of_day/1" do
-      test "yields correct result" do
-        date = ~N[2016-01-01 01:01:01]
-        |> @module.beginning_of_day
-        |> Map.put(:microsecond, {0,0})
-        assert date == ~N[2016-01-01 00:00:00]
-      end
-    end
-
-    describe Atom.to_string(module) <> ".end_of_day/1" do
-      test "yields correct result" do
-        date = ~N[2016-01-01 01:01:01]
-        |> @module.end_of_day
-        |> Map.put(:microsecond, {0,0})
-        assert date == ~N[2016-01-01 23:59:59]
-      end
-    end
   end
 end

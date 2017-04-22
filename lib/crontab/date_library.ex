@@ -13,16 +13,4 @@ defmodule Crontab.DateLibrary do
   @type time_unit :: :days | :hours | :minutes | :seconds | :years | :months
 
   @callback shift(NaiveDateTime.t, integer, time_unit) :: NaiveDateTime.t
-
-  @callback beginning_of_year(NaiveDateTime.t) :: NaiveDateTime.t
-
-  @callback end_of_year(NaiveDateTime.t) :: NaiveDateTime.t
-
-  @callback beginning_of_month(NaiveDateTime.t) :: NaiveDateTime.t
-
-  @callback end_of_month(NaiveDateTime.t) :: NaiveDateTime.t
-
-  @callback beginning_of_day(NaiveDateTime.t) :: NaiveDateTime.t
-
-  @callback end_of_day(NaiveDateTime.t) :: NaiveDateTime.t
 end
