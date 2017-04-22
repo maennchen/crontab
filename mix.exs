@@ -39,8 +39,7 @@ defmodule Crontab.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:timex, "~> 3.0", optional: true},
-     {:ecto, "~> 1.0 or ~> 2.0 or ~> 2.1", optional: true},
+    [{:ecto, "~> 1.0 or ~> 2.0 or ~> 2.1", optional: true},
      {:ex_doc, ">= 0.0.0", only: :dev},
      {:inch_ex, only: :docs},
      {:excoveralls, "~> 0.4", only: [:dev, :test]},
@@ -65,7 +64,6 @@ defmodule Crontab.Mixfile do
        "pages/Getting Started.md",
        "CHANGELOG.md",
        "pages/Basic Usage.md",
-       "pages/Date Library.md"
     ]]
   end
 end
