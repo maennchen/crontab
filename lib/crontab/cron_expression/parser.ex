@@ -17,7 +17,7 @@ defmodule Crontab.CronExpression.Parser do
     midnight: %CronExpression{minute: [0], hour: [0]},
     hourly: %CronExpression{minute: [0]},
     minutely: %CronExpression{},
-    secondly: %CronExpression{},
+    secondly: %CronExpression{extended: true},
   }
 
   @intervals [

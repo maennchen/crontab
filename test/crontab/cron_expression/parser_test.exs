@@ -43,6 +43,14 @@ defmodule Crontab.CronExpression.ParserTest do
     assert parse("@hourly") == {:ok, %Crontab.CronExpression{minute: [0], hour: [:*], day: [:*], month: [:*], weekday: [:*], year: [:*]}}
   end
 
+  test "parse \"@minutely\" gives hourly" do
+    assert parse("@minutely") == {:ok, %Crontab.CronExpression{minute: [:*], hour: [:*], day: [:*], month: [:*], weekday: [:*], year: [:*]}}
+  end
+
+  test "parse \"@secondly\" gives hourly" do
+    assert parse("@secondly") == {:ok, %Crontab.CronExpression{extended: true, second: [:*], minute: [:*], hour: [:*], day: [:*], month: [:*], weekday: [:*], year: [:*]}}
+  end
+
   test "parse \"1 2 3 4 5 6 7\" gives error" do
     assert parse("1 2 3 4 5 6 7") == {:error, "The Cron Format String contains to many parts."}
   end
