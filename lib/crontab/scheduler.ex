@@ -286,7 +286,7 @@ defmodule Crontab.Scheduler do
   defp correct_date(:year, date, :decrement), do: date |> DateHelper.dec_year |> DateHelper.end_of(:year) |> DateHelper.beginning_of(:second)
 
   @spec clean_date(NaiveDateTime.t, :seconds | :microseconds) :: NaiveDateTime.t
-  defp clean_date(date = %NaiveDateTime{microsecond: {0,0}}, :microseconds), do: date
+  defp clean_date(date = %NaiveDateTime{microsecond: {0, _}}, :microseconds), do: date
   defp clean_date(date = %NaiveDateTime{}, :microseconds) do
     date
       |> Map.put(:microsecond, {0,0})
