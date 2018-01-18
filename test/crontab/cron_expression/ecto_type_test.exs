@@ -8,7 +8,7 @@ if Code.ensure_compiled?(Ecto.Type) do
     import Crontab.CronExpression
 
     test "type/0" do
-      assert Type.type == :map
+      assert Type.type() == :map
     end
 
     test "cast/1 String" do

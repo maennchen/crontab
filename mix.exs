@@ -4,16 +4,18 @@ defmodule Crontab.Mixfile do
   @version "1.1.2"
 
   def project do
-    [app: :crontab,
-     version: @version,
-     elixir: "~> 1.4",
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     description: description(),
-     package: package(),
-     deps: deps(),
-     docs: docs(),
-     test_coverage: [tool: ExCoveralls]]
+    [
+      app: :crontab,
+      version: @version,
+      elixir: "~> 1.5",
+      build_embedded: Mix.env() == :prod,
+      start_permanent: Mix.env() == :prod,
+      description: description(),
+      package: package(),
+      deps: deps(),
+      docs: docs(),
+      test_coverage: [tool: ExCoveralls]
+    ]
   end
 
   # Configuration for the OTP application
@@ -39,31 +41,37 @@ defmodule Crontab.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:ecto, "~> 1.0 or ~> 2.0 or ~> 2.1", optional: true},
-     {:ex_doc, ">= 0.0.0", only: :dev},
-     {:inch_ex, only: :docs},
-     {:excoveralls, "~> 0.4", only: [:dev, :test]},
-     {:dialyxir, "~> 0.4", only: [:dev], runtime: false},
-     {:credo, "~> 0.5", only: [:dev, :test]}]
+    [
+      {:ecto, "~> 1.0 or ~> 2.0 or ~> 2.1", optional: true},
+      {:ex_doc, ">= 0.0.0", only: :dev},
+      {:inch_ex, only: :docs},
+      {:excoveralls, "~> 0.4", only: [:dev, :test]},
+      {:dialyxir, "~> 0.4", only: [:dev], runtime: false},
+      {:credo, "~> 0.5", only: [:dev, :test]}
+    ]
   end
 
   defp package do
-    [# These are the default files included in the package
-     name: :crontab,
-     files: ["lib", "mix.exs", "README*", "LICENSE*"],
-     maintainers: ["Jonatan Männchen"],
-     licenses: ["MIT"],
-     links: %{"GitHub" => "https://github.com/jshmrtn/crontab"}]
+    # These are the default files included in the package
+    [
+      name: :crontab,
+      files: ["lib", "mix.exs", "README*", "LICENSE*"],
+      maintainers: ["Jonatan Männchen"],
+      licenses: ["MIT"],
+      links: %{"GitHub" => "https://github.com/jshmrtn/crontab"}
+    ]
   end
 
   defp docs do
-    [main: "getting-started",
-     source_ref: "v" <> @version,
-     source_url: "https://github.com/jshmrtn/crontab",
-     extras: [
-       "pages/Getting Started.md",
-       "CHANGELOG.md",
-       "pages/Basic Usage.md",
-    ]]
+    [
+      main: "getting-started",
+      source_ref: "v" <> @version,
+      source_url: "https://github.com/jshmrtn/crontab",
+      extras: [
+        "pages/Getting Started.md",
+        "CHANGELOG.md",
+        "pages/Basic Usage.md"
+      ]
+    ]
   end
 end

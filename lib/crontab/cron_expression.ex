@@ -6,20 +6,29 @@ defmodule Crontab.CronExpression do
   alias Crontab.CronExpression.Parser
 
   @type t :: %Crontab.CronExpression{
-    extended: boolean,
-    reboot: boolean,
-    second: [value],
-    minute: [value],
-    hour: [value],
-    day: [value],
-    month: [value],
-    weekday: [value],
-    year: [value]
-  }
+          extended: boolean,
+          reboot: boolean,
+          second: [value],
+          minute: [value],
+          hour: [value],
+          day: [value],
+          month: [value],
+          weekday: [value],
+          year: [value]
+        }
   @type interval :: :second | :minute | :hour | :day | :month | :weekday | :year
   @type min_max :: {:-, time_unit, time_unit}
-  @type value :: time_unit | :* | :L | {:L, value} | {:/, time_unit | :*
-    | min_max, pos_integer} | min_max | {:W, time_unit | :L}
+  @type value ::
+          time_unit
+          | :*
+          | :L
+          | {:L, value}
+          | {:/,
+             time_unit
+             | :*
+             | min_max, pos_integer}
+          | min_max
+          | {:W, time_unit | :L}
   @type minute :: 0..59
   @type hour :: 0..23
   @type day :: 0..31
@@ -45,8 +54,15 @@ defmodule Crontab.CronExpression do
 
   The :extended attribute defines if the second is taken into account.
   """
-  defstruct extended: false, reboot: false, second: [:*], minute: [:*], hour: [:*], day: [:*], month: [:*],
-    weekday: [:*], year: [:*]
+  defstruct extended: false,
+            reboot: false,
+            second: [:*],
+            minute: [:*],
+            hour: [:*],
+            day: [:*],
+            month: [:*],
+            weekday: [:*],
+            year: [:*]
 
   @doc """
   Create a `%Crontab.CronExpression{}` via sigil.
@@ -117,13 +133,16 @@ defmodule Crontab.CronExpression do
   """
   @spec to_condition_list(t) :: condition_list
   def to_condition_list(interval = %__struct__{extended: false}) do
-    [{:minute, interval.minute},
-     {:hour, interval.hour},
-     {:day, interval.day},
-     {:month, interval.month},
-     {:weekday, interval.weekday},
-     {:year, interval.year}]
+    [
+      {:minute, interval.minute},
+      {:hour, interval.hour},
+      {:day, interval.day},
+      {:month, interval.month},
+      {:weekday, interval.weekday},
+      {:year, interval.year}
+    ]
   end
+
   def to_condition_list(interval = %__struct__{}) do
     [{:second, interval.second} | to_condition_list(%{interval | extended: false})]
   end
@@ -145,10 +164,11 @@ defmodule Crontab.CronExpression do
         ~e[* * * * * * *]e
 
     """
-    @spec inspect(CronExpression.t, any) :: String.t
+    @spec inspect(CronExpression.t(), any) :: String.t()
     def inspect(cron_expression = %__struct__{extended: false}, _options) do
       "~e[" <> Composer.compose(cron_expression) <> "]"
     end
+
     def inspect(cron_expression = %__struct__{extended: true}, _options) do
       "~e[" <> Composer.compose(cron_expression) <> "]e"
     end
