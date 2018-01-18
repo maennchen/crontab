@@ -11,15 +11,17 @@ defmodule Crontab.CronExpressionTest do
 
   test "sigil inspect" do
     fun = fn ->
-      assert IO.inspect ~e[*]
+      assert IO.inspect(~e[*])
     end
+
     assert capture_io(fun) == "~e[* * * * * *]\n"
   end
 
   test "extended sigil inspect" do
     fun = fn ->
-      assert IO.inspect ~e[*]e
+      assert IO.inspect(~e[*]e)
     end
+
     assert capture_io(fun) == "~e[* * * * * * *]e\n"
   end
 end
