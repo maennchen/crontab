@@ -1,24 +1,22 @@
 language: elixir
 sudo: false
 elixir:
-  - 1.4.5
-  - 1.5.0
+  - 1.5
+  - 1.6
 otp_release:
-  - 18.3
   - 19.3
   - 20.0
 notifications:
   email:
     on_success: change
     on_failure: change
-script:
-  - mix test
-  - mix format mix.exs lib/**/*.ex test/**/*.ex test/**/*.exs --check-formatted
 after_script:
   - MIX_ENV=docs mix deps.get
   - MIX_ENV=docs mix inch.report
   - MIX_ENV=test mix coveralls.travis
-matrix:
-  exclude:
-    - elixir: 1.4.0
-      otp_release: 20.0
+
+jobs:
+  include:
+    stage: format
+    script: mix format mix.exs lib/**/*.ex test/**/*.ex test/**/*.exs --check-formatted
+    elixir: 1.6
