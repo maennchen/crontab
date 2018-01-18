@@ -11,6 +11,9 @@ notifications:
   email:
     on_success: change
     on_failure: change
+script:
+  - mix test
+  - mix format mix.exs lib/**/*.ex test/**/*.ex test/**/*.exs --check-formatted
 after_script:
   - MIX_ENV=docs mix deps.get
   - MIX_ENV=docs mix inch.report
