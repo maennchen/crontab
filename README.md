@@ -6,7 +6,7 @@
 [![InchCI](https://inch-ci.org/github/jshmrtn/crontab.svg?branch=master)](https://inch-ci.org/github/jshmrtn/crontab)
 [![Coverage Status](https://coveralls.io/repos/github/jshmrtn/crontab/badge.svg?branch=master)](https://coveralls.io/github/jshmrtn/crontab?branch=master)
 
-Parse Cron Format Strings, Write Cron Format Strings and Caluclate Execution Dates.
+Parse Cron Format Strings, Write Cron Format Strings and Calculate Execution Dates.
 
 ## Installation
 
