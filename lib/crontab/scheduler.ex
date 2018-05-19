@@ -267,18 +267,16 @@ defmodule Crontab.Scheduler do
   end
 
   defp get_run_date(cron_expression = %CronExpression{extended: false}, date, max_runs, direction) do
-    condition_list =
-      case direction do
-        :increment -> CronExpression.to_condition_list(cron_expression)
-        :decrement -> Enum.reverse(CronExpression.to_condition_list(cron_expression))
-      end
-
-    get_run_date(condition_list, DateHelper.beginning_of(date, :minute), max_runs, direction)
+    cron_expression
+    |> CronExpression.to_condition_list()
+    |> Enum.reverse()
+    |> get_run_date(DateHelper.beginning_of(date, :minute), max_runs, direction)
   end
 
   defp get_run_date(cron_expression = %CronExpression{extended: true}, date, max_runs, direction) do
     cron_expression
     |> CronExpression.to_condition_list()
+    |> Enum.reverse()
     |> get_run_date(DateHelper.beginning_of(date, :second), max_runs, direction)
   end
 
