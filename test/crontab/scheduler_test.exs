@@ -61,4 +61,19 @@ defmodule Crontab.SchedulerTest do
              ~N[2002-01-13 23:00:07]
            ) == {:ok, ~N[2002-02-27 07:03:00]}
   end
+
+  test "check run limits" do
+    assert get_next_run_date(
+             %Crontab.CronExpression{
+               extended: true,
+               second: [59],
+               minute: [59],
+               hour: [23],
+               day: [31],
+               month: [12],
+               year: [9999]
+             },
+             ~N[1234-05-06 07:08:09]
+           ) == {:ok, ~N[9999-12-31 23:59:59]}
+  end
 end
