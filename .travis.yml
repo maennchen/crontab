@@ -18,5 +18,5 @@ after_script:
 jobs:
   include:
     stage: format
-    script: mix format mix.exs lib/**/*.ex test/**/*.ex test/**/*.exs --check-formatted
+    script: mix format --check-formatted
     elixir: 1.6
