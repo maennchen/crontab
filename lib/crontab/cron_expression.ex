@@ -148,8 +148,8 @@ defmodule Crontab.CronExpression do
   end
 
   defimpl Inspect do
-    alias Crontab.CronExpression.Composer
     alias Crontab.CronExpression
+    alias Crontab.CronExpression.Composer
 
     @doc """
     Pretty Print Cron Expressions

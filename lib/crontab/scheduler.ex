@@ -188,7 +188,6 @@ defmodule Crontab.Scheduler do
       iex> Crontab.Scheduler.get_previous_run_date! %Crontab.CronExpression{reboot: true}
       ** (RuntimeError) Special identifier @reboot is not supported.
 
-
   """
   @spec get_previous_run_date!(CronExpression.t(), NaiveDateTime.t(), integer) ::
           NaiveDateTime.t() | no_return

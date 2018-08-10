@@ -20,8 +20,8 @@ if Code.ensure_compiled?(Ecto.Type) do
     """
 
     alias Crontab.CronExpression
-    alias Crontab.CronExpression.Parser
     alias Crontab.CronExpression.Composer
+    alias Crontab.CronExpression.Parser
 
     @behaviour Ecto.Type
 
