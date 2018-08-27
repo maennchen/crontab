@@ -280,11 +280,13 @@ defmodule Crontab.Scheduler do
   end
 
   defp get_run_date(conditions, date, max_runs, direction) do
-    {status, corrected_date} = search_and_correct_date(conditions, date, direction)
+    case search_and_correct_date(conditions, date, direction) do
+      {:found, corrected_date} ->
+        {:ok, corrected_date}
 
-    case status do
-      :found -> {:ok, corrected_date}
-      _ -> get_run_date(conditions, corrected_date, max_runs - 1, direction)
+
+      {:not_found, corrected_date} ->
+        get_run_date(conditions, corrected_date, max_runs - 1, direction)
     end
   end
 
