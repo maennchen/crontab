@@ -300,7 +300,7 @@ defmodule Crontab.Scheduler do
          %NaiveDateTime{year: from_year},
          :increment
        )
-       when target_year < from_year do
+       when is_integer(target_year) and target_year < from_year do
     {:error, :impossible}
   end
 
@@ -309,7 +309,7 @@ defmodule Crontab.Scheduler do
          %NaiveDateTime{year: from_year},
          :decrement
        )
-       when target_year > from_year do
+       when is_integer(target_year) and target_year > from_year do
     {:error, :impossible}
   end
 
