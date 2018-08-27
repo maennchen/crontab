@@ -284,6 +284,8 @@ defmodule Crontab.Scheduler do
       {:found, corrected_date} ->
         {:ok, corrected_date}
 
+      {:error, :impossible} ->
+        {:error, "No compliant date was found for your interval."}
 
       {:not_found, corrected_date} ->
         get_run_date(conditions, corrected_date, max_runs - 1, direction)
@@ -292,6 +294,25 @@ defmodule Crontab.Scheduler do
 
   @spec search_and_correct_date(CronExpression.condition_list(), NaiveDateTime.t(), direction) ::
           NaiveDateTime.t() | {:not_found, NaiveDateTime.t()}
+
+  defp search_and_correct_date(
+         [{:year, [target_year]} | _],
+         %NaiveDateTime{year: from_year},
+         :increment
+       )
+       when target_year < from_year do
+    {:error, :impossible}
+  end
+
+  defp search_and_correct_date(
+         [{:year, [target_year]} | _],
+         %NaiveDateTime{year: from_year},
+         :decrement
+       )
+       when target_year > from_year do
+    {:error, :impossible}
+  end
+
   defp search_and_correct_date([{interval, conditions} | tail], date, direction) do
     if matches_date?(interval, conditions, date) do
       search_and_correct_date(tail, date, direction)
