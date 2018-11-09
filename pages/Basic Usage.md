@@ -2,7 +2,7 @@
 
 ## Extended Cron expressions
 
-An extended cron expression has more precision then a normal cron expression. It also specifies the second.
+An extended cron expression has more precision than a normal cron expression. It also specifies the second.
 
 If you want to use extended cron expressions with the sigil, just append an `e`.
 
