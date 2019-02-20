@@ -14,7 +14,7 @@ if Code.ensure_compiled?(Ecto.Type) do
     ## Schema Example
 
         schema "my_table" do
-          field :schedule, CronExpression.Ecto.Type
+          field :schedule, Crontab.CronExpression.Ecto.Type
         end
 
     """
