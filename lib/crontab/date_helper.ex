@@ -114,13 +114,13 @@ defmodule Crontab.DateHelper do
   end
 
   @spec inc_month(NaiveDateTime.t()) :: NaiveDateTime.t()
-  def inc_month(date) do
+  def inc_month(date = %NaiveDateTime{day: day}) do
     days =
       date
       |> NaiveDateTime.to_date()
       |> Date.days_in_month()
 
-    NaiveDateTime.add(date, days * 86_400, :second)
+    NaiveDateTime.add(date, (days + 1 - day) * 86_400, :second)
   end
 
   @spec dec_month(NaiveDateTime.t()) :: NaiveDateTime.t()
