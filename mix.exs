@@ -14,7 +14,10 @@ defmodule Crontab.Mixfile do
       package: package(),
       deps: deps(),
       docs: docs(),
-      test_coverage: [tool: ExCoveralls]
+      test_coverage: [tool: ExCoveralls],
+      dialyzer: [
+        plt_add_apps: [:ecto]
+      ]
     ]
   end
 

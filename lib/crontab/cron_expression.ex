@@ -8,35 +8,70 @@ defmodule Crontab.CronExpression do
   @type t :: %Crontab.CronExpression{
           extended: boolean,
           reboot: boolean,
-          second: [value],
-          minute: [value],
-          hour: [value],
-          day: [value],
-          month: [value],
-          weekday: [value],
-          year: [value]
+          second: [value(second)],
+          minute: [value(minute)],
+          hour: [value(hour)],
+          day: [value(day)],
+          month: [value(month)],
+          weekday: [value(weekday)],
+          year: [value(year)]
         }
+
   @type interval :: :second | :minute | :hour | :day | :month | :weekday | :year
+
+  @typedoc deprecated: "Use Crontab.CronExpression.min_max/1 instead"
   @type min_max :: {:-, time_unit, time_unit}
+  @type min_max(time_unit) :: {:-, time_unit, time_unit}
+
   @type value ::
+          value(Calendar.second())
+          | value(Calendar.minute())
+          | value(Calendar.hour())
+          | value(Calendar.day())
+          | value(Calendar.month())
+          | value(Calendar.day_of_week())
+          | value(Calendar.year())
+
+  @type value(time_unit) ::
           time_unit
           | :*
           | :L
-          | {:L, value}
+          | {:L, value(time_unit)}
           | {:/,
              time_unit
              | :*
-             | min_max, pos_integer}
-          | min_max
+             | min_max(time_unit), pos_integer}
+          | min_max(time_unit)
           | {:W, time_unit | :L}
-  @type minute :: 0..59
-  @type hour :: 0..23
-  @type day :: 0..31
-  @type month :: 1..12
-  @type weekday :: 0..7
-  @type year :: integer
-  @type time_unit :: minute | hour | day | month | weekday | year
-  @type condition :: {interval, [value]}
+
+  @typedoc deprecated: "Use Calendar.second/0 instead"
+  @type second :: Calendar.second()
+  @typedoc deprecated: "Use Calendar.minute/0 instead"
+  @type minute :: Calendar.minute()
+  @typedoc deprecated: "Use Calendar.hour/0 instead"
+  @type hour :: Calendar.hour()
+  @typedoc deprecated: "Use Calendar.day/0 instead"
+  @type day :: Calendar.day()
+  @typedoc deprecated: "Use Calendar.month/0 instead"
+  @type month :: Calendar.month()
+  @typedoc deprecated: "Use Calendar.day_of_week/0 instead"
+  @type weekday :: Calendar.day_of_week()
+  @typedoc deprecated: "Use Calendar.year/0 instead"
+  @type year :: Calendar.year()
+
+  @typedoc deprecated: "Use Calendar.[second|minute|hour|day|month|day_of_week|year]/0 instead"
+  @type time_unit :: second | minute | hour | day | month | weekday | year
+
+  @type condition(name, time_unit) :: {name, [value(time_unit)]}
+  @type condition ::
+          condition(:second, Calendar.second())
+          | condition(:minute, Calendar.minute())
+          | condition(:hour, Calendar.hour())
+          | condition(:day, Calendar.day())
+          | condition(:month, Calendar.month())
+          | condition(:weekday, Calendar.day_of_week())
+          | condition(:year, Calendar.year())
+
   @type condition_list :: [condition]
 
   @doc """
@@ -132,7 +167,7 @@ defmodule Crontab.CronExpression do
         {:year, [6]}]
   """
   @spec to_condition_list(t) :: condition_list
-  def to_condition_list(interval = %__struct__{extended: false}) do
+  def to_condition_list(interval = %__MODULE__{extended: false}) do
     [
       {:minute, interval.minute},
       {:hour, interval.hour},
@@ -143,7 +178,7 @@ defmodule Crontab.CronExpression do
     ]
   end
 
-  def to_condition_list(interval = %__struct__{}) do
+  def to_condition_list(interval = %__MODULE__{}) do
     [{:second, interval.second} | to_condition_list(%{interval | extended: false})]
   end
 
@@ -165,11 +200,11 @@ defmodule Crontab.CronExpression do
 
     """
     @spec inspect(CronExpression.t(), any) :: String.t()
-    def inspect(cron_expression = %__struct__{extended: false}, _options) do
+    def inspect(cron_expression = %CronExpression{extended: false}, _options) do
       "~e[" <> Composer.compose(cron_expression) <> "]"
     end
 
-    def inspect(cron_expression = %__struct__{extended: true}, _options) do
+    def inspect(cron_expression = %CronExpression{extended: true}, _options) do
       "~e[" <> Composer.compose(cron_expression) <> "]e"
     end
   end

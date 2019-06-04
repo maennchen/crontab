@@ -8,8 +8,10 @@ defmodule Crontab.Scheduler do
   alias Crontab.CronExpression
   alias Crontab.DateHelper
 
+  @typep maybe(success, error) :: {:ok, success} | {:error, error}
+
   @type direction :: :increment | :decrement
-  @type result :: {:error, any} | {:ok, NaiveDateTime.t()}
+  @type result :: maybe(NaiveDateTime.t(), any)
 
   @max_runs Application.get_env(:crontab, :max_runs, 10_000)
 
@@ -281,19 +283,19 @@ defmodule Crontab.Scheduler do
 
   defp get_run_date(conditions, date, max_runs, direction) do
     case search_and_correct_date(conditions, date, direction) do
-      {:found, corrected_date} ->
+      {:ok, corrected_date} ->
         {:ok, corrected_date}
 
       {:error, :impossible} ->
         {:error, "No compliant date was found for your interval."}
 
-      {:not_found, corrected_date} ->
+      {:error, {:not_found, corrected_date}} ->
         get_run_date(conditions, corrected_date, max_runs - 1, direction)
     end
   end
 
   @spec search_and_correct_date(CronExpression.condition_list(), NaiveDateTime.t(), direction) ::
-          NaiveDateTime.t() | {:not_found, NaiveDateTime.t()}
+          maybe(NaiveDateTime.t(), {:not_found, NaiveDateTime.t()} | :impossible)
 
   defp search_and_correct_date(
          [{:year, [target_year]} | _],
@@ -318,89 +320,95 @@ defmodule Crontab.Scheduler do
       search_and_correct_date(tail, date, direction)
     else
       case correct_date(interval, date, direction) do
-        corrected_date = %NaiveDateTime{} ->
-          {:not_found, corrected_date}
+        {:ok, corrected_date} ->
+          {:error, {:not_found, corrected_date}}
 
         # Prevent to reach lower bound (year 0)
-        _ ->
-          {:not_found, date}
+        {:error, _} ->
+          {:error, {:not_found, date}}
       end
     end
   end
 
-  defp search_and_correct_date([], date, _), do: {:found, date}
+  defp search_and_correct_date([], date, _), do: {:ok, date}
 
   @spec correct_date(CronExpression.interval(), NaiveDateTime.t(), direction) ::
-          NaiveDateTime.t() | {:error, any}
+          maybe(NaiveDateTime.t(), any)
 
-  defp correct_date(:second, date, :increment), do: date |> NaiveDateTime.add(1, :second)
+  defp correct_date(:second, date, :increment), do: {:ok, date |> NaiveDateTime.add(1, :second)}
 
   defp correct_date(:minute, date, :increment),
-    do: date |> NaiveDateTime.add(60, :second) |> DateHelper.beginning_of(:minute)
+    do: {:ok, date |> NaiveDateTime.add(60, :second) |> DateHelper.beginning_of(:minute)}
 
   defp correct_date(:hour, date, :increment),
-    do: date |> NaiveDateTime.add(3_600, :second) |> DateHelper.beginning_of(:hour)
+    do: {:ok, date |> NaiveDateTime.add(3_600, :second) |> DateHelper.beginning_of(:hour)}
 
   defp correct_date(:day, date, :increment),
-    do: date |> NaiveDateTime.add(86_400, :second) |> DateHelper.beginning_of(:day)
+    do: {:ok, date |> NaiveDateTime.add(86_400, :second) |> DateHelper.beginning_of(:day)}
 
   defp correct_date(:month, date, :increment),
-    do: date |> DateHelper.inc_month() |> DateHelper.beginning_of(:month)
+    do: {:ok, date |> DateHelper.inc_month() |> DateHelper.beginning_of(:month)}
 
   defp correct_date(:weekday, date, :increment),
-    do: date |> NaiveDateTime.add(86_400, :second) |> DateHelper.beginning_of(:day)
+    do: {:ok, date |> NaiveDateTime.add(86_400, :second) |> DateHelper.beginning_of(:day)}
 
   defp correct_date(:year, %NaiveDateTime{year: 9_999}, :increment), do: {:error, :upper_bound}
 
   defp correct_date(:year, date, :increment),
-    do: date |> DateHelper.inc_year() |> DateHelper.beginning_of(:year)
+    do: {:ok, date |> DateHelper.inc_year() |> DateHelper.beginning_of(:year)}
 
   defp correct_date(:second, date, :decrement),
-    do: date |> NaiveDateTime.add(-1, :second) |> DateHelper.beginning_of(:second)
+    do: {:ok, date |> NaiveDateTime.add(-1, :second) |> DateHelper.beginning_of(:second)}
 
   defp correct_date(:minute, date, :decrement),
     do:
-      date
-      |> NaiveDateTime.add(-60, :second)
-      |> DateHelper.end_of(:minute)
-      |> DateHelper.beginning_of(:second)
+      {:ok,
+       date
+       |> NaiveDateTime.add(-60, :second)
+       |> DateHelper.end_of(:minute)
+       |> DateHelper.beginning_of(:second)}
 
   defp correct_date(:hour, date, :decrement),
     do:
-      date
-      |> NaiveDateTime.add(-3_600, :second)
-      |> DateHelper.end_of(:hour)
-      |> DateHelper.beginning_of(:second)
+      {:ok,
+       date
+       |> NaiveDateTime.add(-3_600, :second)
+       |> DateHelper.end_of(:hour)
+       |> DateHelper.beginning_of(:second)}
 
   defp correct_date(:day, date, :decrement),
     do:
-      date
-      |> NaiveDateTime.add(-86_400, :second)
-      |> DateHelper.end_of(:day)
-      |> DateHelper.beginning_of(:second)
+      {:ok,
+       date
+       |> NaiveDateTime.add(-86_400, :second)
+       |> DateHelper.end_of(:day)
+       |> DateHelper.beginning_of(:second)}
 
   defp correct_date(:month, date, :decrement),
     do:
-      date
-      |> DateHelper.dec_month()
-      |> DateHelper.end_of(:month)
-      |> DateHelper.beginning_of(:second)
+      {:ok,
+       date
+       |> DateHelper.dec_month()
+       |> DateHelper.end_of(:month)
+       |> DateHelper.beginning_of(:second)}
 
   defp correct_date(:weekday, date, :decrement),
     do:
-      date
-      |> NaiveDateTime.add(-86_400, :second)
-      |> DateHelper.end_of(:day)
-      |> DateHelper.beginning_of(:second)
+      {:ok,
+       date
+       |> NaiveDateTime.add(-86_400, :second)
+       |> DateHelper.end_of(:day)
+       |> DateHelper.beginning_of(:second)}
 
-  defp correct_date(:year, date = %NaiveDateTime{year: 0}, :decrement), do: date
+  defp correct_date(:year, %NaiveDateTime{year: 0}, :decrement), do: {:error, :lower_bound}
 
   defp correct_date(:year, date, :decrement),
     do:
-      date
-      |> DateHelper.dec_year()
-      |> DateHelper.end_of(:year)
-      |> DateHelper.beginning_of(:second)
+      {:ok,
+       date
+       |> DateHelper.dec_year()
+       |> DateHelper.end_of(:year)
+       |> DateHelper.beginning_of(:second)}
 
   @spec clean_date(NaiveDateTime.t(), :seconds | :microseconds) :: NaiveDateTime.t()
   defp clean_date(date = %NaiveDateTime{microsecond: {0, _}}, :microseconds), do: date

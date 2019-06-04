@@ -28,13 +28,13 @@ if Code.ensure_compiled?(Ecto.Type) do
     @type map_expression :: %{
             extended: boolean,
             reboot: boolean,
-            second: [CronExpression.value()],
-            minute: [CronExpression.value()],
-            hour: [CronExpression.value()],
-            day: [CronExpression.value()],
-            month: [CronExpression.value()],
-            weekday: [CronExpression.value()],
-            year: [CronExpression.value()]
+            second: [CronExpression.value(Calendar.second())],
+            minute: [CronExpression.value(Calendar.minute())],
+            hour: [CronExpression.value(Calendar.second())],
+            day: [CronExpression.value(Calendar.day())],
+            month: [CronExpression.value(Calendar.month())],
+            weekday: [CronExpression.value(Calendar.day_of_week())],
+            year: [CronExpression.value(Calendar.year())]
           }
 
     @spec type :: :map
