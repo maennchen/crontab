@@ -1,8 +1,6 @@
 language: elixir
 sudo: false
 elixir:
-  - 1.5
-  - 1.6
   - 1.7
   - 1.8
 otp_release:
@@ -20,12 +18,6 @@ after_script:
   - MIX_ENV=test mix coveralls.travis
 matrix:
   exclude:
-    - elixir: 1.5
-      otp_release: 21.3
-    - elixir: 1.5
-      otp_release: 22.0
-    - elixir: 1.6
-      otp_release: 22.0
     - elixir: 1.8
       otp_release: 19.3
 jobs:
