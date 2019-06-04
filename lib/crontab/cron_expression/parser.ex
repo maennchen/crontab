@@ -31,6 +31,10 @@ defmodule Crontab.CronExpression.Parser do
 
   @extended_intervals [:second | @intervals]
 
+  @minute_values 0..59
+  @hour_values 0..23
+  @day_of_month_values 1..31
+
   @weekday_values %{
     MON: 1,
     TUE: 2,
@@ -40,6 +44,8 @@ defmodule Crontab.CronExpression.Parser do
     SAT: 6,
     SUN: 7
   }
+  # Sunday can be represented by 0 or 7
+  @full_weekday_values [0] ++ Map.values(@weekday_values)
 
   @month_values %{
     JAN: 1,
@@ -72,7 +78,7 @@ defmodule Crontab.CronExpression.Parser do
         month: [:*], weekday: [:*], year: [:*], second: [:*]}}
 
       iex> Crontab.CronExpression.Parser.parse "fooo"
-      {:error, "Can't parse fooo as interval minute."}
+      {:error, "Can't parse fooo as minute."}
 
   """
   @spec parse(binary, boolean) :: result
@@ -106,7 +112,7 @@ defmodule Crontab.CronExpression.Parser do
         month: [:*], weekday: [:*], year: [:*], second: [:*]}
 
       iex> Crontab.CronExpression.Parser.parse! "fooo"
-      ** (RuntimeError) Can't parse fooo as interval minute.
+      ** (RuntimeError) Can't parse fooo as minute.
 
   """
   @spec parse!(binary, boolean) :: CronExpression.t() | no_return
@@ -177,12 +183,16 @@ defmodule Crontab.CronExpression.Parser do
   @spec tokenize(CronExpression.interval(), :- | :single_value | :complex_divider) ::
           {:ok, CronExpression.value()} | {:error, binary}
   defp tokenize(interval, :-, whole_string) do
-    [min, max] = String.split(whole_string, "-")
+    case String.split(whole_string, "-") do
+      [min, max] ->
+        case {clean_value(interval, min), clean_value(interval, max)} do
+          {{:ok, min_value}, {:ok, max_value}} -> {:ok, {:-, min_value, max_value}}
+          {error = {:error, _}, _} -> error
+          {_, error = {:error, _}} -> error
+        end
 
-    case {clean_value(interval, min), clean_value(interval, max)} do
-      {{:ok, min_value}, {:ok, max_value}} -> {:ok, {:-, min_value, max_value}}
-      {error = {:error, _}, _} -> error
-      {_, error = {:error, _}} -> error
+      _ ->
+        {:error, "Can't parse #{whole_string} as a range."}
     end
   end
 
@@ -193,55 +203,88 @@ defmodule Crontab.CronExpression.Parser do
   defp tokenize(interval, :complex_divider, value) do
     [base, divider] = String.split(value, "/")
 
-    case {tokenize(interval, base), Integer.parse(divider, 10)} do
-      {{:ok, clean_base}, {clean_divider, _}} ->
+    # Range increments apply only to * or ranges in <start>-<end> format
+    range_tokenization_result = tokenize(interval, :-, base)
+    other_tokenization_result = tokenize(interval, base)
+    integer_divider = Integer.parse(divider, 10)
+
+    case {range_tokenization_result, other_tokenization_result, integer_divider} do
+      # Invalid increment
+      {_, _, {_clean_divider, remainder}} when remainder != "" ->
+        {:error, "Can't parse #{divider} as increment."}
+
+      # Found range in <start>-<end> format
+      {{:ok, clean_base}, _, {clean_divider, ""}} ->
         {:ok, {:/, clean_base, clean_divider}}
 
-      {_, :error} ->
-        {:error, "Can't parse " <> value <> " as interval " <> Atom.to_string(interval) <> "."}
+      # Found star (*) range
+      {{:error, _}, {:ok, :*}, {clean_divider, ""}} ->
+        {:ok, {:/, :*, clean_divider}}
 
-      {error = {:error, _}, _} ->
+      # No valid range found
+      {error = {:error, _}, _, _} ->
         error
     end
   end
 
   @spec clean_value(CronExpression.interval(), binary) ::
           {:ok, CronExpression.value()} | {:error, binary}
+
+  defp clean_value(:minute, value) do
+    clean_integer_within_range(value, "minute", @minute_values)
+  end
+
+  defp clean_value(:hour, value) do
+    clean_integer_within_range(value, "hour", @hour_values)
+  end
+
   defp clean_value(:weekday, "L"), do: {:ok, 7}
 
   defp clean_value(:weekday, value) do
+    # Sunday can be represented by 0 or 7
     cond do
       String.match?(value, ~r/L$/) ->
-        case parse_week_day(binary_part(value, 0, byte_size(value) - 1)) do
-          {:ok, value} -> {:ok, {:L, value}}
-          error = {:error, _} -> error
-        end
+        parse_last_week_day(value)
 
       String.match?(value, ~r/#\d+$/) ->
-        [weekday, n] = String.split(value, "#")
-
-        case parse_week_day(weekday) do
-          {:ok, value} ->
-            {n_int, _} = Integer.parse(n)
-            {:ok, {:"#", value, n_int}}
-
-          error = {:error, _} ->
-            error
-        end
+        parse_nth_week_day(value)
 
       true ->
-        parse_week_day(value)
+        case parse_week_day(value) do
+          {:ok, number} ->
+            check_within_range(number, "day of week", @full_weekday_values)
+
+          error ->
+            error
+        end
     end
   end
 
   defp clean_value(:month, "L"), do: {:ok, 12}
 
   defp clean_value(:month, value) do
-    case {Map.fetch(@month_values, String.to_atom(String.upcase(value))),
-          Integer.parse(value, 10)} do
-      {:error, :error} -> {:error, "Can't parse " <> value <> " as interval month."}
-      {{:ok, number}, :error} -> {:ok, number}
-      {:error, {number, _}} -> {:ok, number}
+    error_message = "Can't parse #{value} as month."
+
+    result =
+      case {Map.fetch(@month_values, String.to_atom(String.upcase(value))),
+            Integer.parse(value, 10)} do
+        # No valid month string or integer
+        {:error, :error} -> {:error, error_message}
+        # Month specified as string
+        {{:ok, number}, :error} -> {:ok, number}
+        # Month specified as integer
+        {:error, {number, ""}} -> {:ok, number}
+        # Integer is followed by an unwanted trailing string
+        {:error, {_number, _remainder}} -> {:error, error_message}
+      end
+
+    case result do
+      {:ok, number} ->
+        month_numbers = Map.values(@month_values)
+        check_within_range(number, "month", month_numbers)
+
+      error ->
+        error
     end
   end
 
@@ -253,20 +296,23 @@ defmodule Crontab.CronExpression.Parser do
       day = binary_part(value, 0, byte_size(value) - 1)
 
       case Integer.parse(day, 10) do
-        {number, _} -> {:ok, {:W, number}}
-        :error -> {:error, "Can't parse " <> value <> " as interval day."}
+        {number, ""} ->
+          case check_within_range(number, "day of month", @day_of_month_values) do
+            {:ok, number} -> {:ok, {:W, number}}
+            error -> error
+          end
+
+        :error ->
+          {:error, "Can't parse " <> value <> " as interval day."}
       end
     else
-      case Integer.parse(value, 10) do
-        {number, _} -> {:ok, number}
-        :error -> {:error, "Can't parse " <> value <> " as interval day."}
-      end
+      clean_integer_within_range(value, "day of month", @day_of_month_values)
     end
   end
 
   defp clean_value(interval, value) do
     case Integer.parse(value, 10) do
-      {number, _} ->
+      {number, ""} ->
         {:ok, number}
 
       :error ->
@@ -274,13 +320,73 @@ defmodule Crontab.CronExpression.Parser do
     end
   end
 
+  @spec clean_integer_within_range(binary, binary, Range.t()) ::
+          {:ok, CronExpression.value()} | {:error, binary}
+  defp clean_integer_within_range(value, field_name, valid_values) do
+    case Integer.parse(value, 10) do
+      {number, ""} ->
+        check_within_range(number, field_name, valid_values)
+
+      _ ->
+        {:error, "Can't parse #{value} as #{field_name}."}
+    end
+  end
+
+  @spec check_within_range(number, binary, Enum.t()) ::
+          {:ok, CronExpression.value()} | {:error, binary}
+  defp check_within_range(number, field_name, valid_values) do
+    if number in valid_values do
+      {:ok, number}
+    else
+      {:error, "Can't parse #{number} as #{field_name}."}
+    end
+  end
+
   @spec parse_week_day(binary) :: {:ok, CronExpression.value()} | {:error, binary}
   defp parse_week_day(value) do
+    error_message = "Can't parse #{value} as day of week."
+
     case {Map.fetch(@weekday_values, String.to_atom(String.upcase(value))),
           Integer.parse(value, 10)} do
-      {:error, :error} -> {:error, "Can't parse " <> value <> " as interval weekday."}
+      {:error, :error} -> {:error, error_message}
       {{:ok, number}, :error} -> {:ok, number}
-      {:error, {number, _}} -> {:ok, number}
+      {:error, {number, ""}} -> {:ok, number}
+      {:error, {_number, _remainder}} -> {:error, error_message}
+    end
+  end
+
+  @spec parse_last_week_day(binary) :: {:ok, CronExpression.value()} | {:error, binary}
+  defp parse_last_week_day(value) do
+    case parse_week_day(binary_part(value, 0, byte_size(value) - 1)) do
+      {:ok, value} ->
+        case check_within_range(value, "day of week", @full_weekday_values) do
+          {:ok, number} -> {:ok, {:L, number}}
+          error -> error
+        end
+
+      error = {:error, _} ->
+        error
+    end
+  end
+
+  @spec parse_nth_week_day(binary) :: {:ok, CronExpression.value()} | {:error, binary}
+  defp parse_nth_week_day(value) do
+    [weekday, n] = String.split(value, "#")
+
+    case parse_week_day(weekday) do
+      {:ok, value} ->
+        {n_int, ""} = Integer.parse(n)
+
+        case check_within_range(value, "day of week", @full_weekday_values) do
+          {:ok, number} ->
+            {:ok, {:"#", number, n_int}}
+
+          error ->
+            error
+        end
+
+      error = {:error, _} ->
+        error
     end
   end
 
