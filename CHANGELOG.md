@@ -9,7 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-Diff for [unreleased](https://github.com/jshmrtn/crontab/compare/v1.1.5...HEAD)
+Diff for [unreleased](https://github.com/jshmrtn/crontab/compare/v1.1.6...HEAD)
+
+## 1.1.6
+
+### Fixed
+
+* Do not skip month in date util skip_month.
+
+Diff for [v1.1.5](https://github.com/jshmrtn/crontab/compare/v1.1.5...v1.1.6)
 
 ## 1.1.5
 
