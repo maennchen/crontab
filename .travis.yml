@@ -33,3 +33,4 @@ jobs:
     stage: format
     script: mix format --check-formatted
     elixir: 1.8
+    otp_release: 22.0
