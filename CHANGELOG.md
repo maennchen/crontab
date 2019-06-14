@@ -9,7 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-Diff for [unreleased](https://github.com/jshmrtn/crontab/compare/v1.1.6...HEAD)
+Diff for [unreleased](https://github.com/jshmrtn/crontab/compare/v1.1.7...HEAD)
+
+## 1.1.7
+
+### Added
+
+* Improved Validation of the Parser
+
+Diff for [v1.1.7](https://github.com/jshmrtn/crontab/compare/v1.1.6...v1.1.7)
 
 ## 1.1.6
 
@@ -17,7 +25,7 @@ Diff for [unreleased](https://github.com/jshmrtn/crontab/compare/v1.1.6...HEAD)
 
 * Do not skip month in date util skip_month.
 
-Diff for [v1.1.5](https://github.com/jshmrtn/crontab/compare/v1.1.5...v1.1.6)
+Diff for [v1.1.6](https://github.com/jshmrtn/crontab/compare/v1.1.5...v1.1.6)
 
 ## 1.1.5
 
