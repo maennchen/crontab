@@ -8,10 +8,12 @@ defmodule Crontab.Scheduler do
   alias Crontab.CronExpression
   alias Crontab.DateHelper
 
-  @typep maybe(success, error) :: {:ok, success} | {:error, error}
+  @typep ok(t) :: {:ok, t}
+  @typep error(t) :: {:error, t}
+
+  @reboot_error "Special identifier @reboot is not supported."
 
   @type direction :: :increment | :decrement
-  @type result :: maybe(NaiveDateTime.t(), any)
 
   @max_runs Application.get_env(:crontab, :max_runs, 10_000)
 
@@ -28,10 +30,11 @@ defmodule Crontab.Scheduler do
       {:ok, ~N[2007-01-01 00:00:00]}
 
       iex> Crontab.Scheduler.get_next_run_date %Crontab.CronExpression{reboot: true}
-      ** (RuntimeError) Special identifier @reboot is not supported.
+      {:error, "Special identifier @reboot is not supported."}
 
   """
-  @spec get_next_run_date(CronExpression.t(), NaiveDateTime.t(), integer) :: result
+  @spec get_next_run_date(CronExpression.t(), NaiveDateTime.t(), integer) ::
+          ok(NaiveDateTime.t()) | error(String.t())
   def get_next_run_date(
         cron_expression,
         date \\ DateTime.to_naive(DateTime.utc_now()),
@@ -39,7 +42,7 @@ defmodule Crontab.Scheduler do
       )
 
   def get_next_run_date(%CronExpression{reboot: true}, _, _),
-    do: raise("Special identifier @reboot is not supported.")
+    do: {:error, @reboot_error}
 
   def get_next_run_date(cron_expression = %CronExpression{extended: false}, date, max_runs) do
     case get_run_date(cron_expression, clean_date(date, :seconds), max_runs, :increment) do
@@ -123,12 +126,12 @@ defmodule Crontab.Scheduler do
     _get_next_run_dates(cron_expression, date, fn date -> NaiveDateTime.add(date, 1, :second) end)
   end
 
-  @spec _get_next_run_dates(CronExpression.t(), NaiveDateTime.t(), function) :: Enumerable.t()
   defp _get_next_run_dates(cron_expression, date, advance_date) do
     Stream.unfold(date, fn previous_date ->
       case get_next_run_date(cron_expression, previous_date) do
         {:ok, new_date} -> {new_date, advance_date.(new_date)}
-        _ -> nil
+        {:error, @reboot_error} -> raise @reboot_error
+        {:error, _} -> nil
       end
     end)
   end
@@ -147,10 +150,11 @@ defmodule Crontab.Scheduler do
       {:ok, ~N[1998-12-31 23:59:00]}
 
       iex> Crontab.Scheduler.get_previous_run_date %Crontab.CronExpression{reboot: true}
-      ** (RuntimeError) Special identifier @reboot is not supported.
+      {:error, "Special identifier @reboot is not supported."}
 
   """
-  @spec get_previous_run_date(CronExpression.t(), NaiveDateTime.t(), integer) :: result
+  @spec get_previous_run_date(CronExpression.t(), NaiveDateTime.t(), integer) ::
+          ok(NaiveDateTime.t()) | error(String.t())
   def get_previous_run_date(
         cron_expression,
         date \\ DateTime.to_naive(DateTime.utc_now()),
@@ -158,7 +162,7 @@ defmodule Crontab.Scheduler do
       )
 
   def get_previous_run_date(%CronExpression{reboot: true}, _, _),
-    do: raise("Special identifier @reboot is not supported.")
+    do: {:error, @reboot_error}
 
   def get_previous_run_date(cron_expression = %CronExpression{extended: false}, date, max_runs) do
     case get_run_date(cron_expression, date, max_runs, :decrement) do
@@ -252,17 +256,12 @@ defmodule Crontab.Scheduler do
     Stream.unfold(date, fn previous_date ->
       case get_previous_run_date(cron_expression, previous_date) do
         {:ok, new_date} -> {new_date, advance_date.(new_date)}
-        _ -> nil
+        {:error, @reboot_error} -> raise @reboot_error
+        {:error, _} -> nil
       end
     end)
   end
 
-  @spec get_run_date(
-          CronExpression.t() | CronExpression.condition_list(),
-          NaiveDateTime.t(),
-          integer,
-          direction
-        ) :: result
   defp get_run_date(_, _, 0, _) do
     {:error, "No compliant date was found for your interval."}
   end
@@ -293,9 +292,6 @@ defmodule Crontab.Scheduler do
         get_run_date(conditions, corrected_date, max_runs - 1, direction)
     end
   end
-
-  @spec search_and_correct_date(CronExpression.condition_list(), NaiveDateTime.t(), direction) ::
-          maybe(NaiveDateTime.t(), {:not_found, NaiveDateTime.t()} | :impossible)
 
   defp search_and_correct_date(
          [{:year, [target_year]} | _],
@@ -331,9 +327,6 @@ defmodule Crontab.Scheduler do
   end
 
   defp search_and_correct_date([], date, _), do: {:ok, date}
-
-  @spec correct_date(CronExpression.interval(), NaiveDateTime.t(), direction) ::
-          maybe(NaiveDateTime.t(), any)
 
   defp correct_date(:second, date, :increment), do: {:ok, date |> NaiveDateTime.add(1, :second)}
 
@@ -410,7 +403,6 @@ defmodule Crontab.Scheduler do
        |> DateHelper.end_of(:year)
        |> DateHelper.beginning_of(:second)}
 
-  @spec clean_date(NaiveDateTime.t(), :seconds | :microseconds) :: NaiveDateTime.t()
   defp clean_date(date = %NaiveDateTime{microsecond: {0, _}}, :microseconds), do: date
 
   defp clean_date(date = %NaiveDateTime{}, :microseconds) do
