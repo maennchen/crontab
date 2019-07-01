@@ -158,7 +158,7 @@ defmodule Crontab.CronExpression.ParserTest do
   end
 
   test "parse \"1 2 3 4 5 6 7\" gives error" do
-    assert parse("1 2 3 4 5 6 7") == {:error, "The Cron Format String contains to many parts."}
+    assert parse("1 2 3 4 5 6 7") == {:error, "The Cron Format String contains too many parts."}
   end
 
   test "parse \"*\" gives minutely" do
