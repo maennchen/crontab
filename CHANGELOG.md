@@ -9,7 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-Diff for [unreleased](https://github.com/jshmrtn/crontab/compare/v1.1.7...HEAD)
+Diff for [unreleased](https://github.com/jshmrtn/crontab/compare/v1.1.8...HEAD)
+
+## 1.1.8
+
+### Added
+
+* Added Ecto 3.2 compatibility
+
+Diff for [v1.1.8](https://github.com/jshmrtn/crontab/compare/v1.1.7...v1.1.8)
 
 ## 1.1.7
 
