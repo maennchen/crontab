@@ -352,4 +352,8 @@ defmodule Crontab.CronExpression.ParserTest do
   test "parse invalid list element gives error" do
     assert parse("* 2,4,invalid * * *") == {:error, "Can't parse invalid as hour."}
   end
+
+  test "parse zero divider gives error" do
+    assert parse("*/0") == {:error, "Can't parse 0 as increment."}
+  end
 end

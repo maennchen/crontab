@@ -213,6 +213,10 @@ defmodule Crontab.CronExpression.Parser do
       {_, _, {_clean_divider, remainder}} when remainder != "" ->
         {:error, "Can't parse #{divider} as increment."}
 
+      # Zero increment
+      {_, _, {0, ""}} ->
+        {:error, "Can't parse #{divider} as increment."}
+
       # Found range in <start>-<end> format
       {{:ok, clean_base}, _, {clean_divider, ""}} ->
         {:ok, {:/, clean_base, clean_divider}}
