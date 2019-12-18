@@ -128,6 +128,10 @@ defmodule Crontab.DateChecker do
     DateHelper.last_weekday(execution_date, weekday) == execution_date.day
   end
 
+  defp matches_specific_date?(:weekday, _, :L, execution_date) do
+    Date.day_of_week(execution_date) == 7
+  end
+
   defp matches_specific_date?(:weekday, _, {:"#", weekday, n}, execution_date) do
     DateHelper.nth_weekday(execution_date, weekday, n) == execution_date.day
   end
@@ -146,6 +150,10 @@ defmodule Crontab.DateChecker do
       end
 
     DateHelper.next_weekday_to(specific_day) === execution_date.day
+  end
+
+  defp matches_specific_date?(:month, _, :L, execution_date) do
+    execution_date.month == 12
   end
 
   defp matches_specific_date?(

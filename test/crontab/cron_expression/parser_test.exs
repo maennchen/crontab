@@ -38,8 +38,8 @@ defmodule Crontab.CronExpression.ParserTest do
               }}
   end
 
-  test ~s(parse "@unknown" gives error) do
-    assert parse("@unknown") == {:error, "Special identifier @unknown is undefined."}
+  test "parse \"@unknown\" gives error" do
+    assert {:error, _} = parse("@unknown")
   end
 
   test ~s("parse "@yearly" gives yearly) do
@@ -161,8 +161,8 @@ defmodule Crontab.CronExpression.ParserTest do
               }}
   end
 
-  test ~s(parse \"1 2 3 4 5 6 7\" gives error) do
-    assert parse("1 2 3 4 5 6 7") == {:error, "The Cron Format String contains too many parts."}
+  test "parse \"1 2 3 4 5 6 7\" gives error" do
+    assert {:error, _} = parse("1 2 3 4 5 6 7")
   end
 
   test ~s(parse "*" gives minutely) do
@@ -191,8 +191,8 @@ defmodule Crontab.CronExpression.ParserTest do
               }}
   end
 
-  test ~s(parse "*/4,9,JAN-DEC" gives error") do
-    assert parse("*/4,9,JAN-DEC") == {:error, "Can't parse JAN as minute."}
+  test "parse \"*/4,9,JAN-DEC\" gives error" do
+    assert {:error, _} = parse("*/4,9,JAN-DEC")
   end
 
   test ~s(parse "* * * JAN-DEC" gives [{:-, 1, 12}]) do
@@ -239,99 +239,119 @@ defmodule Crontab.CronExpression.ParserTest do
   end
 
   test "parse minute followed by string gives error" do
-    assert parse("42invalid * * * *") == {:error, "Can't parse 42invalid as minute."}
+    assert {:error,
+            %Crontab.CronExpression.Parser.ParseError{
+              column: 2,
+              message:
+                "expected special or minute_expression, followed by space, followed by hour_expression, followed by space, followed by day_expression, followed by space, followed by month_expression, followed by space, followed by weekday_expression, followed by space, followed by year_expression, followed by end of string or end of string, followed by end of string or end of string, followed by end of string or end of string, followed by end of string or end of string, followed by end of string or end of string",
+              rest: "invalid * * * *"
+            }} = parse("42invalid * * * *")
   end
 
   test "parse negative minute gives error" do
-    assert parse("-1 * * * *") == {:error, "Can't parse -1 as minute."}
+    assert {:error,
+            %Crontab.CronExpression.Parser.ParseError{
+              column: 2,
+              message: "number -1 must be between 0 and 59",
+              rest: " * * * *"
+            }} = parse("-1 * * * *")
   end
 
   test "parse out of range minute gives error" do
-    assert parse("60 * * * *") == {:error, "Can't parse 60 as minute."}
+    assert {:error,
+            %Crontab.CronExpression.Parser.ParseError{
+              column: 2,
+              message: "number 60 must be between 0 and 59",
+              rest: " * * * *"
+            }} = parse("60 * * * *")
   end
 
   test "parse negative hour gives error" do
-    assert parse("* -1 * * *") == {:error, "Can't parse -1 as hour."}
+    assert {:error, _} = parse("* -1 * * *")
   end
 
   test "parse out of range hour gives error" do
-    assert parse("* 24 * * *") == {:error, "Can't parse 24 as hour."}
+    assert {:error, _} = parse("* 24 * * *")
   end
 
   test "parse day of month below allowed range gives error" do
-    assert parse("* * 0 * *") == {:error, "Can't parse 0 as day of month."}
+    assert {:error, _} = parse("* * 0 * *")
   end
 
   test "parse day of month with trailing string gives error" do
-    assert parse("* * 1invalid * *") == {:error, "Can't parse 1invalid as day of month."}
+    assert {:error, _} = parse("* * 1invalid * *")
   end
 
   test "parse day of month above allowed range gives error" do
-    assert parse("* * 32 * *") == {:error, "Can't parse 32 as day of month."}
+    assert {:error, _} = parse("* * 32 * *")
   end
 
   test "parse weekday nearest day of month below allowed range gives error" do
-    assert parse("* * 0W * *") == {:error, "Can't parse 0 as day of month."}
+    assert {:error, _} = parse("* * 0W * *")
   end
 
   test "parse weekday nearest day of month above allowed range gives error" do
-    assert parse("* * 32W * *") == {:error, "Can't parse 32 as day of month."}
+    assert {:error, _} = parse("* * 32W * *")
   end
 
   test "parse invalid month gives error" do
-    assert parse("* * * invalid *") == {:error, "Can't parse invalid as month."}
+    assert {:error, _} = parse("* * * invalid *")
   end
 
   test "parse month with trailing string gives error" do
-    assert parse("* * * 2invalid *") == {:error, "Can't parse 2invalid as month."}
+    assert {:error, _} = parse("* * * 2invalid *")
   end
 
   test "parse month below allowed range gives error" do
-    assert parse("* * * 0 *") == {:error, "Can't parse 0 as month."}
+    assert {:error, _} = parse("* * * 0 *")
   end
 
   test "parse month above allowed range gives error" do
-    assert parse("* * * 13 *") == {:error, "Can't parse 13 as month."}
+    assert {:error, _} = parse("* * * 13 *")
   end
 
   test "parse day of week below allowed range gives error" do
-    assert parse("* * * * -1") == {:error, "Can't parse -1 as day of week."}
+    assert {:error, _} = parse("* * * * -1")
   end
 
   test "parse day of week above allowed range gives error" do
-    assert parse("* * * * 8") == {:error, "Can't parse 8 as day of week."}
+    assert {:error, _} = parse("* * * * 8")
   end
 
   test "parse invalid day of week gives error" do
-    assert parse("* * * * invalid") == {:error, "Can't parse invalid as day of week."}
+    assert {:error, _} = parse("* * * * invalid")
   end
 
   test "parse invalid last day of week gives error" do
-    assert parse("* * * * invalidL") == {:error, "Can't parse invalid as day of week."}
+    assert {:error, _} = parse("* * * * invalidL")
   end
 
   test "parse last day of week below allowed range gives error" do
-    assert parse("* * * * -1L") == {:error, "Can't parse -1 as day of week."}
+    assert {:error, _} = parse("* * * * -1L")
   end
 
   test "parse last day of week above allowed range gives error" do
-    assert parse("* * * * 8L") == {:error, "Can't parse 8 as day of week."}
+    assert {:error, _} = parse("* * * * 8L")
   end
 
   test "parse invalid second day of week in a month gives error" do
-    assert parse("* * * * invalid#2") == {:error, "Can't parse invalid as day of week."}
+    assert {:error, _} = parse("* * * * invalid#2")
   end
 
   test "parse second day of week in a month below allowed range gives error" do
-    assert parse("* * * * -1#2") == {:error, "Can't parse -1 as day of week."}
+    assert {:error, _} = parse("* * * * -1#2")
   end
 
   test "parse second day of week in a month above allowed range gives error" do
-    assert parse("* * * * 8#2") == {:error, "Can't parse 8 as day of week."}
+    assert {:error, _} = parse("* * * * 8#2")
   end
 
   test "parse day of week followed by string gives error" do
-    assert parse("* * * * 5invalid") == {:error, "Can't parse 5invalid as day of week."}
+    assert {:error, _} = parse("* * * * 5invalid")
+  end
+
+  test "parse invalid range increment" do
+    assert {:error, _} = parse("* 4/8 * * *")
   end
 
   test "parse valid range increment" do
@@ -339,11 +359,11 @@ defmodule Crontab.CronExpression.ParserTest do
   end
 
   test "parse invalid month range start gives error" do
-    assert parse("* * * 0-10 *") == {:error, "Can't parse 0 as month."}
+    assert {:error, _} = parse("* * * 0-10 *")
   end
 
   test "parse invalid month range end gives error" do
-    assert parse("* * * 1-13 *") == {:error, "Can't parse 13 as month."}
+    assert {:error, _} = parse("* * * 1-13 *")
   end
 
   test "parse valid star range increment" do
@@ -351,11 +371,11 @@ defmodule Crontab.CronExpression.ParserTest do
   end
 
   test "parse invalid range increment gives error" do
-    assert parse("* 1-10/2invalid * * *") == {:error, "Can't parse 2invalid as increment."}
+    assert {:error, _} = parse("* 1-10/2invalid * * *")
   end
 
   test "parse invalid star increment gives error" do
-    assert parse("* */8invalid * * *") == {:error, "Can't parse 8invalid as increment."}
+    assert {:error, _} = parse("* */8invalid * * *")
   end
 
   test "parse valid list" do
@@ -363,15 +383,15 @@ defmodule Crontab.CronExpression.ParserTest do
   end
 
   test "parse out of range list element gives error" do
-    assert parse("* 2,4,24 * * *") == {:error, "Can't parse 24 as hour."}
+    assert {:error, _} = parse("* 2,4,24 * * *")
   end
 
   test "parse invalid list element gives error" do
-    assert parse("* 2,4,invalid * * *") == {:error, "Can't parse invalid as hour."}
+    assert {:error, _} = parse("* 2,4,invalid * * *")
   end
 
   test "parse zero divider gives error" do
-    assert parse("*/0") == {:error, "Can't parse 0 as increment."}
+    assert {:error, _} = parse("*/0")
   end
 
   describe "parse/2 non-range step value" do
