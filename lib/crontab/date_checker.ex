@@ -25,7 +25,10 @@ defmodule Crontab.DateChecker do
       true
 
   """
-  @spec matches_date?(CronExpression.t(), NaiveDateTime.t()) :: boolean | no_return
+  @spec matches_date?(cron_expression :: CronExpression.t(), date :: NaiveDateTime.t()) ::
+          boolean | no_return
+  def matches_date?(cron_expression_or_condition_list, date)
+
   def matches_date?(%CronExpression{reboot: true}, _),
     do: raise("Special identifier @reboot is not supported.")
 
@@ -35,8 +38,10 @@ defmodule Crontab.DateChecker do
     |> matches_date?(execution_date)
   end
 
-  @spec matches_date?(CronExpression.condition_list(), NaiveDateTime.t()) :: boolean
-  def matches_date?(condition_list, date)
+  @spec matches_date?(
+          condition_list :: CronExpression.condition_list(),
+          date :: NaiveDateTime.t()
+        ) :: boolean
   def matches_date?([], _), do: true
 
   def matches_date?([{interval, conditions} | tail], execution_date) do
