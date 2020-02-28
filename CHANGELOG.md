@@ -9,7 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-Diff for [unreleased](https://github.com/jshmrtn/crontab/compare/v1.1.9...HEAD)
+Diff for [unreleased](https://github.com/jshmrtn/crontab/compare/v1.1.10...HEAD)
+
+## 1.1.10
+
+### Fixed
+- Fix Warning about function head before function body
+- Mute Warning about deprecated `Code.ensure_compiled?/1`
+
+Diff for [v1.1.10](https://github.com/jshmrtn/crontab/compare/v1.1.9...v1.1.10)
 
 ## 1.1.9
 
