@@ -1,4 +1,12 @@
-if Code.ensure_compiled?(Ecto.Type) do
+# TODO: Replace with simple Code.ensure_compiled as soon as Elixir min. version is raised to 1.10
+Code
+|> function_exported?(:ensure_compiled, 1)
+|> if do
+  match?({:module, Ecto.Type}, Code.ensure_compiled(Ecto.Type))
+else
+  :erlang.apply(Code, :ensure_compiled?, [Ecto.Type])
+end
+|> if do
   defmodule Crontab.CronExpression.Ecto.TypeTest do
     use ExUnit.Case, async: false
     doctest Crontab.CronExpression.Ecto.Type
