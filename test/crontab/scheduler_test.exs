@@ -1,6 +1,10 @@
 defmodule Crontab.SchedulerTest do
+  @moduledoc false
+
   use ExUnit.Case, async: true
+
   doctest Crontab.Scheduler
+
   import Crontab.Scheduler
 
   test "check cron expression for year" do

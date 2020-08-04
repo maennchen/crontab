@@ -1,11 +1,13 @@
 defmodule Crontab.FunctionalTest do
+  @moduledoc false
+
   use ExUnit.Case, async: true
 
-  tests_find_date = [
-    ###########################################################################################################################################
-    # To Parse              # To Compose          # Relative Sate           # Next Search Date        # Previous Search Date    # Matches Now #
-    ###########################################################################################################################################
+  alias Crontab.CronExpression.Composer
+  alias Crontab.CronExpression.Parser
 
+  tests_find_date = [
+    # {To Parse, To Compose, Relative Date, Next Search Date, Previous Search Date, Matches Now}
     {"*/2 */2 * * *", "*/2 */2 * * * *", ~N[2015-08-10 21:47:27], ~N[2015-08-10 22:00:00],
      ~N[2015-08-10 20:58:00], false},
     {"* * * * *", "* * * * * *", ~N[2015-08-10 21:50:37], ~N[2015-08-10 21:51:00],
@@ -144,8 +146,8 @@ defmodule Crontab.FunctionalTest do
            " from " <>
            NaiveDateTime.to_iso8601(@start_date) <>
            " equals " <> NaiveDateTime.to_iso8601(@next_search_date) do
-      {:ok, cron_expression} = Crontab.CronExpression.Parser.parse(@cron_expression)
-      assert Crontab.CronExpression.Composer.compose(cron_expression) == @written_cron_expression
+      {:ok, cron_expression} = Parser.parse(@cron_expression)
+      assert Composer.compose(cron_expression) == @written_cron_expression
 
       assert Crontab.Scheduler.get_next_run_date(cron_expression, @start_date) ==
                {:ok, @next_search_date}
@@ -165,10 +167,7 @@ defmodule Crontab.FunctionalTest do
   end
 
   tests_find_date_extended = [
-    ###########################################################################################################################################
-    # To Parse              # To Compose          # Relative Sate           # Next Search Date        # Previous Search Date    # Matches Now #
-    ###########################################################################################################################################
-
+    # {To Parse, To Compose, Relative Date, Next Search Date, Previous Search Date, Matches Now}
     {"*/2 */2 * * * *", "*/2 */2 * * * * *", ~N[2015-08-10 21:47:27], ~N[2015-08-10 21:48:00],
      ~N[2015-08-10 21:46:58], false},
     {"* * * * *", "* * * * * * *", ~N[2015-08-10 21:50:37], ~N[2015-08-10 21:50:37],
@@ -192,8 +191,8 @@ defmodule Crontab.FunctionalTest do
            " from " <>
            NaiveDateTime.to_iso8601(@start_date) <>
            " equals " <> NaiveDateTime.to_iso8601(@next_search_date) do
-      {:ok, cron_expression} = Crontab.CronExpression.Parser.parse(@cron_expression, true)
-      assert Crontab.CronExpression.Composer.compose(cron_expression) == @written_cron_expression
+      {:ok, cron_expression} = Parser.parse(@cron_expression, true)
+      assert Composer.compose(cron_expression) == @written_cron_expression
 
       assert Crontab.Scheduler.get_next_run_date(cron_expression, @start_date) ==
                {:ok, @next_search_date}

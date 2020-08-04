@@ -1,10 +1,14 @@
 defmodule Crontab.CronExpression.ParserTest do
+  @moduledoc false
+
   use ExUnit.Case, async: true
+
   doctest Crontab.CronExpression.Parser
+
   import Crontab.CronExpression.Parser
   import Crontab.CronExpression
 
-  test "parse \"@reboot\" gives reboot" do
+  test ~s(parse "@reboot" gives reboot") do
     assert parse("@reboot") ==
              {:ok,
               %Crontab.CronExpression{
@@ -19,7 +23,7 @@ defmodule Crontab.CronExpression.ParserTest do
               }}
   end
 
-  test "parse \"@REBOOT\" gives reboot" do
+  test ~s(parse "@REBOOT" gives reboot) do
     assert parse("@REBOOT") ==
              {:ok,
               %Crontab.CronExpression{
@@ -34,11 +38,11 @@ defmodule Crontab.CronExpression.ParserTest do
               }}
   end
 
-  test "parse \"@unknown\" gives error" do
+  test ~s(parse "@unknown" gives error) do
     assert parse("@unknown") == {:error, "Special identifier @unknown is undefined."}
   end
 
-  test "parse \"@yearly\" gives yearly" do
+  test ~s("parse "@yearly" gives yearly) do
     assert parse("@yearly") ==
              {:ok,
               %Crontab.CronExpression{
@@ -51,7 +55,7 @@ defmodule Crontab.CronExpression.ParserTest do
               }}
   end
 
-  test "parse \"@annually\" gives yearly" do
+  test ~s("parse "@annually" gives yearly) do
     assert parse("@annually") ==
              {:ok,
               %Crontab.CronExpression{
@@ -64,7 +68,7 @@ defmodule Crontab.CronExpression.ParserTest do
               }}
   end
 
-  test "parse \"@monthly\" gives monthly" do
+  test ~s("parse "@monthly" gives monthly) do
     assert parse("@monthly") ==
              {:ok,
               %Crontab.CronExpression{
@@ -77,7 +81,7 @@ defmodule Crontab.CronExpression.ParserTest do
               }}
   end
 
-  test "parse \"@weekly\" gives weekly" do
+  test ~s(parse "@weekly" gives weekly) do
     assert parse("@weekly") ==
              {:ok,
               %Crontab.CronExpression{
@@ -90,7 +94,7 @@ defmodule Crontab.CronExpression.ParserTest do
               }}
   end
 
-  test "parse \"@daily\" gives daily" do
+  test ~s(parse "@daily" gives daily) do
     assert parse("@daily") ==
              {:ok,
               %Crontab.CronExpression{
@@ -103,7 +107,7 @@ defmodule Crontab.CronExpression.ParserTest do
               }}
   end
 
-  test "parse \"@midnight\" gives daily" do
+  test ~s(parse "@midnight" gives daily) do
     assert parse("@midnight") ==
              {:ok,
               %Crontab.CronExpression{
@@ -116,7 +120,7 @@ defmodule Crontab.CronExpression.ParserTest do
               }}
   end
 
-  test "parse \"@hourly\" gives hourly" do
+  test ~s(parse "@hourly" gives hourly) do
     assert parse("@hourly") ==
              {:ok,
               %Crontab.CronExpression{
@@ -129,7 +133,7 @@ defmodule Crontab.CronExpression.ParserTest do
               }}
   end
 
-  test "parse \"@minutely\" gives hourly" do
+  test ~s(parse "@minutely" gives hourly) do
     assert parse("@minutely") ==
              {:ok,
               %Crontab.CronExpression{
@@ -142,7 +146,7 @@ defmodule Crontab.CronExpression.ParserTest do
               }}
   end
 
-  test "parse \"@secondly\" gives hourly" do
+  test ~s("parse "@secondly" gives hourly) do
     assert parse("@secondly") ==
              {:ok,
               %Crontab.CronExpression{
@@ -157,11 +161,11 @@ defmodule Crontab.CronExpression.ParserTest do
               }}
   end
 
-  test "parse \"1 2 3 4 5 6 7\" gives error" do
+  test ~s(parse \"1 2 3 4 5 6 7\" gives error) do
     assert parse("1 2 3 4 5 6 7") == {:error, "The Cron Format String contains too many parts."}
   end
 
-  test "parse \"*\" gives minutely" do
+  test ~s(parse "*" gives minutely) do
     assert parse("*") ==
              {:ok,
               %Crontab.CronExpression{
@@ -174,7 +178,7 @@ defmodule Crontab.CronExpression.ParserTest do
               }}
   end
 
-  test "parse \"*/4,9,1-10\" gives [{:\"/\", :*, 4}, 9, {:\"-\", 1, 10}]" do
+  test ~s(parse "*/4,9,1-10" gives [{:"/", :*, 4}, 9, {:"-", 1, 10}]) do
     assert parse("*/4,9,1-10") ==
              {:ok,
               %Crontab.CronExpression{
@@ -187,11 +191,11 @@ defmodule Crontab.CronExpression.ParserTest do
               }}
   end
 
-  test "parse \"*/4,9,JAN-DEC\" gives error" do
+  test ~s(parse "*/4,9,JAN-DEC" gives error") do
     assert parse("*/4,9,JAN-DEC") == {:error, "Can't parse JAN as minute."}
   end
 
-  test "parse \"* * * JAN-DEC\" gives [{:-, 1, 12}]" do
+  test ~s(parse "* * * JAN-DEC" gives [{:-, 1, 12}]) do
     assert parse("* * * JAN-DEC") ==
              {:ok,
               %Crontab.CronExpression{
@@ -204,7 +208,7 @@ defmodule Crontab.CronExpression.ParserTest do
               }}
   end
 
-  test "parse \"* * * MON-TUE\" gives [{:-, 1, 2}]" do
+  test ~s(parse "* * * MON-TUE" gives [{:-, 1, 2}]) do
     assert parse("* * * * MON-TUE") ==
              {:ok,
               %Crontab.CronExpression{
