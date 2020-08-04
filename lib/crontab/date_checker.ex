@@ -7,6 +7,8 @@ defmodule Crontab.DateChecker do
 
   alias Crontab.DateHelper
 
+  @type date :: NaiveDateTime.t() | DateTime.t()
+
   @doc """
   Check a condition list against a given date.
 
@@ -25,8 +27,7 @@ defmodule Crontab.DateChecker do
       true
 
   """
-  @spec matches_date?(cron_expression :: CronExpression.t(), date :: NaiveDateTime.t()) ::
-          boolean | no_return
+  @spec matches_date?(cron_expression :: CronExpression.t(), date :: date) :: boolean | no_return
   def matches_date?(cron_expression_or_condition_list, date)
 
   def matches_date?(%CronExpression{reboot: true}, _),
@@ -38,10 +39,7 @@ defmodule Crontab.DateChecker do
     |> matches_date?(execution_date)
   end
 
-  @spec matches_date?(
-          condition_list :: CronExpression.condition_list(),
-          date :: NaiveDateTime.t()
-        ) :: boolean
+  @spec matches_date?(condition_list :: CronExpression.condition_list(), date :: date) :: boolean
   def matches_date?([], _), do: true
 
   def matches_date?([{interval, conditions} | tail], execution_date) do
@@ -61,9 +59,9 @@ defmodule Crontab.DateChecker do
 
   """
   @spec matches_date?(
-          CronExpression.interval(),
-          CronExpression.condition_list(),
-          NaiveDateTime.t()
+          interval :: CronExpression.interval(),
+          condition_list :: CronExpression.condition_list(),
+          date :: date
         ) :: boolean
   def matches_date?(_, [:* | _], _), do: true
   def matches_date?(_, [], _), do: false
@@ -79,10 +77,10 @@ defmodule Crontab.DateChecker do
   end
 
   @spec matches_specific_date?(
-          CronExpression.interval(),
-          [integer],
-          CronExpression.value(),
-          NaiveDateTime.t()
+          interval :: CronExpression.interval(),
+          values :: [CronExpression.time_unit()],
+          condition :: CronExpression.value(),
+          date :: date
         ) :: boolean
   defp matches_specific_date?(_, [], _, _), do: false
   defp matches_specific_date?(_, _, :*, _), do: true
@@ -173,15 +171,15 @@ defmodule Crontab.DateChecker do
     end
   end
 
-  @spec get_interval_value(CronExpression.interval(), NaiveDateTime.t()) :: [
+  @spec get_interval_value(interval :: CronExpression.interval(), date :: date) :: [
           CronExpression.time_unit()
         ]
-  defp get_interval_value(:second, %NaiveDateTime{second: second}), do: [second]
-  defp get_interval_value(:minute, %NaiveDateTime{minute: minute}), do: [minute]
-  defp get_interval_value(:hour, %NaiveDateTime{hour: hour}), do: [hour]
-  defp get_interval_value(:day, %NaiveDateTime{day: day}), do: [day]
+  defp get_interval_value(:second, %{second: second}), do: [second]
+  defp get_interval_value(:minute, %{minute: minute}), do: [minute]
+  defp get_interval_value(:hour, %{hour: hour}), do: [hour]
+  defp get_interval_value(:day, %{day: day}), do: [day]
 
-  defp get_interval_value(:weekday, %NaiveDateTime{year: year, month: month, day: day}) do
+  defp get_interval_value(:weekday, %{year: year, month: month, day: day}) do
     day = :calendar.day_of_the_week(year, month, day)
 
     if day == 7 do
@@ -191,6 +189,6 @@ defmodule Crontab.DateChecker do
     end
   end
 
-  defp get_interval_value(:month, %NaiveDateTime{month: month}), do: [month]
-  defp get_interval_value(:year, %NaiveDateTime{year: year}), do: [year]
+  defp get_interval_value(:month, %{month: month}), do: [month]
+  defp get_interval_value(:year, %{year: year}), do: [year]
 end
