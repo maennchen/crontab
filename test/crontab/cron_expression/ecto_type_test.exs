@@ -8,7 +8,10 @@ else
 end
 |> if do
   defmodule Crontab.CronExpression.Ecto.TypeTest do
+    @moduledoc false
+
     use ExUnit.Case, async: false
+
     doctest Crontab.CronExpression.Ecto.Type
 
     alias Crontab.CronExpression.Ecto.Type

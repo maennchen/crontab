@@ -18,3 +18,7 @@ erl_crash.dump
 
 # Ignore Mix Lock since this is a lib
 /mix.lock
+
+# Dialyzer
+/priv/plts/*.plt
+/priv/plts/*.plt.hash

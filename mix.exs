@@ -1,4 +1,6 @@
 defmodule Crontab.Mixfile do
+  @moduledoc false
+
   use Mix.Project
 
   @version "1.1.10"
@@ -7,17 +9,22 @@ defmodule Crontab.Mixfile do
     [
       app: :crontab,
       version: @version,
-      elixir: "~> 1.7",
-      build_embedded: Mix.env() == :prod,
+      elixir: "~> 1.9",
+      build_embedded:
+        Mix.env() == :prod or System.get_env("BUILD_EMBEDDED", "false") in ["1", "true"],
       start_permanent: Mix.env() == :prod,
       description: description(),
       package: package(),
       deps: deps(),
       docs: docs(),
       test_coverage: [tool: ExCoveralls],
-      dialyzer: [
-        plt_add_apps: [:ecto]
-      ]
+      dialyzer:
+        [plt_add_apps: [:ecto]] ++
+          if (System.get_env("DIALYZER_PLT_PRIV") || "false") in ["1", "true"] do
+            [plt_file: {:no_warn, "priv/plts/dialyzer.plt"}]
+          else
+            []
+          end
     ]
   end
 
@@ -25,7 +32,7 @@ defmodule Crontab.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger]]
+    [extra_applications: [:logger]]
   end
 
   defp description do
@@ -46,11 +53,10 @@ defmodule Crontab.Mixfile do
   defp deps do
     [
       {:ecto, "~> 1.0 or ~> 2.0 or ~> 3.0", optional: true},
-      {:ex_doc, ">= 0.0.0", only: :dev},
-      {:inch_ex, only: :docs},
-      {:excoveralls, "~> 0.4", only: [:dev, :test]},
-      {:dialyxir, "~> 0.4", only: [:dev], runtime: false},
-      {:credo, "~> 1.0", only: [:dev, :test]}
+      {:ex_doc, "~> 0.19", only: :dev, runtime: false},
+      {:excoveralls, "~> 0.5", only: [:test], runtime: false},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:credo, "~> 1.0", only: [:dev], runtime: false}
     ]
   end
 
