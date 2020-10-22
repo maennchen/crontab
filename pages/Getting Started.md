@@ -5,7 +5,7 @@
 
     ```elixir
     def deps do
-      [{:crontab, "~> 0.8.5"}]
+      [{:crontab, "~> 1.1"}]
     end
     ```
 
