@@ -4,6 +4,7 @@
 ![.github/workflows/elixir.yml](https://github.com/jshmrtn/crontab/workflows/.github/workflows/elixir.yml/badge.svg)
 [![Hex.pm Version](https://img.shields.io/hexpm/v/crontab.svg?style=flat)](https://hex.pm/packages/crontab)
 [![Coverage Status](https://coveralls.io/repos/github/jshmrtn/crontab/badge.svg?branch=master)](https://coveralls.io/github/jshmrtn/crontab?branch=master)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fjshmrtn%2Fcrontab.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fjshmrtn%2Fcrontab?ref=badge_shield)
 
 Parse Cron Format Strings, Write Cron Format Strings and Calculate Execution Dates.
 
@@ -28,3 +29,7 @@ end
 ## Usage
 
 Please look into the [Documentation](https://hexdocs.pm/crontab/) for usage examples.
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fjshmrtn%2Fcrontab.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fjshmrtn%2Fcrontab?ref=badge_large)
