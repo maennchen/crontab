@@ -221,6 +221,23 @@ defmodule Crontab.CronExpression.ParserTest do
               }}
   end
 
+  test "parse second followed by string gives error" do
+    assert parse("42invalid * * * *", true) == {:error, "Can't parse 42invalid as second."}
+  end
+
+  test "parse negative second gives error" do
+    assert parse("-1", true) == {:error, "Can't parse -1 as second."}
+  end
+
+  test "parse out of range second gives error" do
+    assert parse("60", true) == {:error, "Can't parse 60 as second."}
+  end
+
+  test "valid seconds do not give error" do
+    assert parse("10", true) == {:ok, ~e[10 * * * * * *]e}
+    assert parse("*/10", true) == {:ok, ~e[*/10 * * * * * *]e}
+  end
+
   test "parse minute followed by string gives error" do
     assert parse("42invalid * * * *") == {:error, "Can't parse 42invalid as minute."}
   end
