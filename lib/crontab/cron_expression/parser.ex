@@ -31,6 +31,7 @@ defmodule Crontab.CronExpression.Parser do
 
   @extended_intervals [:second | @intervals]
 
+  @second_values 0..59
   @minute_values 0..59
   @hour_values 0..23
   @day_of_month_values 1..31
@@ -233,6 +234,10 @@ defmodule Crontab.CronExpression.Parser do
 
   @spec clean_value(CronExpression.interval(), binary) ::
           {:ok, CronExpression.value()} | {:error, binary}
+
+  defp clean_value(:second, value) do
+    clean_integer_within_range(value, "second", @second_values)
+  end
 
   defp clean_value(:minute, value) do
     clean_integer_within_range(value, "minute", @minute_values)
