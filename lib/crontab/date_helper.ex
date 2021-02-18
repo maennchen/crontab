@@ -16,10 +16,11 @@ defmodule Crontab.DateHelper do
   @doc """
   Get Start of a period of a date.
 
-  ### Examples:
+  ## Examples
 
       iex> Crontab.DateHelper.beginning_of(~N[2016-03-14 01:45:45.123], :year)
       ~N[2016-01-01 00:00:00]
+
   """
   @spec beginning_of(NaiveDateTime.t(), unit) :: NaiveDateTime.t()
   def beginning_of(date, unit) do
@@ -27,12 +28,13 @@ defmodule Crontab.DateHelper do
   end
 
   @doc """
-  Get End of a period of a date.
+  Get the end of a period of a date.
 
-  ### Examples:
+  ## Examples
 
-  iex> Crontab.DateHelper.end_of(~N[2016-03-14 01:45:45.123], :year)
-  ~N[2016-12-31 23:59:59.999999]
+      iex> Crontab.DateHelper.end_of(~N[2016-03-14 01:45:45.123], :year)
+      ~N[2016-12-31 23:59:59.999999]
+
   """
   @spec end_of(NaiveDateTime.t(), unit) :: NaiveDateTime.t()
   def end_of(date, unit) do
@@ -40,7 +42,7 @@ defmodule Crontab.DateHelper do
   end
 
   @doc """
-  Find last occurence of weekday in month
+  Find the last occurence of weekday in month.
   """
   @spec last_weekday(NaiveDateTime.t(), Calendar.day_of_week()) :: Calendar.day()
   def last_weekday(date, weekday) do
@@ -50,7 +52,7 @@ defmodule Crontab.DateHelper do
   end
 
   @doc """
-  Find nth weekday of month
+  Find the nth weekday of month.
   """
   @spec nth_weekday(NaiveDateTime.t(), Calendar.day_of_week(), integer) :: Calendar.day()
   def nth_weekday(date, weekday, n) do
@@ -60,7 +62,7 @@ defmodule Crontab.DateHelper do
   end
 
   @doc """
-  Find last occurence of weekday in month
+  Find the last occurence of weekday in month.
   """
   @spec last_weekday_of_month(NaiveDateTime.t()) :: Calendar.day()
   def last_weekday_of_month(date) do
@@ -68,7 +70,7 @@ defmodule Crontab.DateHelper do
   end
 
   @doc """
-  Find next occurence of weekday relative to date
+  Find the next occurrence of weekday relative to date.
   """
   @spec next_weekday_to(NaiveDateTime.t()) :: Calendar.day()
   def next_weekday_to(date = %NaiveDateTime{year: year, month: month, day: day}) do
