@@ -1,6 +1,6 @@
 defmodule Crontab.CronExpression do
   @moduledoc """
-  This is the Crontab.CronExpression module / struct.
+  The `Crontab.CronExpression` module / struct.
   """
 
   alias Crontab.CronExpression.Parser
@@ -75,7 +75,7 @@ defmodule Crontab.CronExpression do
   @type condition_list :: [condition]
 
   @doc """
-  Defines the Cron Interval
+  Defines the Cron interval.
 
       * * * * * * *
       | | | | | | |
@@ -87,7 +87,7 @@ defmodule Crontab.CronExpression do
       | +------------ :minute Minute             (range: 0-59)
       +-------------- :second Second             (range: 0-59)
 
-  The :extended attribute defines if the second is taken into account.
+  The `:extended` attribute defines if the second is taken into account.
   """
   defstruct extended: false,
             reboot: false,
@@ -102,7 +102,7 @@ defmodule Crontab.CronExpression do
   @doc """
   Create a `%Crontab.CronExpression{}` via sigil.
 
-  ### Examples
+  ## Examples
 
       iex> ~e[*]
       %Crontab.CronExpression{
@@ -143,9 +143,9 @@ defmodule Crontab.CronExpression do
   def sigil_e(cron_expression, _options), do: Parser.parse!(cron_expression, false)
 
   @doc """
-  Convert Crontab.CronExpression struct to Tuple List
+  Convert `Crontab.CronExpression` struct to tuple List.
 
-  ### Examples
+  ## Examples
 
       iex> Crontab.CronExpression.to_condition_list %Crontab.CronExpression{
       ...> minute: [1], hour: [2], day: [3], month: [4], weekday: [5], year: [6]}
@@ -165,6 +165,7 @@ defmodule Crontab.CronExpression do
         {:month, [4]},
         {:weekday, [5]},
         {:year, [6]}]
+
   """
   @spec to_condition_list(t) :: condition_list
   def to_condition_list(interval = %__MODULE__{extended: false}) do
@@ -187,9 +188,9 @@ defmodule Crontab.CronExpression do
     alias Crontab.CronExpression.Composer
 
     @doc """
-    Pretty Print Cron Expressions
+    Pretty print Cron expressions.
 
-    ### Examples:
+    ## Examples
 
         iex> IO.inspect %Crontab.CronExpression{}
         ~e[* * * * * *]

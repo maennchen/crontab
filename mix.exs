@@ -1,8 +1,7 @@
 defmodule Crontab.Mixfile do
-  @moduledoc false
-
   use Mix.Project
 
+  @source_url "https://github.com/jshmrtn/crontab"
   @version "1.1.10"
 
   def project do
@@ -28,32 +27,20 @@ defmodule Crontab.Mixfile do
     ]
   end
 
-  # Configuration for the OTP application
-  #
-  # Type "mix help compile.app" for more information
   def application do
     [extra_applications: [:logger]]
   end
 
   defp description do
     """
-    Parse Cron Format Strings, Write Cron Format Strings and Calculate Execution Dates.
+    Elixir library for parsing, writing, and calculating Cron format strings.
     """
   end
 
-  # Dependencies can be Hex packages:
-  #
-  #   {:mydep, "~> 0.3.0"}
-  #
-  # Or git/path repositories:
-  #
-  #   {:mydep, git: "https://github.com/elixir-lang/mydep.git", tag: "0.1.0"}
-  #
-  # Type "mix help deps" for more examples and options
   defp deps do
     [
       {:ecto, "~> 1.0 or ~> 2.0 or ~> 3.0", optional: true},
-      {:ex_doc, "~> 0.19", only: :dev, runtime: false},
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:excoveralls, "~> 0.5", only: [:test], runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:credo, "~> 1.0", only: [:dev], runtime: false}
@@ -61,26 +48,21 @@ defmodule Crontab.Mixfile do
   end
 
   defp package do
-    # These are the default files included in the package
     [
       name: :crontab,
-      files: ["lib", "mix.exs", "README*", "LICENSE*"],
+      files: ["lib", "mix.exs", "README*", "LICENSE*", "CHANGELOG*"],
       maintainers: ["Jonatan Männchen"],
       licenses: ["MIT"],
-      links: %{"GitHub" => "https://github.com/jshmrtn/crontab"}
+      links: %{"GitHub" => @source_url}
     ]
   end
 
   defp docs do
     [
-      main: "getting-started",
-      source_ref: "v" <> @version,
-      source_url: "https://github.com/jshmrtn/crontab",
-      extras: [
-        "pages/Getting Started.md",
-        "CHANGELOG.md",
-        "pages/Basic Usage.md"
-      ]
+      extras: ["CHANGELOG.md", "README.md"],
+      main: "readme",
+      source_url: @source_url,
+      source_ref: "v" <> @version
     ]
   end
 end

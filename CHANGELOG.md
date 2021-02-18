@@ -21,7 +21,7 @@ Diff for [v1.1.10](https://github.com/jshmrtn/crontab/compare/v1.1.9...v1.1.10)
 
 ## 1.1.9
 
-### Fixed 
+### Fixed
 
 * Do not allow `0` as divider.
 
@@ -47,7 +47,7 @@ Diff for [v1.1.7](https://github.com/jshmrtn/crontab/compare/v1.1.6...v1.1.7)
 
 ### Fixed
 
-* Do not skip month in date util skip_month.
+* Do not skip month in date until skip_month.
 
 Diff for [v1.1.6](https://github.com/jshmrtn/crontab/compare/v1.1.5...v1.1.6)
 

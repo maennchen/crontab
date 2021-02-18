@@ -1,6 +1,6 @@
 defmodule Crontab.DateChecker do
   @moduledoc """
-  This Module is used to check a CronExpression against a given date.
+  This module is used to check a `Crontab.CronExpression` against a given date.
   """
 
   alias Crontab.CronExpression
@@ -12,7 +12,7 @@ defmodule Crontab.DateChecker do
   @doc """
   Check a condition list against a given date.
 
-  ### Examples
+  ## Examples
 
       iex> Crontab.DateChecker.matches_date? %Crontab.CronExpression{minute: [{:"/", :*, 8}]}, ~N[2004-04-16 04:08:08]
       true
@@ -49,7 +49,7 @@ defmodule Crontab.DateChecker do
   @doc """
   Check a condition against a given date.
 
-  ### Examples
+  ## Examples
 
       iex> Crontab.DateChecker.matches_date? :hour, [{:"/", :*, 4}, 7], ~N[2004-04-16 04:07:08]
       true

@@ -1,16 +1,14 @@
 defmodule Crontab.CronExpression.Composer do
   @moduledoc """
-  Genrate from `%CronExpression{}`
-  to `* * * * * *`
+  Generate from `%CronExpression{}` to `* * * * * *`.
   """
 
   alias Crontab.CronExpression
 
   @doc """
-  Genrate from `%Crontab.CronExpression{}`
-  to `* * * * * *`
+  Generate from `%Crontab.CronExpression{}` to `* * * * * *`.
 
-  ### Examples
+  ## Examples
 
       iex> Crontab.CronExpression.Composer.compose %Crontab.CronExpression{}
       "* * * * * *"

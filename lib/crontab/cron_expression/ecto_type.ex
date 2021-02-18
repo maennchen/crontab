@@ -1,4 +1,6 @@
-# TODO: Replace with simple Code.ensure_compiled as soon as Elixir min. version is raised to 1.10
+# TODO: Replace with simple Code.ensure_compiled as soon as Elixir mininum
+# version is raised to 1.10.
+
 Code
 |> function_exported?(:ensure_compiled, 1)
 |> if do

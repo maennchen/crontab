@@ -19,7 +19,7 @@ defmodule Crontab.Scheduler do
   This function provides the functionality to retrieve the next run date from a
   `%Crontab.CronExpression{}`.
 
-  ### Examples
+  ## Examples
 
       iex> Crontab.Scheduler.get_next_run_date(%Crontab.CronExpression{}, ~N[2002-01-13 23:00:07])
       {:ok, ~N[2002-01-13 23:01:00]}
@@ -87,7 +87,7 @@ defmodule Crontab.Scheduler do
   @doc """
   Find the next execution dates relative to a given date from a `%CronExpression{}`.
 
-  ### Examples
+  ## Examples
 
       iex> Enum.take(Crontab.Scheduler.get_next_run_dates(
       ...>  %Crontab.CronExpression{extended: true}, ~N[2016-12-17 00:00:00]), 3)
@@ -137,7 +137,7 @@ defmodule Crontab.Scheduler do
   This function provides the functionality to retrieve the previous run date
   from a `%Crontab.CronExpression{}`.
 
-  ### Examples
+  ## Examples
 
       iex> Crontab.Scheduler.get_previous_run_date %Crontab.CronExpression{}, ~N[2002-01-13 23:00:07]
       {:ok, ~N[2002-01-13 23:00:00]}
@@ -175,7 +175,7 @@ defmodule Crontab.Scheduler do
   This function provides the functionality to retrieve the previous run date
   from a `%Crontab.CronExpression{}`.
 
-  ### Examples
+  ## Examples
 
       iex> Crontab.Scheduler.get_previous_run_date! %Crontab.CronExpression{}, ~N[2002-01-13 23:00:07]
       ~N[2002-01-13 23:00:00]
@@ -207,7 +207,7 @@ defmodule Crontab.Scheduler do
   @doc """
   Find the previous n execution dates relative to a given date from a `%CronExpression{}`.
 
-  ### Examples
+  ## Examples
 
       iex> Enum.take(Crontab.Scheduler.get_previous_run_dates(
       ...>   %Crontab.CronExpression{extended: true}, ~N[2016-12-17 00:00:00]), 3)

@@ -45,7 +45,8 @@ defmodule Crontab.CronExpression.Parser do
     SAT: 6,
     SUN: 7
   }
-  # Sunday can be represented by 0 or 7
+
+  # Sunday can be represented by 0 or 7.
   @full_weekday_values [0] ++ Map.values(@weekday_values)
 
   @month_values %{
@@ -66,7 +67,7 @@ defmodule Crontab.CronExpression.Parser do
   @doc """
   Parse string like `* * * * * *` to a `%CronExpression{}`.
 
-  ### Examples
+  ## Examples
 
       iex> Crontab.CronExpression.Parser.parse "* * * * *"
       {:ok,
@@ -102,7 +103,7 @@ defmodule Crontab.CronExpression.Parser do
   @doc """
   Parse string like `* * * * * *` to a `%CronExpression{}`.
 
-  ### Examples
+  ## Examples
 
       iex> Crontab.CronExpression.Parser.parse! "* * * * *"
       %Crontab.CronExpression{day: [:*], hour: [:*], minute: [:*],
