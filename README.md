@@ -71,7 +71,7 @@ iex> import Crontab.CronExpression
 iex> Crontab.Scheduler.get_next_run_date(~e[*/2], ~N[2017-01-01 01:01:00])
 {:ok, ~N[2017-01-01 01:02:00]}
 iex> Crontab.Scheduler.get_next_run_date!(~e[*/2], ~N[2017-01-01 01:01:00])
-{:ok, ~N[2017-01-01 01:02:00]}
+~N[2017-01-01 01:02:00]
 ```
 
 ```elixir
