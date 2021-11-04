@@ -1,4 +1,4 @@
-# TODO: Replace with simple Code.ensure_compiled as soon as Elixir mininum
+# TODO: Replace with simple Code.ensure_compiled as soon as Elixir minimum
 # version is raised to 1.10.
 
 Code
