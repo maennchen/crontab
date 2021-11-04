@@ -42,7 +42,7 @@ defmodule Crontab.DateHelper do
   end
 
   @doc """
-  Find the last occurence of weekday in month.
+  Find the last occurrence of weekday in month.
   """
   @spec last_weekday(NaiveDateTime.t(), Calendar.day_of_week()) :: Calendar.day()
   def last_weekday(date, weekday) do
@@ -62,7 +62,7 @@ defmodule Crontab.DateHelper do
   end
 
   @doc """
-  Find the last occurence of weekday in month.
+  Find the last occurrence of weekday in month.
   """
   @spec last_weekday_of_month(NaiveDateTime.t()) :: Calendar.day()
   def last_weekday_of_month(date) do
