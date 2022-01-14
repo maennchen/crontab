@@ -54,7 +54,10 @@ end
     def cast(cron_expression = %Crontab.CronExpression{}), do: {:ok, cron_expression}
 
     def cast(cron_expression) when is_binary(cron_expression) do
-      case Parser.parse(cron_expression) do
+      cron_expression
+      |> String.trim()
+      |> Parser.parse()
+      |> case do
         result = {:ok, _} -> result
         _ -> :error
       end
