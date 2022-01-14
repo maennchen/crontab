@@ -33,14 +33,11 @@ defmodule Crontab.CronExpression.Composer do
   end
 
   @spec compose_interval(CronExpression.condition_list()) :: [binary]
-  defp compose_interval([{_, conditions} | tail]) do
-    part =
-      conditions
-      |> Enum.map(fn condition -> compose_condition(condition) end)
-      |> Enum.join(",")
-
-    [part | compose_interval(tail)]
-  end
+  defp compose_interval([{_, conditions} | tail]),
+    do: [
+      Enum.map_join(conditions, ",", fn condition -> compose_condition(condition) end)
+      | compose_interval(tail)
+    ]
 
   defp compose_interval([]), do: []
 
