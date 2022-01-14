@@ -25,6 +25,12 @@ end
     test "cast/1 String" do
       assert Type.cast("*") == {:ok, ~e[*]}
     end
+    
+    test "cast/1 String with whitespace" do
+      assert Type.cast("* ") == {:ok, ~e[*]}
+      assert Type.cast(" * ") == {:ok, ~e[*]}
+      assert Type.cast(" *") == {:ok, ~e[*]}
+    end
 
     test "cast/1 CronExpression" do
       assert Type.cast(~e[*]) == {:ok, ~e[*]}
