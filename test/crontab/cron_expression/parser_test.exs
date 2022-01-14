@@ -267,7 +267,7 @@ defmodule Crontab.CronExpression.ParserTest do
   end
 
   test "parse negative hour gives error" do
-    assert {:error, _} = parse("* -1 * * *")
+    assert {:error, ""} = parse("* -1 * * *")
   end
 
   test "parse out of range hour gives error" do

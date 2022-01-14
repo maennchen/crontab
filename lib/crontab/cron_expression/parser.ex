@@ -60,33 +60,39 @@ defmodule Crontab.CronExpression.Parser do
 
   defcombinatorp(
     :cron_expression,
-    choice([
-      parsec(:special),
-      space_list([
-        parsec(:minute_expression) |> tag(:minute),
-        parsec(:hour_expression) |> tag(:hour),
-        parsec(:day_expression) |> tag(:day),
-        parsec(:month_expression) |> tag(:month),
-        parsec(:weekday_expression) |> tag(:weekday),
-        parsec(:year_expression) |> tag(:year)
-      ])
-    ])
+    concat(
+      choice([
+        parsec(:special),
+        space_list([
+          parsec(:minute_expression) |> tag(:minute),
+          parsec(:hour_expression) |> tag(:hour),
+          parsec(:day_expression) |> tag(:day),
+          parsec(:month_expression) |> tag(:month),
+          parsec(:weekday_expression) |> tag(:weekday),
+          parsec(:year_expression) |> tag(:year)
+        ])
+      ]),
+      eos()
+    )
   )
 
   defcombinatorp(
     :extended_cron_expression,
-    choice([
-      parsec(:special),
-      space_list([
-        parsec(:second_expression) |> tag(:second),
-        parsec(:minute_expression) |> tag(:minute),
-        parsec(:hour_expression) |> tag(:hour),
-        parsec(:day_expression) |> tag(:day),
-        parsec(:month_expression) |> tag(:month),
-        parsec(:weekday_expression) |> tag(:weekday),
-        parsec(:year_expression) |> tag(:year)
-      ])
-    ])
+    concat(
+      choice([
+        parsec(:special),
+        space_list([
+          parsec(:second_expression) |> tag(:second),
+          parsec(:minute_expression) |> tag(:minute),
+          parsec(:hour_expression) |> tag(:hour),
+          parsec(:day_expression) |> tag(:day),
+          parsec(:month_expression) |> tag(:month),
+          parsec(:weekday_expression) |> tag(:weekday),
+          parsec(:year_expression) |> tag(:year)
+        ])
+      ]),
+      eos()
+    )
   )
 
   defparsecp(:parse_expression, parsec(:cron_expression))
