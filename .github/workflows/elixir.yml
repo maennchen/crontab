@@ -29,7 +29,7 @@ jobs:
       MIX_ENV: dev
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: erlef/setup-elixir@v1
         id: setup-elixir
         with:
@@ -67,7 +67,7 @@ jobs:
             elixir: '1.9'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: erlef/setup-elixir@v1
         id: setup-elixir
         with:
@@ -101,7 +101,7 @@ jobs:
       MIX_ENV: dev
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: erlef/setup-elixir@v1
         id: setup-elixir
         with:
@@ -135,7 +135,7 @@ jobs:
       MIX_ENV: dev
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: erlef/setup-elixir@v1
         id: setup-elixir
         with:
@@ -182,7 +182,7 @@ jobs:
       MIX_ENV: dev
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: erlef/setup-elixir@v1
         id: setup-elixir
         with:
@@ -220,7 +220,7 @@ jobs:
       MIX_ENV: dev
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: erlef/setup-elixir@v1
         id: setup-elixir
         with:
