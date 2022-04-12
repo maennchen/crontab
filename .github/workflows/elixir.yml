@@ -166,7 +166,7 @@ jobs:
             dialyzer_plt_dev-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-
             dialyzer_plt_dev-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-
       - run: mix dialyzer --plt
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: dialyzer_plt_dev-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}
           path: priv/plts/
@@ -244,7 +244,7 @@ jobs:
       - run: mix deps.compile --skip-umbrella-children
       - run: mix compile --warning-as-errors
       - run: mix docs
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: docs
           path: doc
