@@ -59,7 +59,7 @@ defmodule Crontab.Mixfile do
 
   defp docs do
     [
-      extras: ["README.md"],
+      extras: ["README.md", "docs/cheatsheets/cron_notation.cheatmd"],
       main: "readme",
       source_url: @source_url,
       source_ref: "v" <> @version

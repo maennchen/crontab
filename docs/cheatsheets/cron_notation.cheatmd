@@ -1,0 +1,121 @@
+# Cron Notation Cheatsheet
+
+## Overview
+
+```
+[:second] :minute :hour :day :month :weekday :year
+```
+
+```
+   [*]       *      *     *     *       *      *
+```
+
+```
+    |        |      |     |     |       |      |
+    |        |      |     |     |       |      └-- Year              (range: 1900-3000)
+    |        |      |     |     |       └--------- Day of the Week   (range: 0-7, 0 sunday, 1 monday, ..., 7 sunday)
+    |        |      |     |     └----------------- Month of the Year (range: 1-12)
+    |        |      |     └----------------------- Day of the Month  (range: 1-31)
+    |        |      └----------------------------- Hour              (range: 0-23)
+    |        └------------------------------------ Minute            (range: 0-59)
+    └--------------------------------------------- Second            (range: 0-59)
+```
+
+Seconds are only present in a cron expression if `extended` is enabled.
+
+## Operators
+
+| Operator | Description                                                  | Allowed in        |
+| -------- | ------------------------------------------------------------ | ----------------- |
+| `*`      | all values                                                   | everywhere        |
+| `,`      | separate individual values                                   | everywhere        |
+| `-`      | a range of values                                            | everywhere        |
+| `/`      | divide a value into steps                                    | everywhere        |
+| `#`      | nth occurance                                                | `weekday`         |
+| `L`      | last occurance                                               | `weekday` / `day` |
+| `W`      | specifies the `weekday` nearest the given `day` of the month | `day`             |
+| `LW`     | last `weekday` of the month                                  | `day`             |
+
+## Expressions
+
+{: .col-2}
+
+### Special Values
+
+{: .list-4}
+
+#### Days
+
+specify a day by name in the `weekday` field
+
+- `MON`
+- `TUE`
+- `WED`
+- `THU`
+- `FRI`
+- `SAT`
+- `SUN`
+
+#### Months
+
+specify a month by name in the `month` field
+
+- `JAN`
+- `FEB`
+- `MAR`
+- `APR`
+- `MAY`
+- `JUN`
+- `JUL`
+- `AUG`
+- `SEP`
+- `OCT`
+- `NOV`
+- `DEC`
+
+### Special Expressions
+
+| Expression  | Description                               |
+| ----------- | ----------------------------------------- |
+| `@reboot`   | once after start of application           |
+| `@yearly`   | once at the start of every year           |
+| `@annually` | same as `@yearly`                         |
+| `@monthly`  | once at the start of every month          |
+| `@weekly`   | once at the start of every week on sunday |
+| `@dayily`   | once at the start of every day            |
+| `@midnight` | same as `@daily`                          |
+| `@hourly`   | once at the start of every hour           |
+| `@minutely` | once at the start of every minute         |
+| `@secondly` | once at the start of every second         |
+
+## Examples
+
+| Expression                 | Description                                                                                                                                                 |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0 0 12 * * *`             | Fire at 12:00 p.m. (noon) every day                                                                                                                         |
+| `0 15 10 * * *`            | Fire at 10:15 a.m. every day                                                                                                                                |
+| `0 15 10 * * *`            | Fire at 10:15 a.m. every day                                                                                                                                |
+| `0 15 10 * * * *`          | Fire at 10:15 a.m. every day                                                                                                                                |
+| `0 15 10 * * * 2012`       | Fire at 10:15 a.m. every day during the year 2012                                                                                                           |
+| `0 * 14 * * *`             | Fire every minute starting at 2:00 p.m. and ending at 2:59.p.m., every day                                                                                  |
+| `0 0/5 14 * * *`           | Fire every five minutes starting at 2:00 p.m. and ending at 2:55 p.m., every day                                                                            |
+| `0 0/5 14,18 * * *`        | Fire every five minutes starting at 2:00 p.m. and ending at 2:55 p.m., and fire every five minutes starting at 6:00 p.m. and ending at 6:55 p.m., every day |
+| `0 0-5 14 * * *`           | Fire every minute starting at 2:00 p.m. and ending at 2:05.p.m., every day                                                                                  |
+| `0 10,44 14 * 3 WED`       | Fire at 2:10 p.m. and at 2:44 p.m. every Wednesday in the month of March                                                                                    |
+| `0 15 10 * * MON-FRI`      | Fire at 10:15 a.m. every Monday, Tuesday, Wednesday, Thursday and Friday                                                                                    |
+| `0 15 10 15 * *`           | Fire at 10:15 a.m. on the 15th day of every month                                                                                                           |
+| `0 15 10 15 * *`           | Fire at 10:15 a.m. on the last day of every month                                                                                                           |
+| `0 15 10 * * 6L`           | Fire at 10:15 a.m. on the last Friday of every month                                                                                                        |
+| `0 15 10 * * 6L 2011-2014` | Fire at 10:15 a.m. on every last Friday of every month during the years 2011, 20012, 2014, and 2014                                                         |
+| `0 15 10 * * 6#3`          | Fire at 10:15 a.m. on the third Friday of every month                                                                                                       |
+| `0 0 12 1/5 * *`           | Fire at 12:00 p.m. (noon) every five days every month, starting on the first day of the month                                                               |
+| `0 11 11 11 11 *`          | Fire every November 11th at 11:11 a.m.                                                                                                                      |
+
+## Helpful Tools / further documentation
+
+- [crontab guru](https://crontab.guru/)
+- https://en.wikipedia.org/wiki/Cron
+- https://linux.die.net/man/5/crontab
+- https://www.netiq.com/documentation/cloud-manager-2-5/ncm-reference/data/bexyssf.html
+- http://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html
+- https://docs.oracle.com/cd/E12058_01/doc/doc.1014/e12030/cron_expressions.htm
