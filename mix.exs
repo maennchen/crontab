@@ -50,16 +50,16 @@ defmodule Crontab.Mixfile do
   defp package do
     [
       name: :crontab,
-      files: ["lib", "mix.exs", "README*", "LICENSE*", "CHANGELOG*"],
+      files: ["lib", "mix.exs", "README*", "LICENSE*"],
       maintainers: ["Jonatan Männchen"],
       licenses: ["MIT"],
-      links: %{"GitHub" => @source_url}
+      links: %{"GitHub" => @source_url, "Changelog" => @source_url <> "/releases"}
     ]
   end
 
   defp docs do
     [
-      extras: ["CHANGELOG.md", "README.md"],
+      extras: ["README.md"],
       main: "readme",
       source_url: @source_url,
       source_ref: "v" <> @version
