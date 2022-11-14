@@ -87,7 +87,7 @@ defmodule Crontab.CronExpression.Parser do
   def parse(cron_expression, extended \\ false)
 
   def parse("@" <> identifier, _) do
-    special(String.to_atom(String.downcase(identifier)))
+    special(String.downcase(identifier))
   end
 
   def parse(cron_expression, true) do
@@ -400,12 +400,14 @@ defmodule Crontab.CronExpression.Parser do
     end
   end
 
-  @spec special(atom) :: result
-  defp special(identifier) do
-    if Map.has_key?(@specials, identifier) do
-      {:ok, Map.fetch!(@specials, identifier)}
-    else
-      {:error, "Special identifier @" <> Atom.to_string(identifier) <> " is undefined."}
+  @spec special(binary) :: result
+  Enum.map(@specials, fn {special, special_value} ->
+    defp special(unquote(to_string(special))) do
+      {:ok, unquote(Macro.escape(special_value))}
     end
+  end)
+
+  defp special(identifier) do
+    {:error, "Special identifier @#{identifier} is undefined."}
   end
 end
