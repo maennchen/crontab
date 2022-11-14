@@ -87,7 +87,7 @@ defmodule Crontab.CronExpression.Parser do
   def parse(cron_expression, extended \\ false)
 
   def parse("@" <> identifier, _) do
-    special(String.to_atom(String.downcase(identifier)))
+    special(String.downcase(identifier))
   end
 
   def parse(cron_expression, true) do
@@ -276,8 +276,7 @@ defmodule Crontab.CronExpression.Parser do
     error_message = "Can't parse #{value} as month."
 
     result =
-      case {Map.fetch(@month_values, String.to_atom(String.upcase(value))),
-            Integer.parse(value, 10)} do
+      case {fetch_month_value(String.upcase(value)), Integer.parse(value, 10)} do
         # No valid month string or integer
         {:error, :error} -> {:error, error_message}
         # Month specified as string
@@ -356,8 +355,7 @@ defmodule Crontab.CronExpression.Parser do
   defp parse_week_day(value) do
     error_message = "Can't parse #{value} as day of week."
 
-    case {Map.fetch(@weekday_values, String.to_atom(String.upcase(value))),
-          Integer.parse(value, 10)} do
+    case {fetch_weekday_value(String.upcase(value)), Integer.parse(value, 10)} do
       {:error, :error} -> {:error, error_message}
       {{:ok, number}, :error} -> {:ok, number}
       {:error, {number, ""}} -> {:ok, number}
@@ -400,12 +398,32 @@ defmodule Crontab.CronExpression.Parser do
     end
   end
 
-  @spec special(atom) :: result
-  defp special(identifier) do
-    if Map.has_key?(@specials, identifier) do
-      {:ok, Map.fetch!(@specials, identifier)}
-    else
-      {:error, "Special identifier @" <> Atom.to_string(identifier) <> " is undefined."}
+  @spec fetch_weekday_value(binary) :: {:ok, integer} | :error
+  Enum.map(@weekday_values, fn {weekday, weekday_number} ->
+    defp fetch_weekday_value(unquote(to_string(weekday))) do
+      {:ok, unquote(weekday_number)}
     end
+  end)
+
+  defp fetch_weekday_value(_), do: :error
+
+  @spec fetch_month_value(binary) :: {:ok, integer} | :error
+  Enum.map(@month_values, fn {month, month_number} ->
+    defp fetch_month_value(unquote(to_string(month))) do
+      {:ok, unquote(month_number)}
+    end
+  end)
+
+  defp fetch_month_value(_), do: :error
+
+  @spec special(binary) :: result
+  Enum.map(@specials, fn {special, special_value} ->
+    defp special(unquote(to_string(special))) do
+      {:ok, unquote(Macro.escape(special_value))}
+    end
+  end)
+
+  defp special(identifier) do
+    {:error, "Special identifier @#{identifier} is undefined."}
   end
 end
