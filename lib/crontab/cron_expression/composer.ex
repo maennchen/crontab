@@ -5,8 +5,18 @@ defmodule Crontab.CronExpression.Composer do
 
   alias Crontab.CronExpression
 
+  @type opts :: [
+          skip_year: boolean
+        ]
+
   @doc """
   Generate from `%Crontab.CronExpression{}` to `* * * * * *`.
+
+  Available options:
+
+    - skip_year: boolean
+      If set to `true`, do not add the year to the expression.
+      This means that `%Crontab.CronExpression{}` will return `* * * * *`.
 
   ## Examples
 
@@ -19,27 +29,40 @@ defmodule Crontab.CronExpression.Composer do
       iex> Crontab.CronExpression.Composer.compose %Crontab.CronExpression{reboot: true}
       "@reboot"
 
+      iex> Crontab.CronExpression.Composer.compose(%Crontab.CronExpression{}, skip_year: true)
+      "* * * * *"
+
+      iex> Crontab.CronExpression.Composer.compose(%Crontab.CronExpression{minute: [9, {:-, 4, 6}, {:/, :*, 9}]}, skip_year: true)
+      "9,4-6,*/9 * * * *"
   """
   @spec compose(CronExpression.t()) :: binary
-  def compose(%CronExpression{reboot: true}) do
+  @spec compose(CronExpression.t(), opts) :: binary
+  def compose(cron_expression, opts \\ [])
+
+  def compose(%CronExpression{reboot: true}, _) do
     "@reboot"
   end
 
-  def compose(cron_expression = %CronExpression{}) do
+  def compose(cron_expression = %CronExpression{}, opts) do
     cron_expression
     |> CronExpression.to_condition_list()
-    |> compose_interval
+    |> compose_interval(Map.new(opts))
     |> Enum.join(" ")
   end
 
-  @spec compose_interval(CronExpression.condition_list()) :: [binary]
-  defp compose_interval([{_, conditions} | tail]),
-    do: [
-      Enum.map_join(conditions, ",", fn condition -> compose_condition(condition) end)
-      | compose_interval(tail)
-    ]
+  @spec compose_interval(CronExpression.condition_list(), map) :: [binary]
+  defp compose_interval([{:year, _} | tail], opts = %{skip_year: true}) do
+    compose_interval(tail, opts)
+  end
 
-  defp compose_interval([]), do: []
+  defp compose_interval([{_, conditions} | tail], opts) do
+    [
+      Enum.map_join(conditions, ",", fn condition -> compose_condition(condition) end)
+      | compose_interval(tail, opts)
+    ]
+  end
+
+  defp compose_interval([], _), do: []
 
   @spec compose_condition(CronExpression.value()) :: binary
   defp compose_condition(:*), do: "*"
