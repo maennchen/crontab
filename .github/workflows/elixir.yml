@@ -8,15 +8,12 @@ on:
     tags:
       - "v*"
 
-# Secrets:
-# * CACHE_VERSION - Set to `date +%s`, set new when the cache should be busted
-
 env:
   BUILD_EMBEDDED: true
   DIALYZER_PLT_PRIV: true
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  DEFAULT_ELIXIR_VERSION: 1.13
-  DEFAULT_OTP_VERSION: 24.2
+  DEFAULT_ELIXIR_VERSION: 1.14
+  DEFAULT_OTP_VERSION: 25.2
 
 jobs:
   format:
@@ -30,24 +27,21 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: erlef/setup-elixir@v1
-        id: setup-elixir
+        id: setupBEAM
         with:
           otp-version: "${{ env.DEFAULT_OTP_VERSION }}"
           elixir-version: "${{ env.DEFAULT_ELIXIR_VERSION }}"
-      - uses: actions/cache@v3.2.4
+      - uses: actions/cache@v3
         with:
           path: deps
-          key: deps-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-${{ hashFiles('mix.lock') }}
+          key: deps-${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}
           restore-keys: |
-            deps-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-
-            deps-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-
+            deps-${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}-
       - run: mix deps.get
       - run: mix format --check-formatted
 
   test:
     name: Run Tests & Submit Coverage
-
-    runs-on: ubuntu-latest
 
     env:
       MIX_ENV: test
@@ -55,51 +49,52 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        otp: ["21.3", "22.3", "23.3", "24.1", "25.1"]
-        elixir: ["1.10", "1.11", "1.12", "1.13", "1.14"]
-        exclude:
-          - otp: "24.1"
-            elixir: "1.10"
-          - otp: "25.1"
-            elixir: "1.10"
-          - otp: "25.1"
-            elixir: "1.11"
-          - otp: "21.3"
-            elixir: "1.12"
-          - otp: "25.1"
-            elixir: "1.12"
-          - otp: "21.3"
-            elixir: "1.13"
-          - otp: "21.3"
-            elixir: "1.14"
-          - otp: "22.3"
-            elixir: "1.14"
+        include:
+          - otp: '21.3'
+            elixir: '1.10'
+            runs-on: ubuntu-18.04
+          - otp: '25.0'
+            elixir: '1.14'
+            runs-on: ubuntu-latest
+          - otp: '25.0'
+            elixir: 'main'
+            runs-on: ubuntu-latest
+          - runs-on: ubuntu-latest
+            # otp: '${{ env.DEFAULT_OTP_VERSION }}'
+            # elixir: '${{ env.DEFAULT_ELIXIR_VERSION }}'
+            enable_coverage_export: 'true'
+
+    runs-on: ${{ matrix.runs-on }}
 
     steps:
       - uses: actions/checkout@v3
       - uses: erlef/setup-elixir@v1
-        id: setup-elixir
+        id: setupBEAM
         with:
-          otp-version: ${{ matrix.otp }}
-          elixir-version: ${{ matrix.elixir }}
-      - uses: actions/cache@v3.2.4
+          otp-version: ${{ matrix.otp || env.DEFAULT_OTP_VERSION }}
+          elixir-version: ${{ matrix.elixir || env.DEFAULT_ELIXIR_VERSION }}
+      - uses: actions/cache@v3
         with:
           path: deps
-          key: deps-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-${{ hashFiles('mix.lock') }}
+          key: deps-${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}
           restore-keys: |
-            deps-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-
-            deps-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-
+            deps-${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}-
       - run: mix deps.get
-      - uses: actions/cache@v3.2.4
+      - uses: actions/cache@v3
         with:
-          path: _build/test
-          key: compile_test-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-${{ hashFiles('mix.lock') }}
+          path: _build/${{ env.MIX_ENV }}
+          key: compile-${{ env.MIX_ENV }}-${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}
           restore-keys: |
-            compile_test-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-
-            compile_test-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-
+            compile-${{ env.MIX_ENV }}-${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}-
       - run: mix deps.compile --skip-umbrella-children
       - run: mix compile --warning-as-errors
-      - run: mix coveralls.github --umbrella || mix test
+      - run: mix coveralls.github
+        if: ${{ matrix.enable_coverage_export == 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: mix test
+        if: ${{ !matrix.enable_coverage_export }}
+
 
   credo:
     name: Check Credo
@@ -112,25 +107,23 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: erlef/setup-elixir@v1
-        id: setup-elixir
+        id: setupBEAM
         with:
           otp-version: "${{ env.DEFAULT_OTP_VERSION }}"
           elixir-version: "${{ env.DEFAULT_ELIXIR_VERSION }}"
-      - uses: actions/cache@v3.2.4
+      - uses: actions/cache@v3
         with:
           path: deps
-          key: deps-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-${{ hashFiles('mix.lock') }}
+          key: deps-${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}
           restore-keys: |
-            deps-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-
-            deps-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-
+            deps-${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}-
       - run: mix deps.get
-      - uses: actions/cache@v3.2.4
+      - uses: actions/cache@v3
         with:
-          path: _build/dev
-          key: compile_dev-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-${{ hashFiles('mix.lock') }}
+          path: _build/${{ env.MIX_ENV }}
+          key: compile-${{ env.MIX_ENV }}-${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}
           restore-keys: |
-            compile_dev-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-
-            compile_dev-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-
+            compile-${{ env.MIX_ENV }}-${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}-
       - run: mix deps.compile --skip-umbrella-children
       - run: mix compile --warning-as-errors
       - run: mix credo --strict
@@ -146,38 +139,35 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: erlef/setup-elixir@v1
-        id: setup-elixir
+        id: setupBEAM
         with:
           otp-version: "${{ env.DEFAULT_OTP_VERSION }}"
           elixir-version: "${{ env.DEFAULT_ELIXIR_VERSION }}"
-      - uses: actions/cache@v3.2.4
+      - uses: actions/cache@v3
         with:
           path: deps
-          key: deps-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-${{ hashFiles('mix.lock') }}
+          key: deps-${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}
           restore-keys: |
-            deps-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-
-            deps-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-
+            deps-${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}-
       - run: mix deps.get
-      - uses: actions/cache@v3.2.4
+      - uses: actions/cache@v3
         with:
-          path: _build/dev
-          key: compile_dev-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-${{ hashFiles('mix.lock') }}
+          path: _build/${{ env.MIX_ENV }}
+          key: compile-${{ env.MIX_ENV }}-${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}
           restore-keys: |
-            compile_dev-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-
-            compile_dev-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-
+            compile-${{ env.MIX_ENV }}-${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}-
       - run: mix deps.compile --skip-umbrella-children
       - run: mix compile --warning-as-errors
-      - uses: actions/cache@v3.2.4
+      - uses: actions/cache@v3
         with:
           path: priv/plts/
-          key: dialyzer_plt_dev-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-${{ hashFiles('mix.lock') }}
+          key: dialyzer_plt_${{ env.MIX_ENV }}-${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}
           restore-keys: |
-            dialyzer_plt_dev-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-
-            dialyzer_plt_dev-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-
+            dialyzer_plt_${{ env.MIX_ENV }}-${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}-
       - run: mix dialyzer --plt
       - uses: actions/upload-artifact@v3
         with:
-          name: dialyzer_plt_dev-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}
+          name: dialyzer_plt_${{ env.MIX_ENV }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}
           path: priv/plts/
 
   dialyzer_test:
@@ -193,30 +183,28 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: erlef/setup-elixir@v1
-        id: setup-elixir
+        id: setupBEAM
         with:
           otp-version: "${{ env.DEFAULT_OTP_VERSION }}"
           elixir-version: "${{ env.DEFAULT_ELIXIR_VERSION }}"
-      - uses: actions/cache@v3.2.4
+      - uses: actions/cache@v3
         with:
           path: deps
-          key: deps-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-${{ hashFiles('mix.lock') }}
+          key: deps-${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}
           restore-keys: |
-            deps-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-
-            deps-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-
+            deps-${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}-
       - run: mix deps.get
-      - uses: actions/cache@v3.2.4
+      - uses: actions/cache@v3
         with:
-          path: _build/dev
-          key: compile_dev-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-${{ hashFiles('mix.lock') }}
+          path: _build/${{ env.MIX_ENV }}
+          key: compile-${{ env.MIX_ENV }}-${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}
           restore-keys: |
-            compile_dev-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-
-            compile_dev-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-
+            compile-${{ env.MIX_ENV }}-${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}-
       - run: mix deps.compile --skip-umbrella-children
       - run: mix compile --warning-as-errors
       - uses: actions/download-artifact@v3
         with:
-          name: dialyzer_plt_dev-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}
+          name: dialyzer_plt_${{ env.MIX_ENV }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}
           path: priv/plts/
       - run: mix dialyzer
 
@@ -231,25 +219,23 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: erlef/setup-elixir@v1
-        id: setup-elixir
+        id: setupBEAM
         with:
           otp-version: "${{ env.DEFAULT_OTP_VERSION }}"
           elixir-version: "${{ env.DEFAULT_ELIXIR_VERSION }}"
-      - uses: actions/cache@v3.2.4
+      - uses: actions/cache@v3
         with:
           path: deps
-          key: deps-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-${{ hashFiles('mix.lock') }}
+          key: deps-${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}
           restore-keys: |
-            deps-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-
-            deps-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-
+            deps-${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}-
       - run: mix deps.get
-      - uses: actions/cache@v3.2.4
+      - uses: actions/cache@v3
         with:
-          path: _build/dev
-          key: compile_dev-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-${{ hashFiles('mix.lock') }}
+          path: _build/${{ env.MIX_ENV }}
+          key: compile-${{ env.MIX_ENV }}-${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}
           restore-keys: |
-            compile_dev-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-${{ runner.os }}-
-            compile_dev-${{ secrets.CACHE_VERSION }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}-
+            compile-${{ env.MIX_ENV }}-${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}-
       - run: mix deps.compile --skip-umbrella-children
       - run: mix compile --warning-as-errors
       - run: mix docs
