@@ -13,13 +13,7 @@ defmodule Crontab.Scheduler do
   @type direction :: :increment | :decrement
   @type result :: maybe(NaiveDateTime.t(), any)
 
-  # TODO: Remove if when requiring Elixir 1.10 + only
-  if function_exported?(Application, :compile_env, 3) do
-    @max_runs Application.compile_env(:crontab, :max_runs, 10_000)
-  else
-    # credo:disable-for-next-line Credo.Check.Warning.ApplicationConfigInModuleAttribute
-    @max_runs Application.get_env(:crontab, :max_runs, 10_000)
-  end
+  @max_runs Application.compile_env(:crontab, :max_runs, 10_000)
 
   @doc """
   This function provides the functionality to retrieve the next run date from a
