@@ -1,12 +1,12 @@
 # Crontab
 
-[![CI](https://github.com/jshmrtn/crontab/workflows/.github/workflows/elixir.yml/badge.svg)](https://github.com/jshmrtn/crontab/actions?query=workflow%3A.github%2Fworkflows%2Felixir.yml)
-[![Coverage Status](https://coveralls.io/repos/github/jshmrtn/crontab/badge.svg?branch=main)](https://coveralls.io/github/jshmrtn/crontab?branch=main)
+[![CI](https://github.com/maennchen/crontab/workflows/.github/workflows/elixir.yml/badge.svg)](https://github.com/maennchen/crontab/actions?query=workflow%3A.github%2Fworkflows%2Felixir.yml)
+[![Coverage Status](https://coveralls.io/repos/github/maennchen/crontab/badge.svg?branch=main)](https://coveralls.io/github/maennchen/crontab?branch=main)
 [![Module Version](https://img.shields.io/hexpm/v/crontab.svg)](https://hex.pm/packages/crontab)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/crontab/)
 [![Total Download](https://img.shields.io/hexpm/dt/crontab.svg)](https://hex.pm/packages/crontab)
-[![License](https://img.shields.io/hexpm/l/crontab.svg)](https://github.com/jshmrtn/crontab/blob/main/LICENSE)
-[![Last Updated](https://img.shields.io/github/last-commit/jshmrtn/crontab.svg)](https://github.com/jshmrtn/crontab/commits/main)
+[![License](https://img.shields.io/hexpm/l/crontab.svg)](https://github.com/maennchen/crontab/blob/main/LICENSE)
+[![Last Updated](https://img.shields.io/github/last-commit/maennchen/crontab.svg)](https://github.com/maennchen/crontab/commits/main)
 
 Elixir library for parsing, writing, and calculating Cron format strings.
 
@@ -114,4 +114,4 @@ iex> Crontab.CronExpression.Composer.compose %Crontab.CronExpression{minute: [9,
 
 Copyright (c) 2016, SK & T AG, JOSHMARTIN GmbH, Jonatan Männchen
 
-This library is MIT licensed. See the [LICENSE](https://github.com/jshmrtn/crontab/blob/main/LICENSE) for details.
+This library is MIT licensed. See the [LICENSE](https://github.com/maennchen/crontab/blob/main/LICENSE) for details.

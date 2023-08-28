@@ -1,7 +1,7 @@
 defmodule Crontab.Mixfile do
   use Mix.Project
 
-  @source_url "https://github.com/jshmrtn/crontab"
+  @source_url "https://github.com/maennchen/crontab"
   @version "1.1.13"
 
   def project do
