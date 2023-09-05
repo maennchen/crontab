@@ -25,7 +25,7 @@ jobs:
       MIX_ENV: dev
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: erlef/setup-elixir@v1
         id: setupBEAM
         with:
@@ -67,7 +67,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: erlef/setup-elixir@v1
         id: setupBEAM
         with:
@@ -105,7 +105,7 @@ jobs:
       MIX_ENV: dev
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: erlef/setup-elixir@v1
         id: setupBEAM
         with:
@@ -137,7 +137,7 @@ jobs:
       MIX_ENV: dev
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: erlef/setup-elixir@v1
         id: setupBEAM
         with:
@@ -181,7 +181,7 @@ jobs:
       MIX_ENV: dev
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: erlef/setup-elixir@v1
         id: setupBEAM
         with:
@@ -217,7 +217,7 @@ jobs:
       MIX_ENV: dev
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: erlef/setup-elixir@v1
         id: setupBEAM
         with:
