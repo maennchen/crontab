@@ -75,10 +75,7 @@ iex> Crontab.Scheduler.get_next_run_date!(~e[*/2], ~N[2017-01-01 01:01:00])
 ```
 
 ```elixir
-iex> Crontab.Scheduler.get_next_run_dates(3, ~e[*/2], ~N[2017-01-01 01:01:00])
-{:ok,
- [~N[2017-01-01 01:02:00], ~N[2017-01-01 01:04:00], ~N[2017-01-01 01:06:00]]}
-iex> Crontab.Scheduler.get_next_run_dates!(3, ~e[*/2], ~N[2017-01-01 01:01:00])
+iex> Enum.take(Crontab.Scheduler.get_next_run_dates(~e[*/2], ~N[2017-01-01 01:01:00]), 3)
 [~N[2017-01-01 01:02:00], ~N[2017-01-01 01:04:00], ~N[2017-01-01 01:06:00]]
 ```
 
