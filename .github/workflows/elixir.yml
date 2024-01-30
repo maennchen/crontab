@@ -12,8 +12,8 @@ env:
   BUILD_EMBEDDED: true
   DIALYZER_PLT_PRIV: true
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  DEFAULT_ELIXIR_VERSION: 1.14
-  DEFAULT_OTP_VERSION: 25.2
+  DEFAULT_ELIXIR_VERSION: 1.16
+  DEFAULT_OTP_VERSION: 26.2
 
 jobs:
   format:
@@ -50,19 +50,19 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - otp: '21.3'
-            elixir: '1.10'
-            runs-on: ubuntu-18.04
-          - otp: '25.0'
-            elixir: '1.14'
+          - otp: "21.3"
+            elixir: "1.11"
+            runs-on: ubuntu-20.04
+          - otp: "25.0"
+            elixir: "1.14"
+            runs-on: ubuntu-22.04
+          - otp: "26.2"
+            elixir: "main"
             runs-on: ubuntu-latest
-          - otp: '25.0'
-            elixir: 'main'
-            runs-on: ubuntu-latest
-          - runs-on: ubuntu-latest
+          - runs-on: ubuntu-22.04
             # otp: '${{ env.DEFAULT_OTP_VERSION }}'
             # elixir: '${{ env.DEFAULT_ELIXIR_VERSION }}'
-            enable_coverage_export: 'true'
+            enable_coverage_export: "true"
 
     runs-on: ${{ matrix.runs-on }}
 
@@ -94,7 +94,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: mix test
         if: ${{ !matrix.enable_coverage_export }}
-
 
   credo:
     name: Check Credo
