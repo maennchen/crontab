@@ -186,6 +186,10 @@ defmodule Crontab.CronExpression.Parser do
           {:ok, CronExpression.value()} | {:error, binary}
   defp tokenize(interval, :-, whole_string) do
     case String.split(whole_string, "-") do
+      # negative number given in complex_divider
+      ["", num] ->
+        clean_value(interval, "-" <> num)
+
       [min, max] ->
         case {clean_value(interval, min), clean_value(interval, max)} do
           {{:ok, min_value}, {:ok, max_value}} -> {:ok, {:-, min_value, max_value}}
@@ -205,7 +209,7 @@ defmodule Crontab.CronExpression.Parser do
   defp tokenize(interval, :complex_divider, value) do
     [base, divider] = String.split(value, "/")
 
-    # Range increments apply only to * or ranges in <start>-<end> format
+    # Range increments apply to *, positive single integers, or ranges in <start>-<end> format
     range_tokenization_result = tokenize(interval, :-, base)
     other_tokenization_result = tokenize(interval, base)
     integer_divider = Integer.parse(divider, 10)
@@ -227,10 +231,35 @@ defmodule Crontab.CronExpression.Parser do
       {{:error, _}, {:ok, :*}, {clean_divider, ""}} ->
         {:ok, {:/, :*, clean_divider}}
 
-      # No valid range found
+      # Found single simple integer
+      {{:error, _}, {:ok, num}, {clean_divider, ""}} ->
+        max_value = max_value_for_interval(interval)
+        tokenize(interval, :complex_divider, "#{num}-#{max_value}/#{clean_divider}")
+
+      # No valid range or single postive integer found
       {error = {:error, _}, _, _} ->
         error
     end
+  end
+
+  @spec max_value_for_interval(interval :: atom()) :: integer()
+  defp max_value_for_interval(interval) do
+    case interval do
+      :second -> last_num_in_range(@second_values)
+      :minute -> last_num_in_range(@minute_values)
+      :hour -> last_num_in_range(@hour_values)
+      :day -> last_num_in_range(@day_of_month_values)
+      :month -> @month_values |> Map.values() |> Enum.reduce(&max/2)
+      :weekday -> @weekday_values |> Map.values() |> Enum.reduce(&max/2)
+      :year -> 3000
+    end
+  end
+
+  @spec last_num_in_range(Range.t()) :: Range.limit()
+  defp last_num_in_range(range) do
+    range
+    |> Enum.to_list()
+    |> List.last()
   end
 
   @spec clean_value(CronExpression.interval(), binary) ::

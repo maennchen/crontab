@@ -334,10 +334,6 @@ defmodule Crontab.CronExpression.ParserTest do
     assert parse("* * * * 5invalid") == {:error, "Can't parse 5invalid as day of week."}
   end
 
-  test "parse invalid range increment" do
-    assert parse("* 4/8 * * *") == {:error, "Can't parse 4 as a range."}
-  end
-
   test "parse valid range increment" do
     assert parse("* 0-12/2 * * *") == {:ok, ~e[* 0-12/2 * * * *]}
   end
@@ -376,5 +372,62 @@ defmodule Crontab.CronExpression.ParserTest do
 
   test "parse zero divider gives error" do
     assert parse("*/0") == {:error, "Can't parse 0 as increment."}
+  end
+
+  describe "parse/2 non-range step value" do
+    setup do: %{now: ~N[2024-01-01 00:00:01]}
+
+    test "for second", %{now: now} do
+      {:ok, expr} = parse("0/2 * * * * * *", true)
+      expected = [~N[2024-01-01 00:00:02], ~N[2024-01-01 00:00:04]]
+
+      assert expr |> Crontab.Scheduler.get_next_run_dates(now) |> Enum.take(2) == expected
+    end
+
+    test "for minute", %{now: now} do
+      {:ok, expr} = parse("0/2 * * * * *")
+      expected = [~N[2024-01-01 00:02:00], ~N[2024-01-01 00:04:00]]
+
+      assert expr |> Crontab.Scheduler.get_next_run_dates(now) |> Enum.take(2) == expected
+    end
+
+    test "for hour", %{now: now} do
+      {:ok, expr} = parse("0 0/2 * * * *")
+      expected = [~N[2024-01-01 02:00:00], ~N[2024-01-01 04:00:00]]
+
+      assert expr |> Crontab.Scheduler.get_next_run_dates(now) |> Enum.take(2) == expected
+    end
+
+    test "for day", %{now: now} do
+      {:ok, expr} = parse("0 0 1/2 * * *")
+      expected = [~N[2024-01-03 00:00:00], ~N[2024-01-05 00:00:00]]
+
+      assert expr |> Crontab.Scheduler.get_next_run_dates(now) |> Enum.take(2) == expected
+    end
+
+    test "for month", %{now: now} do
+      {:ok, expr} = parse("0 0 1 1/2 * *")
+      expected = [~N[2024-03-01 00:00:00], ~N[2024-05-01 00:00:00]]
+
+      assert expr |> Crontab.Scheduler.get_next_run_dates(now) |> Enum.take(2) == expected
+    end
+
+    test "for weekday", %{now: now} do
+      {:ok, expr} = parse("0 0 * * 2/2 *")
+      expected = [~N[2024-01-02 00:00:00], ~N[2024-01-04 00:00:00]]
+
+      assert expr |> Crontab.Scheduler.get_next_run_dates(now) |> Enum.take(2) == expected
+    end
+
+    test "for year", %{now: now} do
+      {:ok, expr} = parse("0 0 1 1 * 2024/2")
+      expected = [~N[2026-01-01 00:00:00], ~N[2028-01-01 00:00:00]]
+
+      assert expr |> Crontab.Scheduler.get_next_run_dates(now) |> Enum.take(2) == expected
+    end
+
+    test "parse non-range step value gives error when given a negative integer" do
+      assert parse("-8/2 * * * *") == {:error, "Can't parse -8 as minute."}
+    end
   end
 end
