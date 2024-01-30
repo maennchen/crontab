@@ -142,31 +142,8 @@ defmodule Crontab.CronExpression do
   def sigil_e(cron_expression, [?e]), do: Parser.parse!(cron_expression, true)
   def sigil_e(cron_expression, _options), do: Parser.parse!(cron_expression, false)
 
-  @doc """
-  Convert `Crontab.CronExpression` struct to tuple List.
-
-  ## Examples
-
-      iex> Crontab.CronExpression.to_condition_list %Crontab.CronExpression{
-      ...> minute: [1], hour: [2], day: [3], month: [4], weekday: [5], year: [6]}
-      [ {:minute, [1]},
-        {:hour, [2]},
-        {:day, [3]},
-        {:month, [4]},
-        {:weekday, [5]},
-        {:year, [6]}]
-
-      iex> Crontab.CronExpression.to_condition_list %Crontab.CronExpression{
-      ...> extended: true, second: [0], minute: [1], hour: [2], day: [3], month: [4], weekday: [5], year: [6]}
-      [ {:second, [0]},
-        {:minute, [1]},
-        {:hour, [2]},
-        {:day, [3]},
-        {:month, [4]},
-        {:weekday, [5]},
-        {:year, [6]}]
-
-  """
+  @doc false
+  # Convert Crontab.CronExpression struct to Tuple List
   @spec to_condition_list(t) :: condition_list
   def to_condition_list(interval = %__MODULE__{extended: false}) do
     [
@@ -181,6 +158,34 @@ defmodule Crontab.CronExpression do
 
   def to_condition_list(interval = %__MODULE__{}) do
     [{:second, interval.second} | to_condition_list(%{interval | extended: false})]
+  end
+
+  @doc false
+
+  def from_parsec([:reboot], _extended), do: %__MODULE__{reboot: true}
+
+  def from_parsec([:yearly], _extended),
+    do: %__MODULE__{minute: [0], hour: [0], day: [1], month: [1]}
+
+  def from_parsec([:annually], _extended),
+    do: %__MODULE__{minute: [0], hour: [0], day: [1], month: [1]}
+
+  def from_parsec([:monthly], _extended), do: %__MODULE__{minute: [0], hour: [0], day: [1]}
+  def from_parsec([:weekly], _extended), do: %__MODULE__{minute: [0], hour: [0], weekday: [0]}
+  def from_parsec([:daily], _extended), do: %__MODULE__{minute: [0], hour: [0]}
+  def from_parsec([:midnight], _extended), do: %__MODULE__{minute: [0], hour: [0]}
+  def from_parsec([:hourly], _extended), do: %__MODULE__{minute: [0]}
+  def from_parsec([:minutely], _extended), do: %__MODULE__{}
+  def from_parsec([:secondly], _extended), do: %__MODULE__{extended: true}
+
+  def from_parsec(parsec, extended) do
+    Enum.reduce(parsec, %__MODULE__{extended: extended}, fn {time_unit, constraints}, acc ->
+      Map.put(
+        acc,
+        time_unit,
+        constraints
+      )
+    end)
   end
 
   defimpl Inspect do
