@@ -333,15 +333,12 @@ defmodule Crontab.CronExpression.Parser do
     if String.match?(value, ~r/W$/) do
       day = binary_part(value, 0, byte_size(value) - 1)
 
-      case Integer.parse(day, 10) do
-        {number, ""} ->
-          case check_within_range(number, "day of month", @day_of_month_values) do
-            {:ok, number} -> {:ok, {:W, number}}
-            error -> error
-          end
-
-        :error ->
-          {:error, "Can't parse " <> value <> " as interval day."}
+      with {number, ""} <- Integer.parse(day, 10),
+           {:ok, number} <- check_within_range(number, "day of month", @day_of_month_values) do
+        {:ok, {:W, number}}
+      else
+        {:error, reason} -> {:error, reason}
+        :error -> {:error, "Can't parse #{value} as interval day."}
       end
     else
       clean_integer_within_range(value, "day of month", @day_of_month_values)
