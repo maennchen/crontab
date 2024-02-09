@@ -75,14 +75,14 @@ defmodule Crontab.DateHelper do
   @spec next_weekday_to(NaiveDateTime.t()) :: Calendar.day()
   def next_weekday_to(date = %NaiveDateTime{year: year, month: month, day: day}) do
     weekday = :calendar.day_of_the_week(year, month, day)
-    next_day = NaiveDateTime.add(date, 86_400, :second)
-    previous_day = NaiveDateTime.add(date, -86_400, :second)
+    next_day = NaiveDateTime.add(date, 1, :day)
+    previous_day = NaiveDateTime.add(date, -1, :day)
 
     cond do
       weekday == 7 && next_day.month == date.month -> next_day.day
-      weekday == 7 -> NaiveDateTime.add(date, -86_400 * 2, :second).day
+      weekday == 7 -> NaiveDateTime.add(date, -2, :day).day
       weekday == 6 && previous_day.month == date.month -> previous_day.day
-      weekday == 6 -> NaiveDateTime.add(date, 86_400 * 2, :second).day
+      weekday == 6 -> NaiveDateTime.add(date, 2, :day).day
       true -> date.day
     end
   end
@@ -95,9 +95,9 @@ defmodule Crontab.DateHelper do
       |> Date.leap_year?()
 
     if leap_year? do
-      NaiveDateTime.add(date, 366 * 86_400, :second)
+      NaiveDateTime.add(date, 366, :day)
     else
-      NaiveDateTime.add(date, 365 * 86_400, :second)
+      NaiveDateTime.add(date, 365, :day)
     end
   end
 
@@ -109,9 +109,9 @@ defmodule Crontab.DateHelper do
       |> Date.leap_year?()
 
     if leap_year? do
-      NaiveDateTime.add(date, -366 * 86_400, :second)
+      NaiveDateTime.add(date, -366, :day)
     else
-      NaiveDateTime.add(date, -365 * 86_400, :second)
+      NaiveDateTime.add(date, -365, :day)
     end
   end
 
@@ -122,7 +122,7 @@ defmodule Crontab.DateHelper do
       |> NaiveDateTime.to_date()
       |> Date.days_in_month()
 
-    NaiveDateTime.add(date, (days + 1 - day) * 86_400, :second)
+    NaiveDateTime.add(date, days + 1 - day, :day)
   end
 
   @spec dec_month(NaiveDateTime.t()) :: NaiveDateTime.t()
@@ -132,7 +132,7 @@ defmodule Crontab.DateHelper do
       |> NaiveDateTime.to_date()
       |> Date.days_in_month()
 
-    NaiveDateTime.add(date, days * -86_400, :second)
+    NaiveDateTime.add(date, -days, :day)
   end
 
   @spec _beginning_of(NaiveDateTime.t(), [{unit, {any, any}}]) :: NaiveDateTime.t()
@@ -180,13 +180,13 @@ defmodule Crontab.DateHelper do
 
   @spec nth_weekday(NaiveDateTime.t(), Calendar.day_of_week(), :start) :: boolean
   defp nth_weekday(date = %NaiveDateTime{}, _, 0, :start),
-    do: NaiveDateTime.add(date, -86_400, :second).day
+    do: NaiveDateTime.add(date, -1, :day).day
 
   defp nth_weekday(date = %NaiveDateTime{year: year, month: month, day: day}, weekday, n, :start) do
     if :calendar.day_of_the_week(year, month, day) == weekday do
-      nth_weekday(NaiveDateTime.add(date, 86_400, :second), weekday, n - 1, :start)
+      nth_weekday(NaiveDateTime.add(date, 1, :day), weekday, n - 1, :start)
     else
-      nth_weekday(NaiveDateTime.add(date, 86_400, :second), weekday, n, :start)
+      nth_weekday(NaiveDateTime.add(date, 1, :day), weekday, n, :start)
     end
   end
 
@@ -195,7 +195,7 @@ defmodule Crontab.DateHelper do
     weekday = :calendar.day_of_the_week(year, month, day)
 
     if weekday > 5 do
-      last_weekday_of_month(NaiveDateTime.add(date, -86_400, :second), :end)
+      last_weekday_of_month(NaiveDateTime.add(date, -1, :day), :end)
     else
       day
     end
@@ -206,7 +206,7 @@ defmodule Crontab.DateHelper do
     if :calendar.day_of_the_week(year, month, day) == weekday do
       day
     else
-      last_weekday(NaiveDateTime.add(date, -86_400, :second), weekday, :end)
+      last_weekday(NaiveDateTime.add(date, -1, :day), weekday, :end)
     end
   end
 end
