@@ -50,11 +50,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - otp: "21.3"
-            elixir: "1.11"
-            runs-on: ubuntu-20.04
-          - otp: "25.0"
+          - otp: "23.3"
             elixir: "1.14"
+            runs-on: ubuntu-20.04
+          - otp: "26.2"
+            elixir: "1.16"
             runs-on: ubuntu-22.04
           - otp: "26.2"
             elixir: "main"
