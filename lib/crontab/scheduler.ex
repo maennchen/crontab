@@ -116,7 +116,7 @@ defmodule Crontab.Scheduler do
   def get_next_run_dates(cron_expression, date \\ DateTime.to_naive(DateTime.utc_now()))
 
   def get_next_run_dates(cron_expression = %CronExpression{extended: false}, date) do
-    _get_next_run_dates(cron_expression, date, fn date -> NaiveDateTime.add(date, 60, :second) end)
+    _get_next_run_dates(cron_expression, date, fn date -> NaiveDateTime.add(date, 1, :minute) end)
   end
 
   def get_next_run_dates(cron_expression = %CronExpression{extended: true}, date) do
@@ -237,7 +237,7 @@ defmodule Crontab.Scheduler do
 
   def get_previous_run_dates(cron_expression = %CronExpression{extended: false}, date) do
     _get_previous_run_dates(cron_expression, date, fn date ->
-      NaiveDateTime.add(date, -60, :second)
+      NaiveDateTime.add(date, -1, :minute)
     end)
   end
 
@@ -338,19 +338,19 @@ defmodule Crontab.Scheduler do
   defp correct_date(:second, date, :increment), do: {:ok, date |> NaiveDateTime.add(1, :second)}
 
   defp correct_date(:minute, date, :increment),
-    do: {:ok, date |> NaiveDateTime.add(60, :second) |> DateHelper.beginning_of(:minute)}
+    do: {:ok, date |> NaiveDateTime.add(1, :minute) |> DateHelper.beginning_of(:minute)}
 
   defp correct_date(:hour, date, :increment),
-    do: {:ok, date |> NaiveDateTime.add(3_600, :second) |> DateHelper.beginning_of(:hour)}
+    do: {:ok, date |> NaiveDateTime.add(1, :hour) |> DateHelper.beginning_of(:hour)}
 
   defp correct_date(:day, date, :increment),
-    do: {:ok, date |> NaiveDateTime.add(86_400, :second) |> DateHelper.beginning_of(:day)}
+    do: {:ok, date |> NaiveDateTime.add(1, :day) |> DateHelper.beginning_of(:day)}
 
   defp correct_date(:month, date, :increment),
     do: {:ok, date |> DateHelper.inc_month() |> DateHelper.beginning_of(:month)}
 
   defp correct_date(:weekday, date, :increment),
-    do: {:ok, date |> NaiveDateTime.add(86_400, :second) |> DateHelper.beginning_of(:day)}
+    do: {:ok, date |> NaiveDateTime.add(1, :day) |> DateHelper.beginning_of(:day)}
 
   defp correct_date(:year, %NaiveDateTime{year: 9_999}, :increment), do: {:error, :upper_bound}
 
@@ -364,7 +364,7 @@ defmodule Crontab.Scheduler do
     do:
       {:ok,
        date
-       |> NaiveDateTime.add(-60, :second)
+       |> NaiveDateTime.add(-1, :minute)
        |> DateHelper.end_of(:minute)
        |> DateHelper.beginning_of(:second)}
 
@@ -372,7 +372,7 @@ defmodule Crontab.Scheduler do
     do:
       {:ok,
        date
-       |> NaiveDateTime.add(-3_600, :second)
+       |> NaiveDateTime.add(-1, :hour)
        |> DateHelper.end_of(:hour)
        |> DateHelper.beginning_of(:second)}
 
@@ -380,7 +380,7 @@ defmodule Crontab.Scheduler do
     do:
       {:ok,
        date
-       |> NaiveDateTime.add(-86_400, :second)
+       |> NaiveDateTime.add(-1, :day)
        |> DateHelper.end_of(:day)
        |> DateHelper.beginning_of(:second)}
 
@@ -396,7 +396,7 @@ defmodule Crontab.Scheduler do
     do:
       {:ok,
        date
-       |> NaiveDateTime.add(-86_400, :second)
+       |> NaiveDateTime.add(-1, :day)
        |> DateHelper.end_of(:day)
        |> DateHelper.beginning_of(:second)}
 
@@ -424,7 +424,7 @@ defmodule Crontab.Scheduler do
 
     case clean_microseconds do
       %NaiveDateTime{second: 0} -> clean_microseconds
-      _ -> NaiveDateTime.add(clean_microseconds, 60, :second)
+      _ -> NaiveDateTime.add(clean_microseconds, 1, :minute)
     end
   end
 end
