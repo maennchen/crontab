@@ -8,7 +8,7 @@ defmodule Crontab.Mixfile do
     [
       app: :crontab,
       version: @version,
-      elixir: "~> 1.11",
+      elixir: "~> 1.14",
       build_embedded:
         Mix.env() == :prod or System.get_env("BUILD_EMBEDDED", "false") in ["1", "true"],
       start_permanent: Mix.env() == :prod,
