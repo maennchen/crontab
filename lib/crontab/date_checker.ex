@@ -7,8 +7,6 @@ defmodule Crontab.DateChecker do
 
   alias Crontab.DateHelper
 
-  @type date :: NaiveDateTime.t() | DateTime.t()
-
   @doc """
   Check a condition list against a given date.
 
@@ -27,7 +25,8 @@ defmodule Crontab.DateChecker do
       true
 
   """
-  @spec matches_date?(cron_expression :: CronExpression.t(), date :: date) :: boolean | no_return
+  @spec matches_date?(cron_expression :: CronExpression.t(), date :: DateHelper.date()) ::
+          boolean | no_return
   def matches_date?(cron_expression_or_condition_list, date)
 
   def matches_date?(%CronExpression{reboot: true}, _),
@@ -39,7 +38,10 @@ defmodule Crontab.DateChecker do
     |> matches_date?(execution_date)
   end
 
-  @spec matches_date?(condition_list :: CronExpression.condition_list(), date :: date) :: boolean
+  @spec matches_date?(
+          condition_list :: CronExpression.condition_list(),
+          date :: DateHelper.date()
+        ) :: boolean
   def matches_date?([], _), do: true
 
   def matches_date?([{interval, conditions} | tail], execution_date) do
@@ -61,7 +63,7 @@ defmodule Crontab.DateChecker do
   @spec matches_date?(
           interval :: CronExpression.interval(),
           condition_list :: CronExpression.condition_list(),
-          date :: date
+          date :: DateHelper.date()
         ) :: boolean
   def matches_date?(_, [:* | _], _), do: true
   def matches_date?(_, [], _), do: false
@@ -80,7 +82,7 @@ defmodule Crontab.DateChecker do
           interval :: CronExpression.interval(),
           values :: [CronExpression.time_unit()],
           condition :: CronExpression.value(),
-          date :: date
+          date :: DateHelper.date()
         ) :: boolean
   defp matches_specific_date?(_, [], _, _), do: false
   defp matches_specific_date?(_, _, :*, _), do: true
@@ -171,7 +173,7 @@ defmodule Crontab.DateChecker do
     end
   end
 
-  @spec get_interval_value(interval :: CronExpression.interval(), date :: date) :: [
+  @spec get_interval_value(interval :: CronExpression.interval(), date :: DateHelper.date()) :: [
           CronExpression.time_unit()
         ]
   defp get_interval_value(:second, %{second: second}), do: [second]
