@@ -51,7 +51,11 @@ defmodule Crontab.DateHelperTest do
     end
 
     # , {:minute, ~T[01:00:59]}, {:hour, ~T[01:59:59]}] do
-    for {unit, hour, minute, second} <- [{:second, 1, 0, 0}, {:minute, 1, 0, 59}, {:hour, 1, 59, 59}] do
+    for {unit, hour, minute, second} <- [
+          {:second, 1, 0, 0},
+          {:minute, 1, 0, 59},
+          {:hour, 1, 59, 59}
+        ] do
       test "one #{unit} to one second before NY DST ends" do
         one_sec_before = DateTime.from_naive!(~N[2024-11-03 00:59:59], "America/New_York")
 
