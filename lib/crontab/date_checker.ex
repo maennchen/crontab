@@ -7,6 +7,8 @@ defmodule Crontab.DateChecker do
 
   alias Crontab.DateHelper
 
+  @type date :: NaiveDateTime.t() | DateTime.t()
+
   @doc """
   Check a condition list against a given date.
 
