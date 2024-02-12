@@ -1,4 +1,6 @@
 defmodule Crontab.DateHelper do
+  use Private
+
   @moduledoc false
 
   @type unit :: :year | :month | :day | :hour | :minute | :second | :microsecond
@@ -286,15 +288,44 @@ defmodule Crontab.DateHelper do
     end
   end
 
-  defp add(datetime = %DateTime{}, amt, unit), do: DateTime.add(datetime, amt, unit)
-  defp add(datetime = %NaiveDateTime{}, amt, unit), do: NaiveDateTime.add(datetime, amt, unit)
-
   defp days_in_year(%{year: year}) do
     Date.new!(year, 1, 1)
     |> Date.leap_year?()
     |> case do
       true -> 366
       false -> 365
+    end
+  end
+
+  private do
+    def add(datetime = %NaiveDateTime{}, amt, unit), do: NaiveDateTime.add(datetime, amt, unit)
+
+    def add(datetime = %DateTime{}, amt, unit) do
+      candidate = DateTime.add(datetime, amt, unit)
+      adjustment = datetime.std_offset - candidate.std_offset
+      adjusted = DateTime.add(candidate, adjustment, :second)
+
+      case adjusted.std_offset == candidate.std_offset do
+        false ->
+          candidate
+
+        true ->
+          adj_plus_1h = DateTime.add(adjusted, 1, :hour)
+
+          case adj_plus_1h.std_offset == adjusted.std_offset do
+            true ->
+              adjusted
+
+            _ ->
+              # the one hour at end of daylight savings with ambiguous timezone
+              # return datetime with the standard (not daylight savings) timezone
+              %DateTime{
+                adjusted
+                | std_offset: adj_plus_1h.std_offset,
+                  zone_abbr: adj_plus_1h.zone_abbr
+              }
+          end
+      end
     end
   end
 end
