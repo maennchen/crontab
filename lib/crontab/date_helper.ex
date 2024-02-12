@@ -1,6 +1,4 @@
 defmodule Crontab.DateHelper do
-  use Private
-
   @moduledoc false
 
   @type unit :: :year | :month | :day | :hour | :minute | :second | :microsecond
@@ -297,24 +295,23 @@ defmodule Crontab.DateHelper do
     end
   end
 
-  private do
-    def add(datetime = %NaiveDateTime{}, amt, unit), do: NaiveDateTime.add(datetime, amt, unit)
+  @doc false
+  def add(datetime = %NaiveDateTime{}, amt, unit), do: NaiveDateTime.add(datetime, amt, unit)
 
-    def add(datetime = %DateTime{}, amt, unit) do
-      candidate = DateTime.add(datetime, amt, unit)
-      adjustment = datetime.std_offset - candidate.std_offset
-      adjusted = DateTime.add(candidate, adjustment, :second)
+  def add(datetime = %DateTime{}, amt, unit) do
+    candidate = DateTime.add(datetime, amt, unit)
+    adjustment = datetime.std_offset - candidate.std_offset
+    adjusted = DateTime.add(candidate, adjustment, :second)
 
-      case adjusted.std_offset == candidate.std_offset do
-        false ->
-          candidate
+    case adjusted.std_offset == candidate.std_offset do
+      false ->
+        candidate
 
-        _ ->
-          case DateTime.from_naive(DateTime.to_naive(adjusted), adjusted.time_zone) do
-            {:ambiguous, _, target} -> target
-            {:ok, target} -> target
-          end
-      end
+      _ ->
+        case DateTime.from_naive(DateTime.to_naive(adjusted), adjusted.time_zone) do
+          {:ambiguous, _, target} -> target
+          {:ok, target} -> target
+        end
     end
   end
 end
