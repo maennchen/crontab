@@ -50,7 +50,6 @@ defmodule Crontab.DateHelperTest do
       end
     end
 
-    # , {:minute, ~T[01:00:59]}, {:hour, ~T[01:59:59]}] do
     for {unit, hour, minute, second} <- [
           {:second, 1, 0, 0},
           {:minute, 1, 0, 59},

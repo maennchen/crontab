@@ -309,21 +309,10 @@ defmodule Crontab.DateHelper do
         false ->
           candidate
 
-        true ->
-          adj_plus_1h = DateTime.add(adjusted, 1, :hour)
-
-          case adj_plus_1h.std_offset == adjusted.std_offset do
-            true ->
-              adjusted
-
-            _ ->
-              # the one hour at end of daylight savings with ambiguous timezone
-              # return datetime with the standard (not daylight savings) timezone
-              %DateTime{
-                adjusted
-                | std_offset: adj_plus_1h.std_offset,
-                  zone_abbr: adj_plus_1h.zone_abbr
-              }
+        _ ->
+          case DateTime.from_naive(DateTime.to_naive(adjusted), adjusted.time_zone) do
+            {:ambiguous, _, target} -> target
+            {:ok, target} -> target
           end
       end
     end
