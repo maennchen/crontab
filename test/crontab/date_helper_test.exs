@@ -12,6 +12,60 @@ defmodule Crontab.DateHelperTest do
     end
   end
 
+  describe "dec_year/1" do
+    test "non-leap year back to leap year at end feb" do
+      given = ~N[2025-02-28 00:00:00]
+      assert DateHelper.dec_year(given) == ~N[2024-02-28 00:00:00]
+    end
+
+    test "leap year back to non-leap year at end feb" do
+      given = ~N[2024-02-29 00:00:00]
+      assert DateHelper.dec_year(given) == ~N[2023-02-28 00:00:00]
+    end
+
+    test "non-leap year back to leap year at start mar" do
+      given = ~N[2025-03-01 00:00:00]
+      assert DateHelper.dec_year(given) == ~N[2024-03-01 00:00:00]
+    end
+
+    test "leap year back to non-leap year at start mar" do
+      given = ~N[2024-03-01 00:00:00]
+      assert DateHelper.dec_year(given) == ~N[2023-03-01 00:00:00]
+    end
+
+    test "non-leap year back to non-leap year" do
+      given = ~N[2026-03-01 00:00:00]
+      assert DateHelper.dec_year(given) == ~N[2025-03-01 00:00:00]
+    end
+  end
+
+  describe "inc_year/1" do
+    test "non-leap year to leap year at end feb" do
+      given = ~N[2023-02-28 00:00:00]
+      assert DateHelper.inc_year(given) == ~N[2024-02-28 00:00:00]
+    end
+
+    test "leap year to non-leap year at end feb" do
+      given = ~N[2024-02-29 00:00:00]
+      assert DateHelper.inc_year(given) == ~N[2025-02-28 00:00:00]
+    end
+
+    test "non-leap year to leap year at start mar" do
+      given = ~N[2023-03-01 00:00:00]
+      assert DateHelper.inc_year(given) == ~N[2024-03-01 00:00:00]
+    end
+
+    test "leap year to non-leap year at start mar" do
+      given = ~N[2024-03-01 00:00:00]
+      assert DateHelper.inc_year(given) == ~N[2025-03-01 00:00:00]
+    end
+
+    test "non-leap year to non-leap year" do
+      given = ~N[2025-03-01 00:00:00]
+      assert DateHelper.inc_year(given) == ~N[2026-03-01 00:00:00]
+    end
+  end
+
   describe "add/3 on NaiveDateTime" do
     test "one day to day before NY DST starts" do
       date = ~N[2024-03-09 12:34:56]

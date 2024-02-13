@@ -136,14 +136,22 @@ defmodule Crontab.DateHelper do
   ### Examples:
 
       iex> Crontab.DateHelper.inc_year(~N[2016-03-14 01:45:45.123])
-      ~N[2017-03-15 01:45:45.123]
+      ~N[2017-03-14 01:45:45.123]
 
       iex> Crontab.DateHelper.inc_year(~U[2016-03-14 01:45:45.123Z])
-      ~U[2017-03-15 01:45:45.123Z]
+      ~U[2017-03-14 01:45:45.123Z]
 
   """
   @spec inc_year(date) :: date when date: date
-  def inc_year(date), do: add(date, days_in_year(date), :day)
+  def inc_year(date = %{month: 2, day: 29}), do: add(date, 365, :day)
+
+  def inc_year(date = %{month: month}) do
+    candidate = add(date, 365, :day)
+    date_leap_year_before_mar? = Date.leap_year?(date) and month < 3
+    candidate_leap_year_after_feb? = Date.leap_year?(candidate) and month > 2
+    adjustment = if candidate_leap_year_after_feb? or date_leap_year_before_mar?, do: 1, else: 0
+    add(candidate, adjustment, :day)
+  end
 
   @doc """
   Decrement Year
@@ -158,7 +166,15 @@ defmodule Crontab.DateHelper do
 
   """
   @spec dec_year(date) :: date when date: date
-  def dec_year(date), do: add(date, -days_in_year(date), :day)
+  def dec_year(date = %{month: 2, day: 29}), do: add(date, -366, :day)
+
+  def dec_year(date = %{month: month}) do
+    candidate = add(date, -365, :day)
+    date_leap_year_after_mar? = Date.leap_year?(date) and month > 2
+    candidate_leap_year_before_feb? = Date.leap_year?(candidate) and month < 3
+    adjustment = if date_leap_year_after_mar? or candidate_leap_year_before_feb?, do: -1, else: 0
+    add(candidate, adjustment, :day)
+  end
 
   @doc """
   Increment Month
@@ -286,15 +302,6 @@ defmodule Crontab.DateHelper do
     end
   end
 
-  defp days_in_year(%{year: year}) do
-    Date.new!(year, 1, 1)
-    |> Date.leap_year?()
-    |> case do
-      true -> 366
-      false -> 365
-    end
-  end
-
   @doc false
   def add(datetime = %NaiveDateTime{}, amt, unit), do: NaiveDateTime.add(datetime, amt, unit)
 
@@ -304,7 +311,7 @@ defmodule Crontab.DateHelper do
     adjusted = DateTime.add(candidate, adjustment, :second)
 
     if adjusted.std_offset != candidate.std_offset do
-        candidate
+      candidate
     else
       case DateTime.from_naive(DateTime.to_naive(adjusted), adjusted.time_zone) do
         {:ambiguous, _, target} -> target
