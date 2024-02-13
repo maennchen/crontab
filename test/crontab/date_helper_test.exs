@@ -123,9 +123,5 @@ defmodule Crontab.DateHelperTest do
         assert DateHelper.add(one_sec_before, 1, unquote(unit)) == expected
       end
     end
-
-    setup do
-      Calendar.put_time_zone_database(Tz.TimeZoneDatabase)
-    end
   end
 end
