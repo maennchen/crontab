@@ -214,20 +214,12 @@ defmodule Crontab.DateHelper do
   """
   @spec dec_month(date) :: date when date: date
   def dec_month(date = %{year: year, month: month, day: day}) do
-    days_in_last_month =
-      Date.new!(year, month, day)
-      |> day_in_last_month
-      |> Date.days_in_month()
-
+    days_in_last_month = Date.new!(year, month, 1) |> Date.add(-1) |> Date.days_in_month()
     add(date, -(day + max(days_in_last_month - day, 0)), :day)
   end
 
-  defp day_in_last_month(start_date), do: day_in_last_month(start_date, start_date)
-
-  defp day_in_last_month(date = %Date{month: month}, start_date = %Date{month: month}),
-    do: date |> Date.add(-1) |> day_in_last_month(start_date)
-
-  defp day_in_last_month(date, _start_date), do: date
+  # defp day_in_last_month(%{year: year, month: month}),
+  # do: Date.new!(year, month, 1) |> Date.add(-1)
 
   @spec _beginning_of(date, [{unit, {any, any}}]) :: date when date: date
   defp _beginning_of(date, [{unit, {lower, _}} | tail]) do
