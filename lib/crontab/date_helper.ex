@@ -218,9 +218,6 @@ defmodule Crontab.DateHelper do
     add(date, -(day + max(days_in_last_month - day, 0)), :day)
   end
 
-  # defp day_in_last_month(%{year: year, month: month}),
-  # do: Date.new!(year, month, 1) |> Date.add(-1)
-
   @spec _beginning_of(date, [{unit, {any, any}}]) :: date when date: date
   defp _beginning_of(date, [{unit, {lower, _}} | tail]) do
     _beginning_of(Map.put(date, unit, lower), tail)
@@ -229,11 +226,8 @@ defmodule Crontab.DateHelper do
   defp _beginning_of(date, []), do: date
 
   @spec _end_of(date, [{unit, {any, any}}]) :: date when date: date
-  defp _end_of(date = %{year: year, month: month, day: day}, [{unit, {_, :end_of_month}} | tail]) do
-    upper =
-      Date.new!(year, month, day)
-      |> Date.days_in_month()
-
+  defp _end_of(date, [{unit, {_, :end_of_month}} | tail]) do
+    upper = Date.days_in_month(date)
     _end_of(Map.put(date, unit, upper), tail)
   end
 
