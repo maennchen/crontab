@@ -116,8 +116,8 @@ defmodule Crontab.DateHelper do
 
   """
   @spec next_weekday_to(date :: date) :: Calendar.day()
-  def next_weekday_to(date = %{year: year, month: month, day: day}) do
-    weekday = :calendar.day_of_the_week(year, month, day)
+  def next_weekday_to(date) do
+    weekday = Date.day_of_week(date)
     next_day = add(date, 1, :day)
     previous_day = add(date, -1, :day)
 
@@ -276,16 +276,14 @@ defmodule Crontab.DateHelper do
           boolean
   defp nth_weekday(date, _, 0, :start), do: add(date, -1, :day).day
 
-  defp nth_weekday(date = %{year: year, month: month, day: day}, weekday, n, :start) do
-    modifier = if :calendar.day_of_the_week(year, month, day) == weekday, do: n - 1, else: n
+  defp nth_weekday(date, weekday, n, :start) do
+    modifier = if Date.day_of_week(date) == weekday, do: n - 1, else: n
     nth_weekday(add(date, 1, :day), weekday, modifier, :start)
   end
 
   @spec last_weekday_of_month(date :: date(), position :: :end) :: Calendar.day()
-  defp last_weekday_of_month(date = %{year: year, month: month, day: day}, :end) do
-    weekday = :calendar.day_of_the_week(year, month, day)
-
-    if weekday > 5 do
+  defp last_weekday_of_month(date = %{day: day}, :end) do
+    if Date.day_of_week(date) > 5 do
       last_weekday_of_month(add(date, -1, :day), :end)
     else
       day
@@ -294,8 +292,8 @@ defmodule Crontab.DateHelper do
 
   @spec last_weekday(date :: date, weekday :: Calendar.day_of_week(), position :: :end) ::
           Calendar.day()
-  defp last_weekday(date = %{year: year, month: month, day: day}, weekday, :end) do
-    if :calendar.day_of_the_week(year, month, day) == weekday do
+  defp last_weekday(date = %{day: day}, weekday, :end) do
+    if Date.day_of_week(date) == weekday do
       day
     else
       last_weekday(add(date, -1, :day), weekday, :end)
