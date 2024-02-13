@@ -27,7 +27,7 @@ defmodule Crontab.DateChecker do
       true
 
   """
-  @spec matches_date?(cron_expression :: CronExpression.t(), date :: DateHelper.date()) ::
+  @spec matches_date?(cron_expression :: CronExpression.t(), date :: date) ::
           boolean | no_return
   def matches_date?(cron_expression_or_condition_list, date)
 
@@ -42,7 +42,7 @@ defmodule Crontab.DateChecker do
 
   @spec matches_date?(
           condition_list :: CronExpression.condition_list(),
-          date :: DateHelper.date()
+          date :: date
         ) :: boolean
   def matches_date?([], _), do: true
 
@@ -65,7 +65,7 @@ defmodule Crontab.DateChecker do
   @spec matches_date?(
           interval :: CronExpression.interval(),
           condition_list :: CronExpression.condition_list(),
-          date :: DateHelper.date()
+          date :: date
         ) :: boolean
   def matches_date?(_, [:* | _], _), do: true
   def matches_date?(_, [], _), do: false
@@ -84,7 +84,7 @@ defmodule Crontab.DateChecker do
           interval :: CronExpression.interval(),
           values :: [CronExpression.time_unit()],
           condition :: CronExpression.value(),
-          date :: DateHelper.date()
+          date :: date
         ) :: boolean
   defp matches_specific_date?(_, [], _, _), do: false
   defp matches_specific_date?(_, _, :*, _), do: true
@@ -175,7 +175,7 @@ defmodule Crontab.DateChecker do
     end
   end
 
-  @spec get_interval_value(interval :: CronExpression.interval(), date :: DateHelper.date()) :: [
+  @spec get_interval_value(interval :: CronExpression.interval(), date :: date) :: [
           CronExpression.time_unit()
         ]
   defp get_interval_value(:second, %{second: second}), do: [second]
