@@ -303,15 +303,13 @@ defmodule Crontab.DateHelper do
     adjustment = datetime.std_offset - candidate.std_offset
     adjusted = DateTime.add(candidate, adjustment, :second)
 
-    case adjusted.std_offset == candidate.std_offset do
-      false ->
+    if adjusted.std_offset != candidate.std_offset do
         candidate
-
-      _ ->
-        case DateTime.from_naive(DateTime.to_naive(adjusted), adjusted.time_zone) do
-          {:ambiguous, _, target} -> target
-          {:ok, target} -> target
-        end
+    else
+      case DateTime.from_naive(DateTime.to_naive(adjusted), adjusted.time_zone) do
+        {:ambiguous, _, target} -> target
+        {:ok, target} -> target
+      end
     end
   end
 end
