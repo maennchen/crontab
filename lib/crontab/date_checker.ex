@@ -27,7 +27,8 @@ defmodule Crontab.DateChecker do
       true
 
   """
-  @spec matches_date?(cron_expression :: CronExpression.t(), date :: date) :: boolean | no_return
+  @spec matches_date?(cron_expression :: CronExpression.t(), date :: date) ::
+          boolean | no_return
   def matches_date?(cron_expression_or_condition_list, date)
 
   def matches_date?(%CronExpression{reboot: true}, _),
@@ -39,7 +40,10 @@ defmodule Crontab.DateChecker do
     |> matches_date?(execution_date)
   end
 
-  @spec matches_date?(condition_list :: CronExpression.condition_list(), date :: date) :: boolean
+  @spec matches_date?(
+          condition_list :: CronExpression.condition_list(),
+          date :: date
+        ) :: boolean
   def matches_date?([], _), do: true
 
   def matches_date?([{interval, conditions} | tail], execution_date) do
