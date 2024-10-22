@@ -82,7 +82,7 @@ defmodule Crontab.DateHelper do
   """
   @spec nth_weekday(date :: date, weekday :: Calendar.day_of_week(), n :: pos_integer) ::
           Calendar.day() | nil
-  def nth_weekday(%{month: month} = date, weekday, n),
+  def nth_weekday(date = %{month: month}, weekday, n),
     do: find_nth_weekday(%{date | day: 1}, month, weekday, n)
 
   @doc """
@@ -261,7 +261,7 @@ defmodule Crontab.DateHelper do
           weekday :: Calendar.day_of_week(),
           n :: non_neg_integer()
         ) :: Calendar.day() | nil
-  defp find_nth_weekday(%{month: month} = date, month, weekday, n) do
+  defp find_nth_weekday(date = %{month: month}, month, weekday, n) do
     modifier =
       if Date.day_of_week(date) == weekday,
         do: n - 1,
