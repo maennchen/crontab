@@ -43,6 +43,7 @@ defmodule Crontab.CronExpression do
              | min_max(time_unit), pos_integer}
           | min_max(time_unit)
           | {:W, time_unit | :L}
+          | {:"#", time_unit, pos_integer}
 
   @typedoc deprecated: "Use Calendar.second/0 instead"
   @type second :: Calendar.second()

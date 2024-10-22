@@ -130,7 +130,9 @@ defmodule Crontab.FunctionalTest do
     {"* * * * 5#1", "* * * * 5#1 *", ~N[2011-07-01 00:00:00], ~N[2011-07-01 00:00:00],
      ~N[2011-07-01 00:00:00], true},
     {"* * * * 3#4", "* * * * 3#4 *", ~N[2011-07-01 00:00:00], ~N[2011-07-27 00:00:00],
-     ~N[2011-06-22 23:59:00], false}
+     ~N[2011-06-22 23:59:00], false},
+    {"0 9 * * mon#5", "0 9 * * 1#5 *", ~N[2024-10-22 09:00:00], ~N[2024-12-30 09:00:00],
+     ~N[2024-09-30 09:00:00], false}
   ]
 
   for {cron_expression, written_cron_expression, start_date, next_search_date,
@@ -149,8 +151,12 @@ defmodule Crontab.FunctionalTest do
       {:ok, cron_expression} = Parser.parse(@cron_expression)
       assert Composer.compose(cron_expression) == @written_cron_expression
 
-      assert Crontab.Scheduler.get_next_run_date(cron_expression, @start_date) ==
-               {:ok, @next_search_date}
+      assert {:ok, next_search_date} =
+               Crontab.Scheduler.get_next_run_date(cron_expression, @start_date)
+
+      assert Crontab.DateChecker.matches_date?(cron_expression, next_search_date)
+
+      assert next_search_date == @next_search_date
 
       case @previous_search_date do
         :none ->
@@ -158,8 +164,12 @@ defmodule Crontab.FunctionalTest do
                    {:error, "No compliant date was found for your interval."}
 
         _ ->
-          assert Crontab.Scheduler.get_previous_run_date(cron_expression, @start_date) ==
-                   {:ok, @previous_search_date}
+          assert {:ok, previous_search_date} =
+                   Crontab.Scheduler.get_previous_run_date(cron_expression, @start_date)
+
+          assert Crontab.DateChecker.matches_date?(cron_expression, previous_search_date)
+
+          assert previous_search_date == @previous_search_date
       end
 
       assert Crontab.DateChecker.matches_date?(cron_expression, @start_date) == @matches_now
