@@ -9,6 +9,7 @@ defmodule Crontab.DateHelperTest do
   describe "nth_weekday/3" do
     refute DateHelper.nth_weekday(~N[2024-11-01 00:00:00], 1, 5)
     assert DateHelper.nth_weekday(~N[2024-12-01 00:00:00], 1, 5) == 30
+    assert DateHelper.nth_weekday(~N[2024-09-01 00:00:00], 1, 5) == 30
   end
 
   describe "inc_month/1" do
