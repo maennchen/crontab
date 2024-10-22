@@ -71,8 +71,7 @@ defmodule Crontab.Scheduler do
       ** (RuntimeError) Special identifier @reboot is not supported.
 
   """
-  @spec get_next_run_date!(CronExpression.t(), NaiveDateTime.t(), integer) ::
-          NaiveDateTime.t() | no_return
+  @spec get_next_run_date!(CronExpression.t(), NaiveDateTime.t(), integer) :: NaiveDateTime.t()
   def get_next_run_date!(
         cron_expression,
         date \\ DateTime.to_naive(DateTime.utc_now()),
@@ -192,7 +191,7 @@ defmodule Crontab.Scheduler do
 
   """
   @spec get_previous_run_date!(CronExpression.t(), NaiveDateTime.t(), integer) ::
-          NaiveDateTime.t() | no_return
+          NaiveDateTime.t()
   def get_previous_run_date!(
         cron_expression,
         date \\ DateTime.to_naive(DateTime.utc_now()),

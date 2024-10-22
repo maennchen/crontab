@@ -12,8 +12,8 @@ env:
   BUILD_EMBEDDED: true
   DIALYZER_PLT_PRIV: true
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  DEFAULT_ELIXIR_VERSION: 1.16
-  DEFAULT_OTP_VERSION: 26.2
+  DEFAULT_ELIXIR_VERSION: 1.17
+  DEFAULT_OTP_VERSION: 27.1
 
 jobs:
   format:
@@ -56,7 +56,7 @@ jobs:
           - otp: "26.2"
             elixir: "1.16"
             runs-on: ubuntu-22.04
-          - otp: "26.2"
+          - otp: "27.1"
             elixir: "main"
             runs-on: ubuntu-latest
           - runs-on: ubuntu-22.04
@@ -166,7 +166,7 @@ jobs:
       - run: mix dialyzer --plt
       - uses: actions/upload-artifact@v4
         with:
-          name: dialyzer_plt_${{ env.MIX_ENV }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}
+          name: dialyzer_plt_${{ env.MIX_ENV }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}
           path: priv/plts/
 
   dialyzer_test:
@@ -203,7 +203,7 @@ jobs:
       - run: mix compile --warning-as-errors
       - uses: actions/download-artifact@v4
         with:
-          name: dialyzer_plt_${{ env.MIX_ENV }}-${{ steps.setup-elixir.outputs.otp-version }}-${{ steps.setup-elixir.outputs.elixir-version }}
+          name: dialyzer_plt_${{ env.MIX_ENV }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.elixir-version }}
           path: priv/plts/
       - run: mix dialyzer
 

@@ -117,7 +117,7 @@ defmodule Crontab.CronExpression.Parser do
       ** (RuntimeError) Can't parse fooo as minute.
 
   """
-  @spec parse!(binary, boolean) :: CronExpression.t() | no_return
+  @spec parse!(binary, boolean) :: CronExpression.t()
   def parse!(cron_expression, extended \\ false) do
     case parse(cron_expression, extended) do
       {:ok, result} -> result
