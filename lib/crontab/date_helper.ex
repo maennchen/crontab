@@ -263,8 +263,15 @@ defmodule Crontab.DateHelper do
   defp nth_weekday(date, _, 0, :start), do: add(date, -1, :day).day
 
   defp nth_weekday(date, weekday, n, :start) do
-    modifier = if Date.day_of_week(date) == weekday, do: n - 1, else: n
-    nth_weekday(add(date, 1, :day), weekday, modifier, :start)
+    modifier =
+      if Date.day_of_week(date) == weekday,
+        do: n - 1,
+        else: n
+
+    increment_day = add(date, 1, :day)
+
+    if increment_day.month == date.month,
+      do: nth_weekday(increment_day, weekday, modifier, :start)
   end
 
   @spec last_weekday_of_month(date :: date(), position :: :end) :: Calendar.day()

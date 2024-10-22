@@ -6,6 +6,11 @@ defmodule Crontab.DateHelperTest do
   doctest Crontab.DateHelper
   alias Crontab.DateHelper
 
+  describe "nth_weekday/3" do
+    refute DateHelper.nth_weekday(~N[2024-11-01 00:00:00], 1, 5)
+    assert DateHelper.nth_weekday(~N[2024-12-01 00:00:00], 1, 5) == 30
+  end
+
   describe "inc_month/1" do
     test "does not jump over month" do
       assert DateHelper.inc_month(~N[2019-05-31 23:00:00]) == ~N[2019-06-01 23:00:00]
