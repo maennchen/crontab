@@ -64,7 +64,9 @@ defmodule Crontab.Mixfile do
       extras: ["README.md", "docs/cheatsheets/cron_notation.cheatmd"],
       main: "readme",
       source_url: @source_url,
-      source_ref: "v" <> @version
+      source_ref: "v" <> @version,
+      logo: "assets/logo-compromise.png",
+      assets: %{"assets" => "assets"}
     ]
   end
 end

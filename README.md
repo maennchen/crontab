@@ -1,3 +1,24 @@
+<picture style="margin-right: 15px; float: right;">
+  <source
+    media="(prefers-color-scheme: dark)"
+    srcset="assets/logo-dark.svg"
+    width="180px"
+    align="right"
+  />
+  <source
+    media="(prefers-color-scheme: light)"
+    srcset="assets/logo-light.svg"
+    width="180px"
+    align="right"
+  />
+  <img
+    src="assets/logo-light.svg"
+    alt="OpenID Connect logo Logo"
+    width="180px"
+    align="right"
+  />
+</picture>
+
 # Crontab
 
 [![CI](https://github.com/maennchen/crontab/workflows/.github/workflows/elixir.yml/badge.svg)](https://github.com/maennchen/crontab/actions?query=workflow%3A.github%2Fworkflows%2Felixir.yml)
@@ -9,6 +30,8 @@
 [![Last Updated](https://img.shields.io/github/last-commit/maennchen/crontab.svg)](https://github.com/maennchen/crontab/commits/main)
 
 Elixir library for parsing, writing, and calculating Cron format strings.
+
+<br clear="left"/>
 
 ## Installation
 
