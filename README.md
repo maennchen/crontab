@@ -45,17 +45,6 @@ def deps do
 end
 ```
 
-For Elixir version before 1.4, ensure `:crontab` is started before your
-application:
-
-```elixir
-def application do
-  [
-    applications: [:crontab]
-  ]
-end
-```
-
 ## Usage
 
 ### Import Cron expression sigil
