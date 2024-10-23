@@ -13,7 +13,7 @@
   />
   <img
     src="assets/logo-light.svg"
-    alt="OpenID Connect logo Logo"
+    alt="Logo featuring a clock"
     width="180px"
     align="right"
   />
