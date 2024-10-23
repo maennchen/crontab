@@ -81,12 +81,9 @@ defmodule Crontab.DateHelper do
 
   """
   @spec nth_weekday(date :: date, weekday :: Calendar.day_of_week(), n :: pos_integer) ::
-          Calendar.day()
-  def nth_weekday(date, weekday, n) do
-    date
-    |> beginning_of(:month)
-    |> nth_weekday(weekday, n, :start)
-  end
+          Calendar.day() | nil
+  def nth_weekday(%{month: month} = date, weekday, n),
+    do: find_nth_weekday(%{date | day: 1}, month, weekday, n)
 
   @doc """
   Find last occurrence of weekday in month
@@ -258,14 +255,24 @@ defmodule Crontab.DateHelper do
     units
   end
 
-  @spec nth_weekday(date :: date, weekday :: Calendar.day_of_week(), position :: :start) ::
-          boolean
-  defp nth_weekday(date, _, 0, :start), do: add(date, -1, :day).day
+  @spec find_nth_weekday(
+          date :: date,
+          month :: Calendar.month(),
+          weekday :: Calendar.day_of_week(),
+          n :: non_neg_integer()
+        ) :: Calendar.day() | nil
+  defp find_nth_weekday(%{month: month} = date, month, weekday, n) do
+    modifier =
+      if Date.day_of_week(date) == weekday,
+        do: n - 1,
+        else: n
 
-  defp nth_weekday(date, weekday, n, :start) do
-    modifier = if Date.day_of_week(date) == weekday, do: n - 1, else: n
-    nth_weekday(add(date, 1, :day), weekday, modifier, :start)
+    if modifier == 0,
+      do: date.day,
+      else: find_nth_weekday(add(date, 1, :day), month, weekday, modifier)
   end
+
+  defp find_nth_weekday(_, _, _, _), do: nil
 
   @spec last_weekday_of_month(date :: date(), position :: :end) :: Calendar.day()
   defp last_weekday_of_month(date = %{day: day}, :end) do

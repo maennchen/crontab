@@ -80,4 +80,25 @@ defmodule Crontab.SchedulerTest do
              ~N[1234-05-06 07:08:09]
            ) == {:ok, ~N[9999-12-31 23:59:59]}
   end
+
+  test "check day occurrences in month" do
+    assert get_next_run_date(
+             %Crontab.CronExpression{minute: [0], hour: [9], weekday: [{:"#", 1, 1}]},
+             ~N[2024-10-22 12:00:07]
+           ) == {:ok, ~N[2024-11-04 09:00:00]}
+  end
+
+  test "check day occurrences in month for 5th time" do
+    assert get_next_run_date(
+             %Crontab.CronExpression{minute: [0], hour: [9], weekday: [{:"#", 1, 5}]},
+             ~N[2024-10-22 12:00:07]
+           ) == {:ok, ~N[2024-12-30 09:00:00]}
+  end
+
+  test "check for 5th occurrence of weekday backwards as well" do
+    assert get_previous_run_date(
+             %Crontab.CronExpression{minute: [0], hour: [9], weekday: [{:"#", 1, 5}]},
+             ~N[2024-10-22 12:00:07]
+           ) == {:ok, ~N[2024-09-30 09:00:00]}
+  end
 end
