@@ -86,47 +86,80 @@ defmodule Crontab.DateHelperTest do
     end
   end
 
-  describe "add/3 on DateTime NYT" do
-    test "one day to day before NY DST starts" do
-      day_before = DateTime.from_naive!(~N[2024-03-09 12:34:56], "America/New_York")
-      expected = DateTime.from_naive!(~N[2024-03-10 12:34:56], "America/New_York")
+  describe "add/4 on DateTime NYT from daylight savings to standard time" do
+    @tz "America/New_York"
+    @date ~D[2024-11-03]
 
-      assert DateHelper.add(day_before, 1, :day) == expected
-    end
+    for {from_time, unit, to_time} <- [
+          {~T[01:59:58], :second, ~T[01:59:59]},
+          {~T[01:58:59], :minute, ~T[01:59:59]}
+        ] do
+      test "add one #{unit} to #{from_time}am EDT returns #{to_time}am EDT" do
+        {:ambiguous, from, _} = DateTime.new(@date, unquote(Macro.escape(from_time)), @tz)
+        {:ambiguous, expected, _} = DateTime.new(@date, unquote(Macro.escape(to_time)), @tz)
 
-    test "one day to day before NY DST ends" do
-      day_before = DateTime.from_naive!(~N[2024-11-02 12:34:56], "America/New_York")
-      expected = DateTime.from_naive!(~N[2024-11-03 12:34:56], "America/New_York")
-
-      assert DateHelper.add(day_before, 1, :day) == expected
-    end
-
-    for {unit, time} <- [{:second, ~T[03:00:00]}, {:minute, ~T[03:00:59]}, {:hour, ~T[03:59:59]}] do
-      test "one #{unit} to one second before NY DST starts" do
-        one_sec_before = DateTime.from_naive!(~N[2024-03-10 01:59:59], "America/New_York")
-        expected = DateTime.new!(~D[2024-03-10], unquote(Macro.escape(time)), "America/New_York")
-
-        assert DateHelper.add(one_sec_before, 1, unquote(unit)) == expected
+        assert DateHelper.add(from, 1, unquote(unit), [:later]) == expected
       end
     end
 
-    for {unit, hour, minute, second} <- [
-          {:second, 1, 0, 0},
-          {:minute, 1, 0, 59},
-          {:hour, 1, 59, 59}
+    for {from_time, unit, to_time} <- [
+          {~T[01:59:59], :second, ~T[01:00:00]},
+          {~T[01:59:00], :minute, ~T[01:00:00]}
         ] do
-      test "one #{unit} to one second before NY DST ends" do
-        one_sec_before = DateTime.from_naive!(~N[2024-11-03 00:59:59], "America/New_York")
+      test "add 1 #{unit} to #{from_time}am EDT returns #{to_time}am EST" do
+        {:ambiguous, from, _} = DateTime.new(@date, unquote(Macro.escape(from_time)), @tz)
+        {:ambiguous, _, expected} = DateTime.new(@date, unquote(Macro.escape(to_time)), @tz)
 
-        # 'cos 1:00:00 to 1:59:00 can be represented as timezones for EDT and EST,
-        # so "work backwards" by getting the EST time from 2:00 onwards then minus 1 hour
-        two_plus = Time.new!(unquote(hour) + 1, unquote(minute), unquote(second))
+        assert DateHelper.add(from, 1, unquote(unit), [:later]) == expected
+      end
+    end
 
-        expected =
-          DateTime.new!(~D[2024-11-03], two_plus, "America/New_York")
-          |> DateTime.add(-1, :hour)
+    for ambiguity_opts <- [[:earlier], [:earlier, :later]] do
+      test "add 1 hour to 12am EDT returns 1am EDT when ambiguity_opt=#{inspect(ambiguity_opts)}" do
+        from_time = DateTime.new!(@date, ~T[00:00:00], @tz)
+        {:ambiguous, expected, _} = DateTime.new(@date, ~T[01:00:00], @tz)
 
-        assert DateHelper.add(one_sec_before, 1, unquote(unit)) == expected
+        assert DateHelper.add(from_time, 1, :hour, unquote(Macro.escape(ambiguity_opts))) ==
+                 expected
+      end
+    end
+
+    test "add 1 hour to 12am EDT returns 1am EST when ambiguity_opt=[:later]" do
+      from_time = DateTime.new!(@date, ~T[00:00:00], @tz)
+      {:ambiguous, _, expected} = DateTime.new(@date, ~T[01:00:00], @tz)
+
+      assert DateHelper.add(from_time, 1, :hour, [:later]) == expected
+    end
+
+    test "add 1 hour to 1am EDT returns 1am EST when ambiguity_opt=[:earlier, :later]" do
+      {:ambiguous, from_time, expected} = DateTime.new(@date, ~T[01:00:00], @tz)
+
+      assert DateHelper.add(from_time, 1, :hour, [:earlier, :later]) == expected
+    end
+  end
+
+  test "add one second to 2 seconds before EST ends" do
+    from_time = DateTime.new!(~D[2024-03-10], ~T[01:59:58], "America/New_York")
+    expected = DateTime.new!(~D[2024-03-10], ~T[01:59:59], "America/New_York")
+
+    assert DateHelper.add(from_time, 1, :second) == expected
+  end
+
+  describe "add/4 on DateTime NYT from standard to daylight savings" do
+    @tz "America/New_York"
+    @date ~D[2024-03-10]
+
+    for {unit, expected} <- [
+          {:second, DateTime.new!(@date, ~T[03:00:00], @tz)},
+          {:minute, DateTime.new!(@date, ~T[03:00:59], @tz)},
+          {:hour, DateTime.new!(@date, ~T[03:59:59], @tz)},
+          # ensure hour doesn't skip ahead by 1
+          {:day, DateTime.new!(Date.add(@date, 1), ~T[01:59:59], @tz)}
+        ] do
+      test "add 1 #{unit} to 1 second before EST ends returns #{inspect(expected)}" do
+        from_time = DateTime.new!(@date, ~T[01:59:59], @tz)
+
+        assert DateHelper.add(from_time, 1, unquote(unit)) == unquote(Macro.escape(expected))
       end
     end
   end

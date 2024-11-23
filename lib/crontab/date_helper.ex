@@ -1,5 +1,6 @@
 defmodule Crontab.DateHelper do
   @moduledoc false
+  alias Crontab.CronExpression, as: CronExpr
 
   @type unit :: :year | :month | :day | :hour | :minute | :second | :microsecond
 
@@ -294,20 +295,46 @@ defmodule Crontab.DateHelper do
   end
 
   @doc false
-  def add(datetime = %NaiveDateTime{}, amt, unit), do: NaiveDateTime.add(datetime, amt, unit)
+  @spec add(date, integer, unit, [CronExpr.ambiguity_opt()]) :: date
+  def add(datetime, amt, unit, ambiguity_opts \\ [:later])
 
-  def add(datetime = %DateTime{}, amt, unit) do
+  def add(datetime = %NaiveDateTime{}, amt, unit, _), do: NaiveDateTime.add(datetime, amt, unit)
+
+  def add(datetime = %DateTime{}, amt, unit, _) when unit in [:second, :minute] do
+    DateTime.add(datetime, amt, unit)
+  end
+
+  def add(datetime = %DateTime{}, amt, unit, ambiguity_opts) do
     candidate = DateTime.add(datetime, amt, unit)
-    adjustment = datetime.std_offset - candidate.std_offset
-    adjusted = DateTime.add(candidate, adjustment, :second)
 
-    if adjusted.std_offset != candidate.std_offset do
+    case DateTime.from_naive(DateTime.to_naive(candidate), candidate.time_zone) do
+      {:ambiguous, earlier, later} -> resolve_ambiguity(datetime, earlier, later, ambiguity_opts)
+      _ -> resolve_potential_gap(datetime, candidate, amt, unit)
+    end
+  end
+
+  def resolve_ambiguity(from_time, earlier, later, ambiguity_opts) do
+    if :earlier in ambiguity_opts and from_time < earlier do
+      earlier
+    else
+      later
+    end
+  end
+
+  def resolve_potential_gap(%{std_offset: n}, candidate = %{std_offset: n}, _, _), do: candidate
+
+  def resolve_potential_gap(_, candidate, _, unit) when unit in [:second, :minute, :hour] do
+    candidate
+  end
+
+  def resolve_potential_gap(from_ts, candidate, amt, unit) do
+    naive_from = DateTime.to_naive(from_ts)
+    naive_candidate = add(naive_from, amt, unit)
+
+    if naive_candidate == DateTime.to_naive(candidate) do
       candidate
     else
-      case DateTime.from_naive(DateTime.to_naive(adjusted), adjusted.time_zone) do
-        {:ambiguous, _, target} -> target
-        {:ok, target} -> target
-      end
+      add(candidate, -1, :hour)
     end
   end
 end
