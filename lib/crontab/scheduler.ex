@@ -32,11 +32,7 @@ defmodule Crontab.Scheduler do
 
   """
   @spec get_next_run_date(CronExpression.t(), NaiveDateTime.t(), integer) :: result
-  def get_next_run_date(
-        cron_expression,
-        date \\ DateTime.to_naive(DateTime.utc_now()),
-        max_runs \\ @max_runs
-      )
+  def get_next_run_date(cron_expression, date \\ NaiveDateTime.utc_now(), max_runs \\ @max_runs)
 
   def get_next_run_date(%CronExpression{reboot: true}, _, _),
     do: raise("Special identifier @reboot is not supported.")
@@ -72,11 +68,7 @@ defmodule Crontab.Scheduler do
 
   """
   @spec get_next_run_date!(CronExpression.t(), NaiveDateTime.t(), integer) :: NaiveDateTime.t()
-  def get_next_run_date!(
-        cron_expression,
-        date \\ DateTime.to_naive(DateTime.utc_now()),
-        max_runs \\ @max_runs
-      ) do
+  def get_next_run_date!(cron_expression, date \\ NaiveDateTime.utc_now(), max_runs \\ @max_runs) do
     case get_next_run_date(cron_expression, date, max_runs) do
       {:ok, result} -> result
       {:error, error} -> raise error
@@ -112,7 +104,7 @@ defmodule Crontab.Scheduler do
 
   """
   @spec get_next_run_dates(CronExpression.t(), NaiveDateTime.t()) :: Enumerable.t()
-  def get_next_run_dates(cron_expression, date \\ DateTime.to_naive(DateTime.utc_now()))
+  def get_next_run_dates(cron_expression, date \\ NaiveDateTime.utc_now())
 
   def get_next_run_dates(cron_expression = %CronExpression{extended: false}, date) do
     _get_next_run_dates(cron_expression, date, fn date -> NaiveDateTime.add(date, 1, :minute) end)
@@ -152,7 +144,7 @@ defmodule Crontab.Scheduler do
   @spec get_previous_run_date(CronExpression.t(), NaiveDateTime.t(), integer) :: result
   def get_previous_run_date(
         cron_expression,
-        date \\ DateTime.to_naive(DateTime.utc_now()),
+        date \\ NaiveDateTime.utc_now(),
         max_runs \\ @max_runs
       )
 
@@ -194,7 +186,7 @@ defmodule Crontab.Scheduler do
           NaiveDateTime.t()
   def get_previous_run_date!(
         cron_expression,
-        date \\ DateTime.to_naive(DateTime.utc_now()),
+        date \\ NaiveDateTime.utc_now(),
         max_runs \\ @max_runs
       ) do
     case get_previous_run_date(cron_expression, date, max_runs) do
@@ -232,7 +224,7 @@ defmodule Crontab.Scheduler do
 
   """
   @spec get_previous_run_dates(CronExpression.t(), NaiveDateTime.t()) :: Enumerable.t()
-  def get_previous_run_dates(cron_expression, date \\ DateTime.to_naive(DateTime.utc_now()))
+  def get_previous_run_dates(cron_expression, date \\ NaiveDateTime.utc_now())
 
   def get_previous_run_dates(cron_expression = %CronExpression{extended: false}, date) do
     _get_previous_run_dates(cron_expression, date, fn date ->
