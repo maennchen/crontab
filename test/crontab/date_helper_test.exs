@@ -162,6 +162,11 @@ defmodule Crontab.DateHelperTest do
         assert DateHelper.shift(from_time, 1, unquote(unit)) == unquote(Macro.escape(expected))
       end
     end
+  end
+
+  describe "shift/4 on DateTime NYT from daylight savings back to standard time" do
+    @tz "America/New_York"
+    @date ~D[2024-03-10]
 
     for {unit, expected} <- [
           {:second, DateTime.new!(@date, ~T[01:59:59], @tz)},
@@ -170,10 +175,48 @@ defmodule Crontab.DateHelperTest do
           # ensure hour stays at 3am
           {:day, DateTime.new!(Date.add(@date, -1), ~T[03:00:00], @tz)}
         ] do
-      test "subtract 1 #{unit} when EST has already ended returns #{inspect(expected)}" do
+      test "subtract 1 #{unit} from 3am when EST has already ended returns #{inspect(expected)}" do
         from_time = DateTime.new!(@date, ~T[03:00:00], @tz)
 
         assert DateHelper.shift(from_time, -1, unquote(unit)) == unquote(Macro.escape(expected))
+      end
+    end
+  end
+
+  describe "shift/4 on DateTime NYT from standard back to daylight savings" do
+    @tz "America/New_York"
+    @date ~D[2024-11-03]
+
+    for {unit, time, ambiguity_opts} <- [
+          {:second, ~T[01:59:59], [:later]},
+          {:minute, ~T[01:59:00], [:later]},
+          {:hour, ~T[01:00:00], [:later]},
+          {:second, ~T[01:59:59], [:earlier, :later]},
+          {:minute, ~T[01:59:00], [:earlier, :later]},
+          {:hour, ~T[01:00:00], [:earlier, :later]}
+        ] do
+      test "subtract 1 #{unit} from EST 1am returns #{inspect(time)}am EDT when ambiguity_opts = #{inspect(ambiguity_opts)}" do
+        {:ambiguous, _, from_ts} = DateTime.new(@date, ~T[01:00:00], @tz)
+        {:ambiguous, expected, _} = DateTime.new(@date, unquote(Macro.escape(time)), @tz)
+        opts = unquote(Macro.escape(ambiguity_opts))
+
+        assert DateHelper.shift(from_ts, -1, unquote(unit), opts) == expected
+      end
+    end
+
+    test "subtract 1 hour from EST 2am returns 1am EDT when ambiguity_opts = [:earlier]" do
+      from_time = DateTime.new!(@date, ~T[02:00:00], @tz)
+      {:ambiguous, expected, _} = DateTime.new(@date, ~T[01:00:00], @tz)
+
+      assert DateHelper.shift(from_time, -1, :hour, [:earlier]) == expected
+    end
+
+    for opts <- [[:later], [:earlier], [:earlier, :later]] do
+      test "subtract 1 day from EST 1am returns 1am EDT of one day earlier when ambiguity_opts = #{inspect(opts)}" do
+        {:ambiguous, _, from_time} = DateTime.new(@date, ~T[01:00:00], @tz)
+        expected = DateTime.new!(Date.add(@date, -1), ~T[01:00:00], @tz)
+
+        assert DateHelper.shift(from_time, -1, :day, unquote(Macro.escape(opts))) == expected
       end
     end
   end

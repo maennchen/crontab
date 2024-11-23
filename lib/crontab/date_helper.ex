@@ -308,13 +308,16 @@ defmodule Crontab.DateHelper do
     candidate = DateTime.add(datetime, amt, unit)
 
     case DateTime.from_naive(DateTime.to_naive(candidate), candidate.time_zone) do
-      {:ambiguous, earlier, later} -> resolve_ambiguity(datetime, earlier, later, ambiguity_opts)
-      _ -> resolve_potential_gap(datetime, candidate, amt, unit)
+      {:ambiguous, earlier, later} ->
+        resolve_ambiguity(datetime, earlier, later, amt, ambiguity_opts)
+
+      _ ->
+        resolve_potential_gap(datetime, candidate, amt, unit)
     end
   end
 
-  def resolve_ambiguity(from_time, earlier, later, ambiguity_opts) do
-    if :earlier in ambiguity_opts and from_time < earlier do
+  def resolve_ambiguity(from_time, earlier, later, amt, ambiguity_opts) do
+    if (:earlier in ambiguity_opts and from_time < earlier) or amt < 0 do
       earlier
     else
       later
@@ -327,14 +330,24 @@ defmodule Crontab.DateHelper do
     candidate
   end
 
-  def resolve_potential_gap(from_ts, candidate, amt, unit) do
+  def resolve_potential_gap(from_ts = %{std_offset: n}, candidate = %{std_offset: m}, amt, unit) do
     naive_candidate = shift(DateTime.to_naive(from_ts), amt, unit)
 
-    if naive_candidate == DateTime.to_naive(candidate) do
-      candidate
-    else
-      adj = if(amt > 0, do: -1, else: 1)
-      shift(candidate, adj, :hour)
+    cond do
+      naive_candidate == DateTime.to_naive(candidate) ->
+        candidate
+
+      # move backwards from ST to DS, -1 to keep same hour
+      m > n and amt < 0 ->
+        shift(candidate, -1, :hour)
+
+      # move backwards from DS to ST, +1 to keep same hour
+      amt < 0 ->
+        shift(candidate, 1, :hour)
+
+      # move forward from ST to DS, -1 to keep same hour
+      true ->
+        shift(candidate, -1, :hour)
     end
   end
 end
