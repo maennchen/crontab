@@ -116,14 +116,14 @@ defmodule Crontab.DateHelper do
   @spec next_weekday_to(date :: date) :: Calendar.day()
   def next_weekday_to(date) do
     weekday = Date.day_of_week(date)
-    next_day = add(date, 1, :day)
-    previous_day = add(date, -1, :day)
+    next_day = shift(date, 1, :day)
+    previous_day = shift(date, -1, :day)
 
     cond do
       weekday == 7 && next_day.month == date.month -> next_day.day
-      weekday == 7 -> add(date, -2, :day).day
+      weekday == 7 -> shift(date, -2, :day).day
       weekday == 6 && previous_day.month == date.month -> previous_day.day
-      weekday == 6 -> add(date, 2, :day).day
+      weekday == 6 -> shift(date, 2, :day).day
       true -> date.day
     end
   end
@@ -141,14 +141,14 @@ defmodule Crontab.DateHelper do
 
   """
   @spec inc_year(date) :: date when date: date
-  def inc_year(date = %{month: 2, day: 29}), do: add(date, 365, :day)
+  def inc_year(date = %{month: 2, day: 29}), do: shift(date, 365, :day)
 
   def inc_year(date = %{month: month}) do
-    candidate = add(date, 365, :day)
+    candidate = shift(date, 365, :day)
     date_leap_year_before_mar? = Date.leap_year?(date) and month < 3
     candidate_leap_year_after_feb? = Date.leap_year?(candidate) and month > 2
     adjustment = if candidate_leap_year_after_feb? or date_leap_year_before_mar?, do: 1, else: 0
-    add(candidate, adjustment, :day)
+    shift(candidate, adjustment, :day)
   end
 
   @doc """
@@ -164,14 +164,14 @@ defmodule Crontab.DateHelper do
 
   """
   @spec dec_year(date) :: date when date: date
-  def dec_year(date = %{month: 2, day: 29}), do: add(date, -366, :day)
+  def dec_year(date = %{month: 2, day: 29}), do: shift(date, -366, :day)
 
   def dec_year(date = %{month: month}) do
-    candidate = add(date, -365, :day)
+    candidate = shift(date, -365, :day)
     date_leap_year_after_mar? = Date.leap_year?(date) and month > 2
     candidate_leap_year_before_feb? = Date.leap_year?(candidate) and month < 3
     adjustment = if date_leap_year_after_mar? or candidate_leap_year_before_feb?, do: -1, else: 0
-    add(candidate, adjustment, :day)
+    shift(candidate, adjustment, :day)
   end
 
   @doc """
@@ -192,7 +192,7 @@ defmodule Crontab.DateHelper do
       Date.new!(year, month, day)
       |> Date.days_in_month()
 
-    add(date, days + 1 - day, :day)
+    shift(date, days + 1 - day, :day)
   end
 
   @doc """
@@ -213,7 +213,7 @@ defmodule Crontab.DateHelper do
   @spec dec_month(date) :: date when date: date
   def dec_month(date = %{year: year, month: month, day: day}) do
     days_in_last_month = Date.new!(year, month, 1) |> Date.add(-1) |> Date.days_in_month()
-    add(date, -(day + max(days_in_last_month - day, 0)), :day)
+    shift(date, -(day + max(days_in_last_month - day, 0)), :day)
   end
 
   @spec _beginning_of(date, [{unit, {any, any}}]) :: date when date: date
@@ -270,7 +270,7 @@ defmodule Crontab.DateHelper do
 
     if modifier == 0,
       do: date.day,
-      else: find_nth_weekday(add(date, 1, :day), month, weekday, modifier)
+      else: find_nth_weekday(shift(date, 1, :day), month, weekday, modifier)
   end
 
   defp find_nth_weekday(_, _, _, _), do: nil
@@ -278,7 +278,7 @@ defmodule Crontab.DateHelper do
   @spec last_weekday_of_month(date :: date(), position :: :end) :: Calendar.day()
   defp last_weekday_of_month(date = %{day: day}, :end) do
     if Date.day_of_week(date) > 5 do
-      last_weekday_of_month(add(date, -1, :day), :end)
+      last_weekday_of_month(shift(date, -1, :day), :end)
     else
       day
     end
@@ -290,21 +290,21 @@ defmodule Crontab.DateHelper do
     if Date.day_of_week(date) == weekday do
       day
     else
-      last_weekday(add(date, -1, :day), weekday, :end)
+      last_weekday(shift(date, -1, :day), weekday, :end)
     end
   end
 
   @doc false
-  @spec add(date, integer, unit, [CronExpr.ambiguity_opt()]) :: date
-  def add(datetime, amt, unit, ambiguity_opts \\ [:later])
+  @spec shift(date, integer, unit, [CronExpr.ambiguity_opt()]) :: date
+  def shift(datetime, amt, unit, ambiguity_opts \\ [:later])
 
-  def add(datetime = %NaiveDateTime{}, amt, unit, _), do: NaiveDateTime.add(datetime, amt, unit)
+  def shift(datetime = %NaiveDateTime{}, amt, unit, _), do: NaiveDateTime.add(datetime, amt, unit)
 
-  def add(datetime = %DateTime{}, amt, unit, _) when unit in [:second, :minute] do
+  def shift(datetime = %DateTime{}, amt, unit, _) when unit in [:second, :minute] do
     DateTime.add(datetime, amt, unit)
   end
 
-  def add(datetime = %DateTime{}, amt, unit, ambiguity_opts) do
+  def shift(datetime = %DateTime{}, amt, unit, ambiguity_opts) do
     candidate = DateTime.add(datetime, amt, unit)
 
     case DateTime.from_naive(DateTime.to_naive(candidate), candidate.time_zone) do
@@ -328,13 +328,12 @@ defmodule Crontab.DateHelper do
   end
 
   def resolve_potential_gap(from_ts, candidate, amt, unit) do
-    naive_from = DateTime.to_naive(from_ts)
-    naive_candidate = add(naive_from, amt, unit)
+    naive_candidate = shift(DateTime.to_naive(from_ts), amt, unit)
 
     if naive_candidate == DateTime.to_naive(candidate) do
       candidate
     else
-      add(candidate, -1, :hour)
+      shift(candidate, -1, :hour)
     end
   end
 end

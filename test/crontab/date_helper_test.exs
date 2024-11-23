@@ -72,21 +72,21 @@ defmodule Crontab.DateHelperTest do
     end
   end
 
-  describe "add/3 on NaiveDateTime" do
+  describe "shift/4 on NaiveDateTime" do
     test "one day to day before NY DST starts" do
       date = ~N[2024-03-09 12:34:56]
-      assert DateHelper.add(date, 1, :day) == ~N[2024-03-10 12:34:56]
+      assert DateHelper.shift(date, 1, :day) == ~N[2024-03-10 12:34:56]
     end
   end
 
-  describe "add/3 on DateTime UTC" do
+  describe "shift/4 on DateTime UTC" do
     test "one day to day before NY DST starts" do
       date = ~U[2024-03-09 12:34:56Z]
-      assert DateHelper.add(date, 1, :day) == ~U[2024-03-10 12:34:56Z]
+      assert DateHelper.shift(date, 1, :day) == ~U[2024-03-10 12:34:56Z]
     end
   end
 
-  describe "add/4 on DateTime NYT from daylight savings to standard time" do
+  describe "shift/4 on DateTime NYT from daylight savings to standard time" do
     @tz "America/New_York"
     @date ~D[2024-11-03]
 
@@ -98,7 +98,7 @@ defmodule Crontab.DateHelperTest do
         {:ambiguous, from, _} = DateTime.new(@date, unquote(Macro.escape(from_time)), @tz)
         {:ambiguous, expected, _} = DateTime.new(@date, unquote(Macro.escape(to_time)), @tz)
 
-        assert DateHelper.add(from, 1, unquote(unit), [:later]) == expected
+        assert DateHelper.shift(from, 1, unquote(unit), [:later]) == expected
       end
     end
 
@@ -110,7 +110,7 @@ defmodule Crontab.DateHelperTest do
         {:ambiguous, from, _} = DateTime.new(@date, unquote(Macro.escape(from_time)), @tz)
         {:ambiguous, _, expected} = DateTime.new(@date, unquote(Macro.escape(to_time)), @tz)
 
-        assert DateHelper.add(from, 1, unquote(unit), [:later]) == expected
+        assert DateHelper.shift(from, 1, unquote(unit), [:later]) == expected
       end
     end
 
@@ -119,7 +119,7 @@ defmodule Crontab.DateHelperTest do
         from_time = DateTime.new!(@date, ~T[00:00:00], @tz)
         {:ambiguous, expected, _} = DateTime.new(@date, ~T[01:00:00], @tz)
 
-        assert DateHelper.add(from_time, 1, :hour, unquote(Macro.escape(ambiguity_opts))) ==
+        assert DateHelper.shift(from_time, 1, :hour, unquote(Macro.escape(ambiguity_opts))) ==
                  expected
       end
     end
@@ -128,13 +128,13 @@ defmodule Crontab.DateHelperTest do
       from_time = DateTime.new!(@date, ~T[00:00:00], @tz)
       {:ambiguous, _, expected} = DateTime.new(@date, ~T[01:00:00], @tz)
 
-      assert DateHelper.add(from_time, 1, :hour, [:later]) == expected
+      assert DateHelper.shift(from_time, 1, :hour, [:later]) == expected
     end
 
     test "add 1 hour to 1am EDT returns 1am EST when ambiguity_opt=[:earlier, :later]" do
       {:ambiguous, from_time, expected} = DateTime.new(@date, ~T[01:00:00], @tz)
 
-      assert DateHelper.add(from_time, 1, :hour, [:earlier, :later]) == expected
+      assert DateHelper.shift(from_time, 1, :hour, [:earlier, :later]) == expected
     end
   end
 
@@ -142,10 +142,10 @@ defmodule Crontab.DateHelperTest do
     from_time = DateTime.new!(~D[2024-03-10], ~T[01:59:58], "America/New_York")
     expected = DateTime.new!(~D[2024-03-10], ~T[01:59:59], "America/New_York")
 
-    assert DateHelper.add(from_time, 1, :second) == expected
+    assert DateHelper.shift(from_time, 1, :second) == expected
   end
 
-  describe "add/4 on DateTime NYT from standard to daylight savings" do
+  describe "shift/4 on DateTime NYT from standard to daylight savings" do
     @tz "America/New_York"
     @date ~D[2024-03-10]
 
@@ -159,7 +159,7 @@ defmodule Crontab.DateHelperTest do
       test "add 1 #{unit} to 1 second before EST ends returns #{inspect(expected)}" do
         from_time = DateTime.new!(@date, ~T[01:59:59], @tz)
 
-        assert DateHelper.add(from_time, 1, unquote(unit)) == unquote(Macro.escape(expected))
+        assert DateHelper.shift(from_time, 1, unquote(unit)) == unquote(Macro.escape(expected))
       end
     end
   end
