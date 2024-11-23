@@ -153,13 +153,27 @@ defmodule Crontab.DateHelperTest do
           {:second, DateTime.new!(@date, ~T[03:00:00], @tz)},
           {:minute, DateTime.new!(@date, ~T[03:00:59], @tz)},
           {:hour, DateTime.new!(@date, ~T[03:59:59], @tz)},
-          # ensure hour doesn't skip ahead by 1
+          # ensure hour stays at 1:59:59am
           {:day, DateTime.new!(Date.add(@date, 1), ~T[01:59:59], @tz)}
         ] do
       test "add 1 #{unit} to 1 second before EST ends returns #{inspect(expected)}" do
         from_time = DateTime.new!(@date, ~T[01:59:59], @tz)
 
         assert DateHelper.shift(from_time, 1, unquote(unit)) == unquote(Macro.escape(expected))
+      end
+    end
+
+    for {unit, expected} <- [
+          {:second, DateTime.new!(@date, ~T[01:59:59], @tz)},
+          {:minute, DateTime.new!(@date, ~T[01:59:00], @tz)},
+          {:hour, DateTime.new!(@date, ~T[01:00:00], @tz)},
+          # ensure hour stays at 3am
+          {:day, DateTime.new!(Date.add(@date, -1), ~T[03:00:00], @tz)}
+        ] do
+      test "subtract 1 #{unit} when EST has already ended returns #{inspect(expected)}" do
+        from_time = DateTime.new!(@date, ~T[03:00:00], @tz)
+
+        assert DateHelper.shift(from_time, -1, unquote(unit)) == unquote(Macro.escape(expected))
       end
     end
   end

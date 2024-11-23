@@ -333,7 +333,8 @@ defmodule Crontab.DateHelper do
     if naive_candidate == DateTime.to_naive(candidate) do
       candidate
     else
-      shift(candidate, -1, :hour)
+      adj = if(amt > 0, do: -1, else: 1)
+      shift(candidate, adj, :hour)
     end
   end
 end
