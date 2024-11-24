@@ -331,13 +331,8 @@ defmodule Crontab.DateHelper do
     candidate
   end
 
-  def resolve_potential_gap(from_ts = %{std_offset: n}, candidate = %{std_offset: m}, amt, unit) do
-    naive_candidate = shift(DateTime.to_naive(from_ts), amt, unit)
-
+  def resolve_potential_gap(%{std_offset: n}, candidate = %{std_offset: m}, amt, _) do
     cond do
-      naive_candidate == DateTime.to_naive(candidate) ->
-        candidate
-
       # move backwards from ST to DS, -1 to keep same hour
       m > n and amt < 0 ->
         shift(candidate, -1, :hour)
