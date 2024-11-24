@@ -2,6 +2,7 @@ defmodule Crontab.DateHelper do
   @moduledoc false
   alias Crontab.CronExpression, as: CronExpr
 
+  @typep ambiguity_opts :: [CronExpr.ambiguity_opt()]
   @type unit :: :year | :month | :day | :hour | :minute | :second | :microsecond
 
   @type date :: NaiveDateTime.t() | DateTime.t()
@@ -295,7 +296,7 @@ defmodule Crontab.DateHelper do
   end
 
   @doc false
-  @spec shift(date, integer, unit, [CronExpr.ambiguity_opt()]) :: date
+  @spec shift(date, integer, unit, ambiguity_opts) :: date
   def shift(datetime, amt, unit, ambiguity_opts \\ [:later])
 
   def shift(datetime = %NaiveDateTime{}, amt, unit, _), do: NaiveDateTime.add(datetime, amt, unit)
