@@ -92,6 +92,10 @@ defmodule Crontab.CronExpression do
       +-------------- :second Second             (range: 0-59)
 
   The `:extended` attribute defines if the second is taken into account.
+  When using localized DateTime, the `:on_ambiguity` attribute defines
+  whether the scheduler should return the earlier or later time when
+  the next run DateTime is ambiguous. `:on_ambiguity` defaults to `[:later]`.
+  To run on both, set it as `[:earlier, :later]`.
   """
   defstruct extended: false,
             reboot: false,
