@@ -220,4 +220,54 @@ defmodule Crontab.FunctionalTest do
       assert Crontab.DateChecker.matches_date?(cron_expression, @start_date) == @matches_now
     end
   end
+
+  tests_find_date_tz_changes = [
+    # DST Shift with extra hour
+    {"30 2 * * *", [:earlier], "Europe/Zurich", ~N[2024-10-27 01:00:01],
+     ["2024-10-27T02:30:00+02:00", "2024-10-28T02:30:00+01:00"]},
+    {"30 2 * * *", [:later], "Europe/Zurich", ~N[2024-10-27 01:00:01],
+     ["2024-10-27T02:30:00+01:00", "2024-10-28T02:30:00+01:00"]},
+    {"30 2 * * *", [:earlier, :later], "Europe/Zurich", ~N[2024-10-27 01:00:01],
+     ["2024-10-27T02:30:00+02:00", "2024-10-27T02:30:00+01:00", "2024-10-28T02:30:00+01:00"]},
+    {"30 2 * * *", [], "Europe/Zurich", ~N[2024-10-27 01:00:01], ["2024-10-28T02:30:00+01:00"]},
+
+    # DST Shift with missing hour
+    {"30 2 * * *", [:earlier], "Europe/Zurich", ~N[2024-03-31 01:00:01],
+     ["2024-04-01T02:30:00+02:00"]},
+    {"30 2 * * *", [:later], "Europe/Zurich", ~N[2024-03-31 01:00:01],
+     ["2024-04-01T02:30:00+02:00"]},
+    {"30 2 * * *", [:earlier, :later], "Europe/Zurich", ~N[2024-03-31 01:00:01],
+     ["2024-04-01T02:30:00+02:00"]},
+    {"30 2 * * *", [], "Europe/Zurich", ~N[2024-03-31 01:00:01], ["2024-04-01T02:30:00+02:00"]},
+
+    # Half Hour Shift
+    {"*/30", [:earlier], "Australia/Lord_Howe", ~N[2024-04-07 01:15:01],
+     ["2024-04-07T01:30:00+11:00", "2024-04-07T02:00:00+10:30"]},
+    {"*/30", [:later], "Australia/Lord_Howe", ~N[2024-04-07 01:15:01],
+     ["2024-04-07T01:30:00+10:30", "2024-04-07T02:00:00+10:30"]},
+    {"*/30", [:earlier, :later], "Australia/Lord_Howe", ~N[2024-04-07 01:15:01],
+     ["2024-04-07T01:30:00+11:00", "2024-04-07T01:30:00+10:30", "2024-04-07T02:00:00+10:30"]},
+    {"*/30", [], "Australia/Lord_Howe", ~N[2024-04-07 01:15:01], ["2024-04-07T02:00:00+10:30"]}
+  ]
+
+  for {cron_expression, on_ambiguity, timezone, start_date, expected_dates} <-
+        tests_find_date_tz_changes do
+    @cron_expression cron_expression
+    @on_ambiguity on_ambiguity
+    @timezone timezone
+    @start_date start_date
+    @expected_dates expected_dates
+    test "tz changes test #{@cron_expression} from #{NaiveDateTime.to_iso8601(@start_date)} (#{@timezone}; #{inspect(@on_ambiguity)})" do
+      cron_expression = Parser.parse!(@cron_expression, false, @on_ambiguity)
+      start_date = DateTime.from_naive!(@start_date, @timezone)
+
+      result =
+        cron_expression
+        |> Crontab.Scheduler.get_next_run_dates(start_date)
+        |> Stream.map(&DateTime.to_iso8601/1)
+        |> Enum.take(length(@expected_dates))
+
+      assert @expected_dates == result
+    end
+  end
 end
