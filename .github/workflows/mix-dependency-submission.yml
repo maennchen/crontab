@@ -25,4 +25,4 @@ jobs:
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - uses: erlef/mix-dependency-submission@6b9e140ea0cb657344589f9d073b7a6a328bedc4 # v1.0.0-beta.8
+      - uses: erlef/mix-dependency-submission@1e053814fbac1bc35460ffdd896a9ad9ff82bbef # v1.0.0-beta.8
