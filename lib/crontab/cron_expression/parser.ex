@@ -72,32 +72,31 @@ defmodule Crontab.CronExpression.Parser do
       iex> Crontab.CronExpression.Parser.parse "* * * * *"
       {:ok,
         %Crontab.CronExpression{day: [:*], hour: [:*], minute: [:*],
-        month: [:*], weekday: [:*], year: [:*]}}
+        month: [:*], weekday: [:*], year: [:*], on_ambiguity: [:later]}}
 
       iex> Crontab.CronExpression.Parser.parse "* * * * *", true
       {:ok,
         %Crontab.CronExpression{extended: true, day: [:*], hour: [:*], minute: [:*],
-        month: [:*], weekday: [:*], year: [:*], second: [:*]}}
+        month: [:*], weekday: [:*], year: [:*], second: [:*], on_ambiguity: [:later]}}
 
       iex> Crontab.CronExpression.Parser.parse "fooo"
       {:error, "Can't parse fooo as minute."}
 
   """
-  @spec parse(binary, boolean) :: result
-  def parse(cron_expression, extended \\ false)
+  @spec parse(binary, boolean, [CronExpression.ambiguity_opt()]) :: result
+  def parse(cron_expression, extended \\ false, ambiguity_opts \\ [:later])
 
-  def parse("@" <> identifier, _) do
+  def parse("@" <> identifier, _, _) do
     special(String.downcase(identifier))
   end
 
-  def parse(cron_expression, true) do
-    interpret(String.split(cron_expression, " "), @extended_intervals, %CronExpression{
-      extended: true
-    })
-  end
+  def parse(cron_expression, is_extended, ambiguity_opts) do
+    format = if(is_extended, do: @extended_intervals, else: @intervals)
 
-  def parse(cron_expression, false) do
-    interpret(String.split(cron_expression, " "), @intervals, %CronExpression{})
+    interpret(String.split(cron_expression, " "), format, %CronExpression{
+      extended: is_extended,
+      on_ambiguity: ambiguity_opts
+    })
   end
 
   @doc """
@@ -117,9 +116,9 @@ defmodule Crontab.CronExpression.Parser do
       ** (RuntimeError) Can't parse fooo as minute.
 
   """
-  @spec parse!(binary, boolean) :: CronExpression.t()
-  def parse!(cron_expression, extended \\ false) do
-    case parse(cron_expression, extended) do
+  @spec parse!(binary, boolean, [CronExpression.ambiguity_opt()]) :: CronExpression.t()
+  def parse!(cron_expression, extended \\ false, ambiguity_opts \\ [:later]) do
+    case parse(cron_expression, extended, ambiguity_opts) do
       {:ok, result} -> result
       {:error, error} -> raise error
     end
