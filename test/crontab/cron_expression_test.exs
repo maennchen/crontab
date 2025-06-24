@@ -11,10 +11,22 @@ defmodule Crontab.CronExpressionTest do
   # doctest Inspect.Crontab.CronExpression, import: true
 
   test "sigil inspect" do
-    assert inspect(~e[*]) == "~e[* * * * * *]"
+    assert inspect(~e[*]) == "~e[* * * * * *]l"
   end
 
   test "extended sigil inspect" do
-    assert inspect(~e[*]e) == "~e[* * * * * * *]e"
+    assert inspect(~e[*]e) == "~e[* * * * * * *]le"
+  end
+
+  test "earlier sigil inspect" do
+    assert inspect(~e[*]a) == "~e[* * * * * *]a"
+  end
+
+  test "earlier and later sigil inspect" do
+    assert inspect(~e[*]al) == "~e[* * * * * *]al"
+  end
+
+  test "earlier, later, and extended sigil inspect" do
+    assert inspect(~e[*]eal) == "~e[* * * * * * *]ale"
   end
 end

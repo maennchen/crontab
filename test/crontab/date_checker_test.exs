@@ -5,6 +5,7 @@ defmodule Crontab.DateCheckerTest do
 
   doctest Crontab.DateChecker
 
+  import Crontab.CronExpression
   import Crontab.DateChecker
 
   test "2002-01-13 23:00:07 matches * * * * *" do
@@ -76,5 +77,28 @@ defmodule Crontab.DateCheckerTest do
     assert_raise RuntimeError, "Special identifier @reboot is not supported.", fn ->
       matches_date?(%Crontab.CronExpression{reboot: true}, base_date)
     end
+  end
+
+  test "DST ambiguity checks correct" do
+    normal_date = DateTime.from_naive!(~N[2024-11-28 00:00:00], "Europe/Zurich")
+
+    {:ambiguous, date_earlier, date_later} =
+      DateTime.from_naive(~N[2024-10-27 02:30:00], "Europe/Zurich")
+
+    assert matches_date?(~e[* * * * * *]a, date_earlier)
+    refute matches_date?(~e[* * * * * *]a, date_later)
+    assert matches_date?(~e[* * * * * *]a, normal_date)
+
+    assert matches_date?(~e[* * * * * *]l, date_earlier)
+    refute matches_date?(~e[* * * * * *]l, date_later)
+    assert matches_date?(~e[* * * * * *]l, normal_date)
+
+    assert matches_date?(~e[* * * * * *]al, date_earlier)
+    assert matches_date?(~e[* * * * * *]al, date_later)
+    assert matches_date?(~e[* * * * * *]al, normal_date)
+
+    refute matches_date?(~e[* * * * * *], date_earlier)
+    refute matches_date?(~e[* * * * * *], date_later)
+    assert matches_date?(~e[* * * * * *], normal_date)
   end
 end
