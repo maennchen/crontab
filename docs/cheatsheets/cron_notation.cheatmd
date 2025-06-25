@@ -82,7 +82,7 @@ specify a month by name in the `month` field
 | `@annually` | same as `@yearly`                         |
 | `@monthly`  | once at the start of every month          |
 | `@weekly`   | once at the start of every week on sunday |
-| `@dayily`   | once at the start of every day            |
+| `@daily`    | once at the start of every day            |
 | `@midnight` | same as `@daily`                          |
 | `@hourly`   | once at the start of every hour           |
 | `@minutely` | once at the start of every minute         |
