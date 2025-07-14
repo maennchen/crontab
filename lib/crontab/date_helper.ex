@@ -297,53 +297,35 @@ defmodule Crontab.DateHelper do
 
   @doc false
   @spec shift(date, integer, unit, ambiguity_opts) :: date
-  def shift(datetime, amt, unit, ambiguity_opts \\ [:later])
+  def shift(dt, amt, unit, ambiguity_opts \\ [:later])
 
-  def shift(datetime = %NaiveDateTime{}, amt, unit, _), do: NaiveDateTime.add(datetime, amt, unit)
+  def shift(dt = %NaiveDateTime{}, amt, unit, _), do: NaiveDateTime.add(dt, amt, unit)
 
-  def shift(datetime = %DateTime{}, amt, unit, _) when unit in [:second, :minute] do
-    DateTime.add(datetime, amt, unit)
-  end
-
-  def shift(datetime = %DateTime{}, amt, unit, ambiguity_opts) do
-    candidate = DateTime.add(datetime, amt, unit)
-
-    case DateTime.from_naive(DateTime.to_naive(candidate), candidate.time_zone) do
-      {:ambiguous, earlier, later} ->
-        resolve_ambiguity(datetime, earlier, later, amt, ambiguity_opts)
-
-      _ ->
-        resolve_potential_gap(datetime, candidate, amt, unit)
-    end
-  end
-
-  def resolve_ambiguity(from_time, earlier, later, amt, ambiguity_opts) do
-    if (:earlier in ambiguity_opts and from_time < earlier) or amt < 0 do
-      earlier
-    else
-      later
-    end
-  end
-
-  def resolve_potential_gap(%{std_offset: n}, candidate = %{std_offset: n}, _, _), do: candidate
-
-  def resolve_potential_gap(_, candidate, _, unit) when unit in [:second, :minute, :hour] do
-    candidate
-  end
-
-  def resolve_potential_gap(%{std_offset: n}, candidate = %{std_offset: m}, amt, _) do
+  def shift(dt, amt, unit, _) when unit == :day do
+    candidate = DateTime.add(dt, amt, unit)
     cond do
-      # move backwards from ST to DS, -1 to keep same hour
-      m > n and amt < 0 ->
-        shift(candidate, -1, :hour)
+      dt.std_offset == candidate.std_offset ->
+        candidate
 
-      # move backwards from DS to ST, +1 to keep same hour
-      amt < 0 ->
-        shift(candidate, 1, :hour)
+      dt.std_offset < candidate.std_offset ->
+        DateTime.add(candidate, -candidate.std_offset, :second)
 
-      # move forward from ST to DS, -1 to keep same hour
       true ->
-        shift(candidate, -1, :hour)
+        DateTime.add(candidate, dt.std_offset, :second)
     end
   end
+
+  def shift(dt, amt, unit, ambiguity_opts) do
+    case DateTime.from_naive(DateTime.add(dt, amt, unit), dt.time_zone) do
+      {:ambiguous, earlier, later} ->
+        resolve_ambiguity(dt.std_offset, dt < earlier, earlier, later, ambiguity_opts)
+      {:ok, candidate} -> candidate
+    end
+  end
+
+  def resolve_ambiguity(_, _, result, _, [:earlier]), do: result
+  def resolve_ambiguity(_, _, _, result, [:later]), do: result
+  def resolve_ambiguity(0, true, _, result, _), do: result
+  def resolve_ambiguity(_, true, result, _, _), do: result
+  def resolve_ambiguity(_, false, _, result, _), do: result
 end

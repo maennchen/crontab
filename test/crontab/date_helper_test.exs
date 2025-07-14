@@ -86,137 +86,133 @@ defmodule Crontab.DateHelperTest do
     end
   end
 
-  describe "shift/4 on DateTime NYT from daylight savings to standard time" do
-    @tz "America/New_York"
-    @date ~D[2024-11-03]
+  describe "shift/4 by day keeps to same hour" do
+    tests = [
+      {"STD to STD", "America/New_York", ~N[2025-07-18 12:34:56], ~N[2025-07-19 12:34:56]},
+      {"STD to DST", "America/New_York", ~N[2025-03-09 01:00:00], ~N[2025-03-10 01:00:00]},
+      {"DST to STD", "America/New_York", ~N[2025-11-02 00:30:00], ~N[2025-11-03 00:30:00]},
+      {"STD to DST", "Australia/Lord_Howe", ~N[2025-10-05 01:00:00], ~N[2025-10-06 01:00:00]},
+      {"DST to STD", "Australia/Lord_Howe", ~N[2025-04-06 01:00:00], ~N[2025-04-07 01:00:00]},
+      {"STD to DST", "Europe/Zurich", ~N[2025-03-30 01:00:00], ~N[2025-03-31 01:00:00]},
+      {"DST to STD", "Europe/Zurich", ~N[2025-10-26 01:00:00], ~N[2025-10-27 01:00:00]},
+    ]
 
-    for {from_time, unit, to_time} <- [
-          {~T[01:59:58], :second, ~T[01:59:59]},
-          {~T[01:58:59], :minute, ~T[01:59:59]}
-        ] do
-      test "add one #{unit} to #{from_time}am EDT returns #{to_time}am EDT" do
-        {:ambiguous, from, _} = DateTime.new(@date, unquote(Macro.escape(from_time)), @tz)
-        {:ambiguous, expected, _} = DateTime.new(@date, unquote(Macro.escape(to_time)), @tz)
-
-        assert DateHelper.shift(from, 1, unquote(unit), [:later]) == expected
-      end
-    end
-
-    for {from_time, unit, to_time} <- [
-          {~T[01:59:59], :second, ~T[01:00:00]},
-          {~T[01:59:00], :minute, ~T[01:00:00]}
-        ] do
-      test "add 1 #{unit} to #{from_time}am EDT returns #{to_time}am EST" do
-        {:ambiguous, from, _} = DateTime.new(@date, unquote(Macro.escape(from_time)), @tz)
-        {:ambiguous, _, expected} = DateTime.new(@date, unquote(Macro.escape(to_time)), @tz)
-
-        assert DateHelper.shift(from, 1, unquote(unit), [:later]) == expected
-      end
-    end
-
-    for ambiguity_opts <- [[:earlier], [:earlier, :later]] do
-      test "add 1 hour to 12am EDT returns 1am EDT when ambiguity_opt=#{inspect(ambiguity_opts)}" do
-        from = DateTime.new!(@date, ~T[00:00:00], @tz)
-        {:ambiguous, expected, _} = DateTime.new(@date, ~T[01:00:00], @tz)
-        opts = unquote(Macro.escape(ambiguity_opts))
-
-        assert DateHelper.shift(from, 1, :hour, opts) == expected
-      end
-    end
-
-    test "add 1 hour to 12am EDT returns 1am EST when ambiguity_opt=[:later]" do
-      from = DateTime.new!(@date, ~T[00:00:00], @tz)
-      {:ambiguous, _, expected} = DateTime.new(@date, ~T[01:00:00], @tz)
-
-      assert DateHelper.shift(from, 1, :hour, [:later]) == expected
-    end
-
-    test "add 1 hour to 1am EDT returns 1am EST when ambiguity_opt=[:earlier, :later]" do
-      {:ambiguous, from_time, expected} = DateTime.new(@date, ~T[01:00:00], @tz)
-
-      assert DateHelper.shift(from_time, 1, :hour, [:earlier, :later]) == expected
-    end
-  end
-
-  test "add one second to 2 seconds before EST ends" do
-    from = DateTime.new!(~D[2024-03-10], ~T[01:59:58], "America/New_York")
-    expected = DateTime.new!(~D[2024-03-10], ~T[01:59:59], "America/New_York")
-
-    assert DateHelper.shift(from, 1, :second) == expected
-  end
-
-  describe "shift/4 on DateTime NYT from standard to daylight savings" do
-    @tz "America/New_York"
-    @date ~D[2024-03-10]
-
-    for {unit, expected} <- [
-          {:second, DateTime.new!(@date, ~T[03:00:00], @tz)},
-          {:minute, DateTime.new!(@date, ~T[03:00:59], @tz)},
-          {:hour, DateTime.new!(@date, ~T[03:59:59], @tz)},
-          # ensure hour stays at 1:59:59am
-          {:day, DateTime.new!(Date.add(@date, 1), ~T[01:59:59], @tz)}
-        ] do
-      test "add 1 #{unit} to 1 second before EST ends returns #{inspect(expected)}" do
-        from = DateTime.new!(@date, ~T[01:59:59], @tz)
-
-        assert DateHelper.shift(from, 1, unquote(unit)) == unquote(Macro.escape(expected))
+    for {desc, timezone, given, expected} <- tests do
+      test "#{desc} #{timezone}" do
+        timezone = unquote(timezone)
+        dt = DateTime.from_naive!(unquote(Macro.escape(given)), timezone)
+        expected = DateTime.from_naive!(unquote(Macro.escape(expected)), timezone)
+        assert DateHelper.shift(dt, 1, :day) == expected
       end
     end
   end
 
-  describe "shift/4 on DateTime NYT from daylight savings back to standard time" do
-    @tz "America/New_York"
-    @date ~D[2024-03-10]
+  describe "shift/4 by minute from non-ambiguous daylight time ambiguous daylight/standard time" do
+    for {timezone, given, expected, opts} <- [
+      {"America/New_York", ~N[2025-11-02 00:59:01], ~N[2025-11-02 01:00:01], [:earlier]},
+      {"Australia/Lord_Howe", ~N[2025-04-06 01:29:02], ~N[2025-04-06 01:30:02], [:earlier]},
+      {"Europe/Zurich", ~N[2025-10-26 01:59:03], ~N[2025-10-26 02:00:03], [:earlier]},
+      {"America/New_York", ~N[2025-11-02 00:59:01], ~N[2025-11-02 01:00:01], [:earlier, :later]},
+      {"Australia/Lord_Howe", ~N[2025-04-06 01:29:02], ~N[2025-04-06 01:30:02], [:earlier, :later]},
+      {"Europe/Zurich", ~N[2025-10-26 01:59:03], ~N[2025-10-26 02:00:03], [:earlier, :later]},
+    ] do
+      test "returns daylight time for #{timezone} when opts = #{inspect opts}" do
+        timezone = unquote(timezone)
+        {:ok, given} = DateTime.from_naive(unquote(Macro.escape(given)), timezone)
+        {:ambiguous, expected, _} = DateTime.from_naive(unquote(Macro.escape(expected)), timezone)
+        assert DateHelper.shift(given, 1, :minute, unquote(Macro.escape(opts))) == expected
+      end
+    end
 
-    for {unit, expected} <- [
-          {:second, DateTime.new!(@date, ~T[01:59:59], @tz)},
-          {:minute, DateTime.new!(@date, ~T[01:59:00], @tz)},
-          {:hour, DateTime.new!(@date, ~T[01:00:00], @tz)},
-          # ensure hour stays at 3am
-          {:day, DateTime.new!(Date.add(@date, -1), ~T[03:00:00], @tz)}
-        ] do
-      test "subtract 1 #{unit} from 3am when EST has already ended returns #{inspect(expected)}" do
-        from = DateTime.new!(@date, ~T[03:00:00], @tz)
-
-        assert DateHelper.shift(from, -1, unquote(unit)) == unquote(Macro.escape(expected))
+    for {timezone, given, expected} <- [
+      {"America/New_York", ~N[2025-11-02 00:59:04], ~N[2025-11-02 01:00:04]},
+      {"Australia/Lord_Howe", ~N[2025-04-06 01:29:05], ~N[2025-04-06 01:30:05]},
+      {"Europe/Zurich", ~N[2025-10-26 01:59:06], ~N[2025-10-26 02:00:06]},
+    ] do
+      test "returns standard time for #{timezone} when opts = [:later]" do
+        timezone = unquote(timezone)
+        {:ok, given} = DateTime.from_naive(unquote(Macro.escape(given)), timezone)
+        {:ambiguous, _, expected} = DateTime.from_naive(unquote(Macro.escape(expected)), timezone)
+        assert DateHelper.shift(given, 1, :minute, [:later]) == expected
       end
     end
   end
 
-  describe "shift/4 on DateTime NYT from standard back to daylight savings" do
-    @tz "America/New_York"
-    @date ~D[2024-11-03]
-
-    for {unit, to_time, ambiguity_opts} <- [
-          {:second, ~T[01:59:59], [:later]},
-          {:minute, ~T[01:59:00], [:later]},
-          {:hour, ~T[01:00:00], [:later]},
-          {:second, ~T[01:59:59], [:earlier, :later]},
-          {:minute, ~T[01:59:00], [:earlier, :later]},
-          {:hour, ~T[01:00:00], [:earlier, :later]}
-        ] do
-      test "subtract 1 #{unit} from EST 1am returns #{inspect(to_time)}am EDT when ambiguity_opts = #{inspect(ambiguity_opts)}" do
-        {:ambiguous, _, from} = DateTime.new(@date, ~T[01:00:00], @tz)
-        {:ambiguous, expected, _} = DateTime.new(@date, unquote(Macro.escape(to_time)), @tz)
-        opts = unquote(Macro.escape(ambiguity_opts))
-
-        assert DateHelper.shift(from, -1, unquote(unit), opts) == expected
+  describe "shift/4 by minute when in ambiguous daylight time" do
+    for {timezone, given, expected} <- [
+      {"America/New_York", ~N[2025-11-02 00:59:10], ~N[2025-11-02 01:00:10]},
+      {"Australia/Lord_Howe", ~N[2025-04-06 01:29:11], ~N[2025-04-06 01:30:11]},
+      {"Europe/Zurich", ~N[2025-10-26 01:59:12], ~N[2025-10-26 02:00:12]},
+    ] do
+      test "returns standard when ambiguous to ambiguous [:earlier, :later] #{timezone}" do
+        timezone = unquote(timezone)
+        {:ok, given} = DateTime.from_naive(unquote(Macro.escape(given)), timezone)
+        {:ambiguous, expected, _} = DateTime.from_naive(unquote(Macro.escape(expected)), timezone)
+        assert DateHelper.shift(given, 1, :minute, [:earlier, :later]) == expected
       end
     end
 
-    test "subtract 1 hour from EST 2am returns 1am EDT when ambiguity_opts = [:earlier]" do
-      from = DateTime.new!(@date, ~T[02:00:00], @tz)
-      {:ambiguous, expected, _} = DateTime.new(@date, ~T[01:00:00], @tz)
-
-      assert DateHelper.shift(from, -1, :hour, [:earlier]) == expected
+    for {timezone, given, expected, opts} <- [
+      {"America/New_York", ~N[2025-11-02 01:58:13], ~N[2025-11-02 01:59:13], [:earlier]},
+      {"Australia/Lord_Howe", ~N[2025-04-06 01:58:14], ~N[2025-04-06 01:59:14], [:earlier]},
+      {"Europe/Zurich", ~N[2025-10-26 02:58:15], ~N[2025-10-26 02:59:15], [:earlier]},
+      {"America/New_York", ~N[2025-11-02 01:58:13], ~N[2025-11-02 01:59:13], [:earlier, :later]},
+      {"Australia/Lord_Howe", ~N[2025-04-06 01:58:14], ~N[2025-04-06 01:59:14], [:earlier, :later]},
+      {"Europe/Zurich", ~N[2025-10-26 02:58:15], ~N[2025-10-26 02:59:15], [:earlier, :later]},
+    ] do
+      test "returns daylight when shift stays in daylight #{inspect opts} #{timezone}" do
+        timezone = unquote(timezone)
+        {:ambiguous, given, _} = DateTime.from_naive(unquote(Macro.escape(given)), timezone)
+        {:ambiguous, expected, _} = DateTime.from_naive(unquote(Macro.escape(expected)), timezone)
+        assert DateHelper.shift(given, 1, :minute, unquote(Macro.escape(opts))) == expected
+      end
     end
 
-    for opts <- [[:later], [:earlier], [:earlier, :later]] do
-      test "subtract 1 day from EST 1am returns 1am EDT of one day earlier when ambiguity_opts = #{inspect(opts)}" do
-        {:ambiguous, _, from} = DateTime.new(@date, ~T[01:00:00], @tz)
-        expected = DateTime.new!(Date.add(@date, -1), ~T[01:00:00], @tz)
+    for {timezone, given, expected, opts} <- [
+      {"America/New_York", ~N[2025-11-02 01:58:13], ~N[2025-11-02 01:59:13], [:later]},
+      {"Australia/Lord_Howe", ~N[2025-04-06 01:58:14], ~N[2025-04-06 01:59:14], [:later]},
+      {"Europe/Zurich", ~N[2025-10-26 02:58:15], ~N[2025-10-26 02:59:15], [:later]},
+      {"America/New_York", ~N[2025-11-02 01:58:13], ~N[2025-11-02 01:59:13], [:earlier, :later]},
+      {"Australia/Lord_Howe", ~N[2025-04-06 01:58:14], ~N[2025-04-06 01:59:14], [:earlier, :later]},
+      {"Europe/Zurich", ~N[2025-10-26 02:58:15], ~N[2025-10-26 02:59:15], [:earlier, :later]},
+    ] do
+      test "returns standard when shift stays in standard #{inspect opts} #{timezone}" do
+        timezone = unquote(timezone)
+        {:ambiguous, _, given} = DateTime.from_naive(unquote(Macro.escape(given)), timezone)
+        {:ambiguous, _, expected} = DateTime.from_naive(unquote(Macro.escape(expected)), timezone)
+        assert DateHelper.shift(given, 1, :minute, unquote(Macro.escape(opts))) == expected
+      end
+    end
 
-        assert DateHelper.shift(from, -1, :day, unquote(Macro.escape(opts))) == expected
+    for {timezone, given, expected, opts} <- [
+      {"America/New_York", ~N[2025-11-02 01:59:16], ~N[2025-11-02 02:00:16], [:later]},
+      {"Australia/Lord_Howe", ~N[2025-04-06 01:59:17], ~N[2025-04-06 02:00:17], [:later]},
+      {"Europe/Zurich", ~N[2025-10-26 02:59:18], ~N[2025-10-26 03:00:18], [:later]},
+      {"America/New_York", ~N[2025-11-02 01:59:16], ~N[2025-11-02 02:00:16], [:earlier, :later]},
+      {"Australia/Lord_Howe", ~N[2025-04-06 01:59:17], ~N[2025-04-06 02:00:17], [:earlier, :later]},
+      {"Europe/Zurich", ~N[2025-10-26 02:59:18], ~N[2025-10-26 03:00:18], [:earlier, :later]},
+    ] do
+      test "returns standard when shift to non-ambiguous standard #{inspect opts} #{timezone}" do
+        timezone = unquote(timezone)
+        {:ambiguous, _, given} = DateTime.from_naive(unquote(Macro.escape(given)), timezone)
+        {:ok, expected} = DateTime.from_naive(unquote(Macro.escape(expected)), timezone)
+        assert DateHelper.shift(given, 1, :minute, unquote(Macro.escape(opts))) == expected
+      end
+    end
+  end
+
+  for opts <- [[:earlier], [:later], [:earlier, :later]] do
+    for {timezone, given, expected} <- [
+      {"America/New_York", ~N[2025-03-09 01:59:00], ~N[2025-03-09 03:00:00]},
+      {"Australia/Lord_Howe", ~N[2025-10-05 01:59:00], ~N[2025-10-05 02:30:00]},
+      {"Europe/Zurich", ~N[2025-03-30 01:59:00], ~N[2025-03-30 03:00:00], [:earlier]},
+    ] do
+      test "shift/4 by minute from standard to daylight for #{timezone} with #{inspect opts}" do
+        timezone = unquote(timezone)
+        {:ok, given} = DateTime.from_naive(unquote(Macro.escape(given)), timezone)
+        {:ok, expected} = DateTime.from_naive(unquote(Macro.escape(expected)), timezone)
+
+        assert DateHelper.shift(given, 1, :minute, unquote(Macro.escape(opts))) == expected
       end
     end
   end
