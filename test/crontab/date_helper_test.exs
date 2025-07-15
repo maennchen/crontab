@@ -199,6 +199,18 @@ defmodule Crontab.DateHelperTest do
         assert DateHelper.shift(given, 1, :minute, unquote(Macro.escape(opts))) == expected
       end
     end
+
+    for {timezone, given, expected} <- [
+      {"America/New_York", ~N[2025-11-02 01:59:00], ~N[2025-11-02 02:00:00]}
+    ] do
+      test "xxx" do
+        timezone = unquote(timezone)
+        {:ambiguous, given, _} = DateTime.from_naive(unquote(Macro.escape(given)), timezone)
+        {:ok, expected} = DateTime.from_naive(unquote(Macro.escape(expected)), timezone)
+
+        assert DateHelper.shift(given, 1, :minute, [:earlier]) == expected
+      end
+    end
   end
 
   for opts <- [[:earlier], [:later], [:earlier, :later]] do

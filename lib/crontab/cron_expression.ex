@@ -94,12 +94,12 @@ defmodule Crontab.CronExpression do
   The `:extended` attribute defines if the second is taken into account.
   When using localized DateTime, the `:on_ambiguity` attribute defines
   whether the scheduler should return the earlier or later time when
-  the next run DateTime is ambiguous. `:on_ambiguity` defaults to `[:later]`.
+  the next run DateTime is ambiguous. `:on_ambiguity` defaults to `[]`.
   To run on both, set it as `[:earlier, :later]`.
   """
   defstruct extended: false,
             reboot: false,
-            on_ambiguity: [:later],
+            on_ambiguity: [],
             second: [:*],
             minute: [:*],
             hour: [:*],
@@ -116,7 +116,7 @@ defmodule Crontab.CronExpression do
       iex> ~e[*]
       %Crontab.CronExpression{
         extended: false,
-        on_ambiguity: [:later],
+        on_ambiguity: [],
         second: [:*],
         minute: [:*],
         hour: [:*],
@@ -148,6 +148,18 @@ defmodule Crontab.CronExpression do
         month: [5],
         weekday: [6],
         year: [7]}
+
+      iex> ~e[1 2 3 4 5 6 7]e
+      %Crontab.CronExpression{
+        extended: true,
+        on_ambiguity: [],
+        second: [1],
+        minute: [2],
+        hour: [3],
+        day: [4],
+        month: [5],
+        weekday: [6],
+        year: [7]}
   """
   @spec sigil_e(binary, charlist) :: t
   def sigil_e(cron_expression, options \\ [?l]) do
@@ -157,7 +169,8 @@ defmodule Crontab.CronExpression do
       cond do
         ?a in options and ?l in options -> [:earlier, :later]
         ?a in options -> [:earlier]
-        true -> [:later]
+        ?l in options -> [:later]
+        true -> []
       end
     )
   end
@@ -213,11 +226,11 @@ defmodule Crontab.CronExpression do
     ## Examples
 
         iex> IO.inspect %Crontab.CronExpression{}
-        ~e[* * * * * *]l
+        ~e[* * * * * *]
 
         iex> import Crontab.CronExpression
         iex> IO.inspect %Crontab.CronExpression{extended: true}
-        ~e[* * * * * * *]le
+        ~e[* * * * * * *]e
 
         iex> import Crontab.CronExpression
         iex> IO.inspect %Crontab.CronExpression{extended: true, on_ambiguity: [:earlier, :later]}
