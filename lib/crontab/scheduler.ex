@@ -297,6 +297,7 @@ defmodule Crontab.Scheduler do
        ) do
     cron_expression
     |> CronExpression.to_condition_list()
+    |> Keyword.delete(:ambiguity_opts)
     |> Enum.reverse()
     |> get_run_date(DateHelper.beginning_of(date, :minute), max_runs, direction, ambiguity_opts)
   end
@@ -310,6 +311,7 @@ defmodule Crontab.Scheduler do
        ) do
     cron_expression
     |> CronExpression.to_condition_list()
+    |> Keyword.delete(:ambiguity_opts)
     |> Enum.reverse()
     |> get_run_date(DateHelper.beginning_of(date, :second), max_runs, direction, ambiguity_opts)
   end
@@ -341,7 +343,7 @@ defmodule Crontab.Scheduler do
   end
 
   defp search_and_correct_date([{interval, conditions} | tail], date, direction, ambiguity_opts) do
-    if matches_date?(interval, conditions, date) do
+    if matches_date?(interval, conditions, date, ambiguity_opts) do
       search_and_correct_date(tail, date, direction, ambiguity_opts)
     else
       case correct_date(interval, date, direction, ambiguity_opts) do

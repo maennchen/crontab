@@ -303,6 +303,7 @@ defmodule Crontab.DateHelper do
 
   def shift(dt, amt, unit, _) when unit == :day do
     candidate = DateTime.add(dt, amt, unit)
+
     cond do
       dt.std_offset == candidate.std_offset ->
         candidate
@@ -318,7 +319,15 @@ defmodule Crontab.DateHelper do
   def shift(dt, amt, unit, ambiguity_opts) do
     case DateTime.from_naive(DateTime.add(dt, amt, unit), dt.time_zone) do
       {:ambiguous, earlier, later} ->
-        resolve_ambiguity(DateTime.before?(dt, earlier), earlier, later, amt, unit, ambiguity_opts)
+        resolve_ambiguity(
+          DateTime.before?(dt, earlier),
+          earlier,
+          later,
+          amt,
+          unit,
+          ambiguity_opts
+        )
+
       {:ok, candidate} ->
         candidate
     end
@@ -328,6 +337,9 @@ defmodule Crontab.DateHelper do
   def resolve_ambiguity(true, earlier, _, _, _, [:earlier, :later]), do: earlier
   def resolve_ambiguity(false, _, later, _, _, [:earlier, :later]), do: later
   def resolve_ambiguity(true, earlier, _, _, _, [:earlier]), do: earlier
-  def resolve_ambiguity(false, _, later, amt, unit, [:earlier] = opts), do: shift(later, amt, unit, opts)
+
+  def resolve_ambiguity(false, _, later, amt, unit, opts = [:earlier]),
+    do: shift(later, amt, unit, opts)
+
   def resolve_ambiguity(_, _, later, amt, unit, []), do: shift(later, amt, unit, [])
 end

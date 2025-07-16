@@ -20,7 +20,7 @@ defmodule Crontab.CronExpression do
 
   @type ambiguity_opt :: :earlier | :later
 
-  @type interval :: :second | :minute | :hour | :day | :month | :weekday | :year
+  @type interval :: :second | :minute | :hour | :day | :month | :weekday | :year | :ambiguity_opts
 
   @typedoc deprecated: "Use Crontab.CronExpression.min_max/1 instead"
   @type min_max :: {:-, time_unit, time_unit}
@@ -66,7 +66,7 @@ defmodule Crontab.CronExpression do
   @typedoc deprecated: "Use Calendar.[second|minute|hour|day|month|day_of_week|year]/0 instead"
   @type time_unit :: second | minute | hour | day | month | weekday | year
 
-  @type condition(name, time_unit) :: {name, [value(time_unit)]}
+  @type condition(name, time_unit) :: {name, [value(time_unit) | ambiguity_opt]}
   @type condition ::
           condition(:second, Calendar.second())
           | condition(:minute, Calendar.minute())
@@ -75,6 +75,7 @@ defmodule Crontab.CronExpression do
           | condition(:month, Calendar.month())
           | condition(:weekday, Calendar.day_of_week())
           | condition(:year, Calendar.year())
+          | condition(:ambiguity_opts, ambiguity_opt)
 
   @type condition_list :: [condition]
 
@@ -94,8 +95,9 @@ defmodule Crontab.CronExpression do
   The `:extended` attribute defines if the second is taken into account.
   When using localized DateTime, the `:on_ambiguity` attribute defines
   whether the scheduler should return the earlier or later time when
-  the next run DateTime is ambiguous. `:on_ambiguity` defaults to `[]`.
-  To run on both, set it as `[:earlier, :later]`.
+  the next run DateTime is ambiguous. `:on_ambiguity` defaults to `[]`
+  which means run DateTimes that fall within the ambiguous times would
+  be skipped. To run on both, set it as `[:earlier, :later]`.
   """
   defstruct extended: false,
             reboot: false,
@@ -187,7 +189,8 @@ defmodule Crontab.CronExpression do
         {:day, [3]},
         {:month, [4]},
         {:weekday, [5]},
-        {:year, [6]}]
+        {:year, [6]},
+        {:ambiguity_opts, []}]
 
       iex> Crontab.CronExpression.to_condition_list %Crontab.CronExpression{
       ...> extended: true, second: [0], minute: [1], hour: [2], day: [3], month: [4], weekday: [5], year: [6]}
@@ -197,7 +200,8 @@ defmodule Crontab.CronExpression do
         {:day, [3]},
         {:month, [4]},
         {:weekday, [5]},
-        {:year, [6]}]
+        {:year, [6]},
+        {:ambiguity_opts, []}]
 
   """
   @spec to_condition_list(t) :: condition_list
@@ -208,7 +212,8 @@ defmodule Crontab.CronExpression do
       {:day, interval.day},
       {:month, interval.month},
       {:weekday, interval.weekday},
-      {:year, interval.year}
+      {:year, interval.year},
+      {:ambiguity_opts, interval.on_ambiguity}
     ]
   end
 
