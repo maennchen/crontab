@@ -297,7 +297,7 @@ defmodule Crontab.DateHelper do
 
   @doc false
   @spec shift(date, integer, unit, ambiguity_opts) :: date
-  def shift(dt, amt, unit, ambiguity_opts \\ [:subsequent])
+  def shift(dt, amt, unit, ambiguity_opts \\ [])
 
   def shift(dt = %NaiveDateTime{}, amt, unit, _), do: NaiveDateTime.add(dt, amt, unit)
 
