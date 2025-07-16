@@ -18,7 +18,7 @@ defmodule Crontab.CronExpression do
           year: [value(year)]
         }
 
-  @type ambiguity_opt :: :earlier | :later
+  @type ambiguity_opt :: :prior | :subsequent
 
   @type interval :: :second | :minute | :hour | :day | :month | :weekday | :year | :ambiguity_opts
 
@@ -94,10 +94,10 @@ defmodule Crontab.CronExpression do
 
   The `:extended` attribute defines if the second is taken into account.
   When using localized DateTime, the `:on_ambiguity` attribute defines
-  whether the scheduler should return the earlier or later time when
+  whether the scheduler should return the prior or subsequent time when
   the next run DateTime is ambiguous. `:on_ambiguity` defaults to `[]`
   which means run DateTimes that fall within the ambiguous times would
-  be skipped. To run on both, set it as `[:earlier, :later]`.
+  be skipped. To run on both, set it as `[:prior, :subsequent]`.
   """
   defstruct extended: false,
             reboot: false,
@@ -127,10 +127,10 @@ defmodule Crontab.CronExpression do
         weekday: [:*],
         year: [:*]}
 
-      iex> ~e[*]ea
+      iex> ~e[*]ep
       %Crontab.CronExpression{
         extended: true,
-        on_ambiguity: [:earlier],
+        on_ambiguity: [:prior],
         second: [:*],
         minute: [:*],
         hour: [:*],
@@ -139,10 +139,10 @@ defmodule Crontab.CronExpression do
         weekday: [:*],
         year: [:*]}
 
-      iex> ~e[1 2 3 4 5 6 7]ale
+      iex> ~e[1 2 3 4 5 6 7]eps
       %Crontab.CronExpression{
         extended: true,
-        on_ambiguity: [:earlier, :later],
+        on_ambiguity: [:prior, :subsequent],
         second: [1],
         minute: [2],
         hour: [3],
@@ -169,9 +169,9 @@ defmodule Crontab.CronExpression do
       cron_expression,
       ?e in options,
       cond do
-        ?a in options and ?l in options -> [:earlier, :later]
-        ?a in options -> [:earlier]
-        ?l in options -> [:later]
+        ?p in options and ?s in options -> [:prior, :subsequent]
+        ?p in options -> [:prior]
+        ?s in options -> [:subsequent]
         true -> []
       end
     )
@@ -238,15 +238,15 @@ defmodule Crontab.CronExpression do
         ~e[* * * * * * *]e
 
         iex> import Crontab.CronExpression
-        iex> IO.inspect %Crontab.CronExpression{extended: true, on_ambiguity: [:earlier, :later]}
-        ~e[* * * * * * *]ale
+        iex> IO.inspect %Crontab.CronExpression{extended: true, on_ambiguity: [:prior, :subsequent]}
+        ~e[* * * * * * *]eps
     """
     @spec inspect(CronExpression.t(), any) :: String.t()
     def inspect(cron_expression = %CronExpression{}, _options) do
-      earlier = if(:earlier in cron_expression.on_ambiguity, do: "a", else: "")
-      later = if(:later in cron_expression.on_ambiguity, do: "l", else: "")
+      prior = if(:prior in cron_expression.on_ambiguity, do: "p", else: "")
+      subsequent = if(:subsequent in cron_expression.on_ambiguity, do: "s", else: "")
       extended = if(cron_expression.extended, do: "e", else: "")
-      "~e[" <> Composer.compose(cron_expression) <> "]#{earlier}#{later}#{extended}"
+      "~e[" <> Composer.compose(cron_expression) <> "]#{extended}#{prior}#{subsequent}"
     end
   end
 end

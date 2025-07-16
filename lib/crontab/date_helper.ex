@@ -297,7 +297,7 @@ defmodule Crontab.DateHelper do
 
   @doc false
   @spec shift(date, integer, unit, ambiguity_opts) :: date
-  def shift(dt, amt, unit, ambiguity_opts \\ [:later])
+  def shift(dt, amt, unit, ambiguity_opts \\ [:subsequent])
 
   def shift(dt = %NaiveDateTime{}, amt, unit, _), do: NaiveDateTime.add(dt, amt, unit)
 
@@ -333,12 +333,12 @@ defmodule Crontab.DateHelper do
     end
   end
 
-  def resolve_ambiguity(_, _, later, _, _, [:later]), do: later
-  def resolve_ambiguity(true, earlier, _, _, _, [:earlier, :later]), do: earlier
-  def resolve_ambiguity(false, _, later, _, _, [:earlier, :later]), do: later
-  def resolve_ambiguity(true, earlier, _, _, _, [:earlier]), do: earlier
+  def resolve_ambiguity(_, _, later, _, _, [:subsequent]), do: later
+  def resolve_ambiguity(true, earlier, _, _, _, [:prior, :subsequent]), do: earlier
+  def resolve_ambiguity(false, _, later, _, _, [:prior, :subsequent]), do: later
+  def resolve_ambiguity(true, earlier, _, _, _, [:prior]), do: earlier
 
-  def resolve_ambiguity(false, _, later, amt, unit, opts = [:earlier]),
+  def resolve_ambiguity(false, _, later, amt, unit, opts = [:prior]),
     do: shift(later, amt, unit, opts)
 
   def resolve_ambiguity(_, _, later, amt, unit, []), do: shift(later, amt, unit, [])

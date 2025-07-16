@@ -85,17 +85,17 @@ defmodule Crontab.DateCheckerTest do
     {:ambiguous, date_earlier, date_later} =
       DateTime.from_naive(~N[2024-10-27 02:30:00], "Europe/Zurich")
 
-    assert matches_date?(~e[* * * * * *]a, date_earlier)
-    refute matches_date?(~e[* * * * * *]a, date_later)
-    assert matches_date?(~e[* * * * * *]a, normal_date)
+    assert matches_date?(~e[* * * * * *]p, date_earlier)
+    refute matches_date?(~e[* * * * * *]p, date_later)
+    assert matches_date?(~e[* * * * * *]p, normal_date)
 
-    refute matches_date?(~e[* * * * * *]l, date_earlier)
-    assert matches_date?(~e[* * * * * *]l, date_later)
-    assert matches_date?(~e[* * * * * *]l, normal_date)
+    refute matches_date?(~e[* * * * * *]s, date_earlier)
+    assert matches_date?(~e[* * * * * *]s, date_later)
+    assert matches_date?(~e[* * * * * *]s, normal_date)
 
-    assert matches_date?(~e[* * * * * *]al, date_earlier)
-    assert matches_date?(~e[* * * * * *]al, date_later)
-    assert matches_date?(~e[* * * * * *]al, normal_date)
+    assert matches_date?(~e[* * * * * *]ps, date_earlier)
+    assert matches_date?(~e[* * * * * *]ps, date_later)
+    assert matches_date?(~e[* * * * * *]ps, normal_date)
 
     refute matches_date?(~e[* * * * * *], date_earlier)
     refute matches_date?(~e[* * * * * *], date_later)

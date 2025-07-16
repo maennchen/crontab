@@ -19,14 +19,14 @@ defmodule Crontab.CronExpressionTest do
   end
 
   test "earlier sigil inspect" do
-    assert inspect(~e[*]a) == "~e[* * * * * *]a"
+    assert inspect(~e[*]p) == "~e[* * * * * *]p"
   end
 
   test "earlier and later sigil inspect" do
-    assert inspect(~e[*]al) == "~e[* * * * * *]al"
+    assert inspect(~e[*]ps) == "~e[* * * * * *]ps"
   end
 
   test "earlier, later, and extended sigil inspect" do
-    assert inspect(~e[*]eal) == "~e[* * * * * * *]ale"
+    assert inspect(~e[*]eps) == "~e[* * * * * * *]eps"
   end
 end

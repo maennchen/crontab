@@ -82,8 +82,8 @@ defmodule Crontab.DateChecker do
   def matches_date?(:ambiguity_opts, conditions, date, _) do
     case DateTime.from_naive(date, date.time_zone) do
       {:ok, _} -> true
-      {:ambiguous, ^date, _} -> :earlier in conditions
-      {:ambiguous, _, ^date} -> :later in conditions
+      {:ambiguous, ^date, _} -> :prior in conditions
+      {:ambiguous, _, ^date} -> :subsequent in conditions
       _ -> false
     end
   end
