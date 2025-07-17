@@ -20,19 +20,24 @@ defmodule Crontab.CronExpression.Composer do
 
   ## Examples
 
-      iex> Crontab.CronExpression.Composer.compose %Crontab.CronExpression{}
+      iex> Crontab.CronExpression.Composer.compose(%Crontab.CronExpression{})
       "* * * * * *"
 
-      iex> Crontab.CronExpression.Composer.compose %Crontab.CronExpression{minute: [9, {:-, 4, 6}, {:/, :*, 9}]}
+      iex> Crontab.CronExpression.Composer.compose(%Crontab.CronExpression{
+      ...>   minute: [9, {:-, 4, 6}, {:/, :*, 9}]
+      ...> })
       "9,4-6,*/9 * * * * *"
 
-      iex> Crontab.CronExpression.Composer.compose %Crontab.CronExpression{reboot: true}
+      iex> Crontab.CronExpression.Composer.compose(%Crontab.CronExpression{reboot: true})
       "@reboot"
 
       iex> Crontab.CronExpression.Composer.compose(%Crontab.CronExpression{}, skip_year: true)
       "* * * * *"
 
-      iex> Crontab.CronExpression.Composer.compose(%Crontab.CronExpression{minute: [9, {:-, 4, 6}, {:/, :*, 9}]}, skip_year: true)
+      iex> Crontab.CronExpression.Composer.compose(
+      ...>   %Crontab.CronExpression{minute: [9, {:-, 4, 6}, {:/, :*, 9}]},
+      ...>   skip_year: true
+      ...> )
       "9,4-6,*/9 * * * *"
   """
   @spec compose(CronExpression.t()) :: binary
@@ -43,7 +48,7 @@ defmodule Crontab.CronExpression.Composer do
     "@reboot"
   end
 
-  def compose(cron_expression = %CronExpression{}, opts) do
+  def compose(%CronExpression{} = cron_expression, opts) do
     cron_expression
     |> CronExpression.to_condition_list()
     |> compose_interval(Map.new(opts))
@@ -51,7 +56,7 @@ defmodule Crontab.CronExpression.Composer do
   end
 
   @spec compose_interval(CronExpression.condition_list(), map) :: [binary]
-  defp compose_interval([{:year, _} | tail], opts = %{skip_year: true}) do
+  defp compose_interval([{:year, _} | tail], %{skip_year: true} = opts) do
     compose_interval(tail, opts)
   end
 

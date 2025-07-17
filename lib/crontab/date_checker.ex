@@ -4,7 +4,6 @@ defmodule Crontab.DateChecker do
   """
 
   alias Crontab.CronExpression
-
   alias Crontab.DateHelper
 
   @type date :: NaiveDateTime.t() | DateTime.t()
@@ -14,16 +13,25 @@ defmodule Crontab.DateChecker do
 
   ## Examples
 
-      iex> Crontab.DateChecker.matches_date? %Crontab.CronExpression{minute: [{:"/", :*, 8}]}, ~N[2004-04-16 04:08:08]
+      iex> Crontab.DateChecker.matches_date?(
+      ...>   %Crontab.CronExpression{minute: [{:/, :*, 8}]},
+      ...>   ~N[2004-04-16 04:08:08]
+      ...> )
       true
 
-      iex> Crontab.DateChecker.matches_date? %Crontab.CronExpression{minute: [{:"/", :*, 9}]}, ~N[2004-04-16 04:07:08]
+      iex> Crontab.DateChecker.matches_date?(
+      ...>   %Crontab.CronExpression{minute: [{:/, :*, 9}]},
+      ...>   ~N[2004-04-16 04:07:08]
+      ...> )
       false
 
-      iex> Crontab.DateChecker.matches_date? %Crontab.CronExpression{reboot: true}, ~N[2004-04-16 04:07:08]
+      iex> Crontab.DateChecker.matches_date?(
+      ...>   %Crontab.CronExpression{reboot: true},
+      ...>   ~N[2004-04-16 04:07:08]
+      ...> )
       ** (RuntimeError) Special identifier @reboot is not supported.
 
-      iex> Crontab.DateChecker.matches_date? [{:hour, [{:"/", :*, 4}, 7]}], ~N[2004-04-16 04:07:08]
+      iex> Crontab.DateChecker.matches_date?([{:hour, [{:/, :*, 4}, 7]}], ~N[2004-04-16 04:07:08])
       true
 
   """
@@ -36,7 +44,7 @@ defmodule Crontab.DateChecker do
   def matches_date?(%CronExpression{reboot: true}, _),
     do: raise("Special identifier @reboot is not supported.")
 
-  def matches_date?(cron_expression = %CronExpression{}, execution_date) do
+  def matches_date?(%CronExpression{} = cron_expression, execution_date) do
     cron_expression
     |> CronExpression.to_condition_list()
     |> matches_date?(execution_date)
@@ -44,7 +52,7 @@ defmodule Crontab.DateChecker do
 
   def matches_date?(condition_list, execution_date) do
     ambiguity_opts = Keyword.get(condition_list, :ambiguity_opts, [])
-    condition_list |> matches_date?(execution_date, ambiguity_opts)
+    matches_date?(condition_list, execution_date, ambiguity_opts)
   end
 
   @spec matches_date?(
@@ -64,10 +72,10 @@ defmodule Crontab.DateChecker do
 
   ## Examples
 
-      iex> Crontab.DateChecker.matches_date? :hour, [{:"/", :*, 4}, 7], ~N[2004-04-16 04:07:08], []
+      iex> Crontab.DateChecker.matches_date?(:hour, [{:/, :*, 4}, 7], ~N[2004-04-16 04:07:08], [])
       true
 
-      iex> Crontab.DateChecker.matches_date? :hour, [8], ~N[2004-04-16 04:07:08], []
+      iex> Crontab.DateChecker.matches_date?(:hour, [8], ~N[2004-04-16 04:07:08], [])
       false
 
   """
@@ -114,7 +122,7 @@ defmodule Crontab.DateChecker do
   defp matches_specific_date?(
          interval,
          [head_value | tail_values],
-         condition = {:-, from, to},
+         {:-, from, to} = condition,
          execution_date,
          ambiguity_opts
        ) do
@@ -133,7 +141,7 @@ defmodule Crontab.DateChecker do
   defp matches_specific_date?(
          :weekday,
          [0 | tail_values],
-         condition = {:/, _, _},
+         {:/, _, _} = condition,
          execution_date,
          ambiguity_opts
        ) do
@@ -142,8 +150,8 @@ defmodule Crontab.DateChecker do
 
   defp matches_specific_date?(
          interval,
-         values = [head_value | tail_values],
-         condition = {:/, base = {:-, from, _}, divider},
+         [head_value | tail_values] = values,
+         {:/, {:-, from, _} = base, divider} = condition,
          execution_date,
          ambiguity_opts
        ) do
@@ -185,9 +193,10 @@ defmodule Crontab.DateChecker do
     last_day = DateHelper.end_of(execution_date, :month).day
 
     specific_day =
-      case last_day < day do
-        true -> DateHelper.end_of(execution_date, :month)
-        false -> Map.put(execution_date, :day, day)
+      if last_day < day do
+        DateHelper.end_of(execution_date, :month)
+      else
+        Map.put(execution_date, :day, day)
       end
 
     DateHelper.next_weekday_to(specific_day) === execution_date.day
@@ -195,8 +204,8 @@ defmodule Crontab.DateChecker do
 
   defp matches_specific_date?(
          interval,
-         values = [head_value | tail_values],
-         condition = {:/, base, divider},
+         [head_value | tail_values] = values,
+         {:/, base, divider} = condition,
          execution_date,
          ambiguity_opts
        ) do

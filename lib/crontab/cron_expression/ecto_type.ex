@@ -29,11 +29,11 @@ if match?({:module, Ecto.Type}, Code.ensure_compiled(Ecto.Type)) do
 
     """
 
+    @behaviour Ecto.Type
+
     alias Crontab.CronExpression
     alias Crontab.CronExpression.Composer
     alias Crontab.CronExpression.Parser
-
-    @behaviour Ecto.Type
 
     @doc false
     @impl Ecto.Type
@@ -43,7 +43,7 @@ if match?({:module, Ecto.Type}, Code.ensure_compiled(Ecto.Type)) do
     @doc false
     @impl Ecto.Type
     @spec cast(any) :: {:ok, CronExpression.t()} | :error
-    def cast(cron_expression = %Crontab.CronExpression{}), do: {:ok, cron_expression}
+    def cast(%CronExpression{} = cron_expression), do: {:ok, cron_expression}
 
     def cast(cron_expression) when is_binary(cron_expression) do
       cron_expression
@@ -60,7 +60,7 @@ if match?({:module, Ecto.Type}, Code.ensure_compiled(Ecto.Type)) do
     @doc false
     @impl Ecto.Type
     @spec load(any) :: {:ok, CronExpression.t()} | :error
-    def load(term = %{"extended" => extended, "expression" => expression}) do
+    def load(%{"extended" => extended, "expression" => expression} = term) do
       load(%{
         extended: extended,
         expression: expression,
@@ -69,18 +69,18 @@ if match?({:module, Ecto.Type}, Code.ensure_compiled(Ecto.Type)) do
       })
     end
 
-    def load(term = %{extended: extended, expression: expression}) do
+    def load(%{extended: extended, expression: expression} = term) do
       ambiguity_opts =
         Enum.reject(
           [
-            if(term[:prior], do: :prior, else: nil),
-            if(term[:subsequent], do: :subsequent, else: nil)
+            if(term[:prior], do: :prior),
+            if(term[:subsequent], do: :subsequent)
           ],
           &is_nil/1
         )
 
       case Parser.parse(expression, extended, ambiguity_opts) do
-        result = {:ok, _} -> result
+        {:ok, _} = result -> result
         _ -> :error
       end
     end
@@ -90,7 +90,7 @@ if match?({:module, Ecto.Type}, Code.ensure_compiled(Ecto.Type)) do
     @doc false
     @impl Ecto.Type
     @spec dump(any) :: {:ok, CronExpression.t()} | :error
-    def dump(cron_expression = %CronExpression{extended: extended}) do
+    def dump(%CronExpression{extended: extended} = cron_expression) do
       {:ok,
        %{
          extended: extended,

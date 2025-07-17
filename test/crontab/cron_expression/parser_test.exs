@@ -3,10 +3,10 @@ defmodule Crontab.CronExpression.ParserTest do
 
   use ExUnit.Case, async: true
 
-  doctest Crontab.CronExpression.Parser
-
-  import Crontab.CronExpression.Parser
   import Crontab.CronExpression
+  import Crontab.CronExpression.Parser
+
+  doctest Crontab.CronExpression.Parser
 
   test ~s(parse "@reboot" gives reboot") do
     assert parse("@reboot") ==

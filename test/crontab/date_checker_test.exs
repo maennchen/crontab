@@ -3,10 +3,10 @@ defmodule Crontab.DateCheckerTest do
 
   use ExUnit.Case, async: true
 
-  doctest Crontab.DateChecker
-
   import Crontab.CronExpression
   import Crontab.DateChecker
+
+  doctest Crontab.DateChecker
 
   test "2002-01-13 23:00:07 matches * * * * *" do
     base_date = ~N[2002-01-13 23:00:07]
