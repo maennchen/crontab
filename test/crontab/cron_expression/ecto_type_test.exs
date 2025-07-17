@@ -26,6 +26,7 @@ if match?({:module, Ecto.Type}, Code.ensure_compiled(Ecto.Type)) do
 
     test "cast/1 CronExpression" do
       assert Type.cast(~e[*]) == {:ok, ~e[*]}
+      assert Type.cast(~e[*]ps) == {:ok, ~e[*]ps}
     end
 
     test "cast/1 other" do
@@ -35,8 +36,22 @@ if match?({:module, Ecto.Type}, Code.ensure_compiled(Ecto.Type)) do
     test "load/1 map" do
       assert Type.load(%{extended: false, expression: "* * * * *"}) == {:ok, ~e[*]}
       assert Type.load(%{extended: true, expression: "* * * * * *"}) == {:ok, ~e[*]e}
+
+      assert Type.load(%{
+               extended: true,
+               expression: "* * * * * *",
+               prior: true,
+               subsequent: true
+             }) == {:ok, ~e[*]eps}
+
       assert Type.load(%{extended: false, expression: "*/9"}) == {:ok, ~e[*/9]}
-      assert Type.load(%{"extended" => false, "expression" => "*/9"}) == {:ok, ~e[*/9]}
+
+      assert Type.load(%{
+               "extended" => false,
+               "expression" => "*/9",
+               "prior" => true,
+               "subsequent" => false
+             }) == {:ok, ~e[*/9]p}
     end
 
     test "load/1 other" do
@@ -44,7 +59,13 @@ if match?({:module, Ecto.Type}, Code.ensure_compiled(Ecto.Type)) do
     end
 
     test "dump/1 CronExpression" do
-      assert Type.dump(~e[*]) == {:ok, %{expression: "* * * * * *", extended: false}}
+      assert Type.dump(~e[*]) ==
+               {:ok,
+                %{expression: "* * * * * *", extended: false, prior: false, subsequent: false}}
+
+      assert Type.dump(~e[*]eps) ==
+               {:ok,
+                %{expression: "* * * * * * *", extended: true, prior: true, subsequent: true}}
     end
 
     test "dump/1 other" do

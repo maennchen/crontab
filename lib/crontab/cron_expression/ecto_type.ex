@@ -60,12 +60,26 @@ if match?({:module, Ecto.Type}, Code.ensure_compiled(Ecto.Type)) do
     @doc false
     @impl Ecto.Type
     @spec load(any) :: {:ok, CronExpression.t()} | :error
-    def load(%{"extended" => extended, "expression" => expression}) do
-      load(%{extended: extended, expression: expression})
+    def load(term = %{"extended" => extended, "expression" => expression}) do
+      load(%{
+        extended: extended,
+        expression: expression,
+        prior: Map.get(term, "prior", false),
+        subsequent: Map.get(term, "subsequent", false)
+      })
     end
 
-    def load(%{extended: extended, expression: expression}) do
-      case Parser.parse(expression, extended) do
+    def load(term = %{extended: extended, expression: expression}) do
+      ambiguity_opts =
+        Enum.reject(
+          [
+            if(term[:prior], do: :prior, else: nil),
+            if(term[:subsequent], do: :subsequent, else: nil)
+          ],
+          &is_nil/1
+        )
+
+      case Parser.parse(expression, extended, ambiguity_opts) do
         result = {:ok, _} -> result
         _ -> :error
       end
@@ -77,7 +91,13 @@ if match?({:module, Ecto.Type}, Code.ensure_compiled(Ecto.Type)) do
     @impl Ecto.Type
     @spec dump(any) :: {:ok, CronExpression.t()} | :error
     def dump(cron_expression = %CronExpression{extended: extended}) do
-      {:ok, %{extended: extended, expression: Composer.compose(cron_expression)}}
+      {:ok,
+       %{
+         extended: extended,
+         expression: Composer.compose(cron_expression),
+         prior: :prior in cron_expression.on_ambiguity,
+         subsequent: :subsequent in cron_expression.on_ambiguity
+       }}
     end
 
     @doc false
