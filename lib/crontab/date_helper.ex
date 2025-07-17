@@ -84,7 +84,7 @@ defmodule Crontab.DateHelper do
   """
   @spec nth_weekday(date :: date, weekday :: Calendar.day_of_week(), n :: pos_integer) ::
           Calendar.day() | nil
-  def nth_weekday(date = %{month: month}, weekday, n),
+  def nth_weekday(%{month: month} = date, weekday, n),
     do: find_nth_weekday(%{date | day: 1}, month, weekday, n)
 
   @doc """
@@ -142,9 +142,9 @@ defmodule Crontab.DateHelper do
 
   """
   @spec inc_year(date) :: date when date: date
-  def inc_year(date = %{month: 2, day: 29}), do: shift(date, 365, :day)
+  def inc_year(%{month: 2, day: 29} = date), do: shift(date, 365, :day)
 
-  def inc_year(date = %{month: month}) do
+  def inc_year(%{month: month} = date) do
     candidate = shift(date, 365, :day)
     date_leap_year_before_mar? = Date.leap_year?(date) and month < 3
     candidate_leap_year_after_feb? = Date.leap_year?(candidate) and month > 2
@@ -165,9 +165,9 @@ defmodule Crontab.DateHelper do
 
   """
   @spec dec_year(date) :: date when date: date
-  def dec_year(date = %{month: 2, day: 29}), do: shift(date, -366, :day)
+  def dec_year(%{month: 2, day: 29} = date), do: shift(date, -366, :day)
 
-  def dec_year(date = %{month: month}) do
+  def dec_year(%{month: month} = date) do
     candidate = shift(date, -365, :day)
     date_leap_year_after_mar? = Date.leap_year?(date) and month > 2
     candidate_leap_year_before_feb? = Date.leap_year?(candidate) and month < 3
@@ -188,9 +188,10 @@ defmodule Crontab.DateHelper do
 
   """
   @spec inc_month(date) :: date when date: date
-  def inc_month(date = %{year: year, month: month, day: day}) do
+  def inc_month(%{year: year, month: month, day: day} = date) do
     days =
-      Date.new!(year, month, day)
+      year
+      |> Date.new!(month, day)
       |> Date.days_in_month()
 
     shift(date, days + 1 - day, :day)
@@ -212,8 +213,8 @@ defmodule Crontab.DateHelper do
 
   """
   @spec dec_month(date) :: date when date: date
-  def dec_month(date = %{year: year, month: month, day: day}) do
-    days_in_last_month = Date.new!(year, month, 1) |> Date.add(-1) |> Date.days_in_month()
+  def dec_month(%{year: year, month: month, day: day} = date) do
+    days_in_last_month = year |> Date.new!(month, 1) |> Date.add(-1) |> Date.days_in_month()
     shift(date, -(day + max(days_in_last_month - day, 0)), :day)
   end
 
@@ -263,7 +264,7 @@ defmodule Crontab.DateHelper do
           weekday :: Calendar.day_of_week(),
           n :: non_neg_integer()
         ) :: Calendar.day() | nil
-  defp find_nth_weekday(date = %{month: month}, month, weekday, n) do
+  defp find_nth_weekday(%{month: month} = date, month, weekday, n) do
     modifier =
       if Date.day_of_week(date) == weekday,
         do: n - 1,
@@ -277,7 +278,7 @@ defmodule Crontab.DateHelper do
   defp find_nth_weekday(_, _, _, _), do: nil
 
   @spec last_weekday_of_month(date :: date(), position :: :end) :: Calendar.day()
-  defp last_weekday_of_month(date = %{day: day}, :end) do
+  defp last_weekday_of_month(%{day: day} = date, :end) do
     if Date.day_of_week(date) > 5 do
       last_weekday_of_month(shift(date, -1, :day), :end)
     else
@@ -287,7 +288,7 @@ defmodule Crontab.DateHelper do
 
   @spec last_weekday(date :: date, weekday :: Calendar.day_of_week(), position :: :end) ::
           Calendar.day()
-  defp last_weekday(date = %{day: day}, weekday, :end) do
+  defp last_weekday(%{day: day} = date, weekday, :end) do
     if Date.day_of_week(date) == weekday do
       day
     else
@@ -299,7 +300,7 @@ defmodule Crontab.DateHelper do
   @spec shift(date, integer, unit, ambiguity_opts) :: date
   def shift(dt, amt, unit, ambiguity_opts \\ [])
 
-  def shift(dt = %NaiveDateTime{}, amt, unit, _), do: NaiveDateTime.add(dt, amt, unit)
+  def shift(%NaiveDateTime{} = dt, amt, unit, _), do: NaiveDateTime.add(dt, amt, unit)
 
   def shift(dt, amt, unit, _) when unit == :day do
     candidate = DateTime.add(dt, amt, unit)
@@ -338,7 +339,7 @@ defmodule Crontab.DateHelper do
   def resolve_ambiguity(false, _, later, _, _, [:prior, :subsequent]), do: later
   def resolve_ambiguity(true, earlier, _, _, _, [:prior]), do: earlier
 
-  def resolve_ambiguity(false, _, later, amt, unit, opts = [:prior]),
+  def resolve_ambiguity(false, _, later, amt, unit, [:prior] = opts),
     do: shift(later, amt, unit, opts)
 
   def resolve_ambiguity(_, _, later, amt, unit, []), do: shift(later, amt, unit, [])

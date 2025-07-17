@@ -3,8 +3,9 @@ defmodule Crontab.DateHelperTest do
 
   use ExUnit.Case, async: true
 
-  doctest Crontab.DateHelper
   alias Crontab.DateHelper
+
+  doctest DateHelper
 
   describe "nth_weekday/3" do
     refute DateHelper.nth_weekday(~N[2024-11-01 00:00:00], 1, 5)
@@ -112,12 +113,9 @@ defmodule Crontab.DateHelperTest do
           {"America/New_York", ~N[2025-11-02 00:59:01], ~N[2025-11-02 01:00:01], [:prior]},
           {"Australia/Lord_Howe", ~N[2025-04-06 01:29:02], ~N[2025-04-06 01:30:02], [:prior]},
           {"Europe/Zurich", ~N[2025-10-26 01:59:03], ~N[2025-10-26 02:00:03], [:prior]},
-          {"America/New_York", ~N[2025-11-02 00:59:01], ~N[2025-11-02 01:00:01],
-           [:prior, :subsequent]},
-          {"Australia/Lord_Howe", ~N[2025-04-06 01:29:02], ~N[2025-04-06 01:30:02],
-           [:prior, :subsequent]},
-          {"Europe/Zurich", ~N[2025-10-26 01:59:03], ~N[2025-10-26 02:00:03],
-           [:prior, :subsequent]}
+          {"America/New_York", ~N[2025-11-02 00:59:01], ~N[2025-11-02 01:00:01], [:prior, :subsequent]},
+          {"Australia/Lord_Howe", ~N[2025-04-06 01:29:02], ~N[2025-04-06 01:30:02], [:prior, :subsequent]},
+          {"Europe/Zurich", ~N[2025-10-26 01:59:03], ~N[2025-10-26 02:00:03], [:prior, :subsequent]}
         ] do
       test "returns daylight time for #{timezone} when opts = #{inspect(opts)}" do
         timezone = unquote(timezone)
@@ -159,12 +157,9 @@ defmodule Crontab.DateHelperTest do
           {"America/New_York", ~N[2025-11-02 01:58:13], ~N[2025-11-02 01:59:13], [:prior]},
           {"Australia/Lord_Howe", ~N[2025-04-06 01:58:14], ~N[2025-04-06 01:59:14], [:prior]},
           {"Europe/Zurich", ~N[2025-10-26 02:58:15], ~N[2025-10-26 02:59:15], [:prior]},
-          {"America/New_York", ~N[2025-11-02 01:58:16], ~N[2025-11-02 01:59:16],
-           [:prior, :subsequent]},
-          {"Australia/Lord_Howe", ~N[2025-04-06 01:58:17], ~N[2025-04-06 01:59:17],
-           [:prior, :subsequent]},
-          {"Europe/Zurich", ~N[2025-10-26 02:58:18], ~N[2025-10-26 02:59:18],
-           [:prior, :subsequent]}
+          {"America/New_York", ~N[2025-11-02 01:58:16], ~N[2025-11-02 01:59:16], [:prior, :subsequent]},
+          {"Australia/Lord_Howe", ~N[2025-04-06 01:58:17], ~N[2025-04-06 01:59:17], [:prior, :subsequent]},
+          {"Europe/Zurich", ~N[2025-10-26 02:58:18], ~N[2025-10-26 02:59:18], [:prior, :subsequent]}
         ] do
       test "returns daylight when shift stays in daylight #{inspect(opts)} #{timezone}" do
         timezone = unquote(timezone)
@@ -176,15 +171,11 @@ defmodule Crontab.DateHelperTest do
 
     for {timezone, given, expected, opts} <- [
           {"America/New_York", ~N[2025-11-02 01:58:19], ~N[2025-11-02 01:59:19], [:subsequent]},
-          {"Australia/Lord_Howe", ~N[2025-04-06 01:58:20], ~N[2025-04-06 01:59:20],
-           [:subsequent]},
+          {"Australia/Lord_Howe", ~N[2025-04-06 01:58:20], ~N[2025-04-06 01:59:20], [:subsequent]},
           {"Europe/Zurich", ~N[2025-10-26 02:58:21], ~N[2025-10-26 02:59:21], [:subsequent]},
-          {"America/New_York", ~N[2025-11-02 01:58:22], ~N[2025-11-02 01:59:22],
-           [:prior, :subsequent]},
-          {"Australia/Lord_Howe", ~N[2025-04-06 01:58:23], ~N[2025-04-06 01:59:23],
-           [:prior, :subsequent]},
-          {"Europe/Zurich", ~N[2025-10-26 02:58:24], ~N[2025-10-26 02:59:24],
-           [:prior, :subsequent]}
+          {"America/New_York", ~N[2025-11-02 01:58:22], ~N[2025-11-02 01:59:22], [:prior, :subsequent]},
+          {"Australia/Lord_Howe", ~N[2025-04-06 01:58:23], ~N[2025-04-06 01:59:23], [:prior, :subsequent]},
+          {"Europe/Zurich", ~N[2025-10-26 02:58:24], ~N[2025-10-26 02:59:24], [:prior, :subsequent]}
         ] do
       test "returns standard when shift stays in standard #{inspect(opts)} #{timezone}" do
         timezone = unquote(timezone)
@@ -196,15 +187,11 @@ defmodule Crontab.DateHelperTest do
 
     for {timezone, given, expected, opts} <- [
           {"America/New_York", ~N[2025-11-02 01:59:25], ~N[2025-11-02 02:00:25], [:subsequent]},
-          {"Australia/Lord_Howe", ~N[2025-04-06 01:59:26], ~N[2025-04-06 02:00:26],
-           [:subsequent]},
+          {"Australia/Lord_Howe", ~N[2025-04-06 01:59:26], ~N[2025-04-06 02:00:26], [:subsequent]},
           {"Europe/Zurich", ~N[2025-10-26 02:59:27], ~N[2025-10-26 03:00:27], [:subsequent]},
-          {"America/New_York", ~N[2025-11-02 01:59:28], ~N[2025-11-02 02:00:28],
-           [:prior, :subsequent]},
-          {"Australia/Lord_Howe", ~N[2025-04-06 01:59:29], ~N[2025-04-06 02:00:29],
-           [:prior, :subsequent]},
-          {"Europe/Zurich", ~N[2025-10-26 02:59:30], ~N[2025-10-26 03:00:30],
-           [:prior, :subsequent]}
+          {"America/New_York", ~N[2025-11-02 01:59:28], ~N[2025-11-02 02:00:28], [:prior, :subsequent]},
+          {"Australia/Lord_Howe", ~N[2025-04-06 01:59:29], ~N[2025-04-06 02:00:29], [:prior, :subsequent]},
+          {"Europe/Zurich", ~N[2025-10-26 02:59:30], ~N[2025-10-26 03:00:30], [:prior, :subsequent]}
         ] do
       test "returns standard when shift to non-ambiguous standard #{inspect(opts)} #{timezone}" do
         timezone = unquote(timezone)

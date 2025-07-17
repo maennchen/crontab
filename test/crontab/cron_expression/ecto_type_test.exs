@@ -4,11 +4,11 @@ if match?({:module, Ecto.Type}, Code.ensure_compiled(Ecto.Type)) do
 
     use ExUnit.Case, async: false
 
-    doctest Crontab.CronExpression.Ecto.Type
+    import Crontab.CronExpression
 
     alias Crontab.CronExpression.Ecto.Type
 
-    import Crontab.CronExpression
+    doctest Type
 
     test "type/0" do
       assert Type.type() == :map
@@ -60,12 +60,10 @@ if match?({:module, Ecto.Type}, Code.ensure_compiled(Ecto.Type)) do
 
     test "dump/1 CronExpression" do
       assert Type.dump(~e[*]) ==
-               {:ok,
-                %{expression: "* * * * * *", extended: false, prior: false, subsequent: false}}
+               {:ok, %{expression: "* * * * * *", extended: false, prior: false, subsequent: false}}
 
       assert Type.dump(~e[*]eps) ==
-               {:ok,
-                %{expression: "* * * * * * *", extended: true, prior: true, subsequent: true}}
+               {:ok, %{expression: "* * * * * * *", extended: true, prior: true, subsequent: true}}
     end
 
     test "dump/1 other" do

@@ -5,6 +5,7 @@ defmodule Crontab.Scheduler do
   """
 
   import Crontab.DateChecker
+
   alias Crontab.CronExpression
   alias Crontab.DateHelper
 
@@ -26,10 +27,13 @@ defmodule Crontab.Scheduler do
       iex> Crontab.Scheduler.get_next_run_date(%Crontab.CronExpression{}, ~N[2002-01-13 23:00:07])
       {:ok, ~N[2002-01-13 23:01:00]}
 
-      iex> Crontab.Scheduler.get_next_run_date(%Crontab.CronExpression{year: [{:/, :*, 9}]}, ~N[2002-01-13 23:00:07])
+      iex> Crontab.Scheduler.get_next_run_date(
+      ...>   %Crontab.CronExpression{year: [{:/, :*, 9}]},
+      ...>   ~N[2002-01-13 23:00:07]
+      ...> )
       {:ok, ~N[2007-01-01 00:00:00]}
 
-      iex> Crontab.Scheduler.get_next_run_date %Crontab.CronExpression{reboot: true}
+      iex> Crontab.Scheduler.get_next_run_date(%Crontab.CronExpression{reboot: true})
       ** (RuntimeError) Special identifier @reboot is not supported.
 
   """
@@ -40,7 +44,7 @@ defmodule Crontab.Scheduler do
     do: raise("Special identifier @reboot is not supported.")
 
   def get_next_run_date(
-        cron_expression = %CronExpression{extended: false, on_ambiguity: ambiguity_opts},
+        %CronExpression{extended: false, on_ambiguity: ambiguity_opts} = cron_expression,
         date,
         max_runs
       ) do
@@ -52,12 +56,12 @@ defmodule Crontab.Scheduler do
            ambiguity_opts
          ) do
       {:ok, date} -> {:ok, date}
-      error = {:error, _} -> error
+      {:error, _} = error -> error
     end
   end
 
   def get_next_run_date(
-        cron_expression = %CronExpression{extended: true, on_ambiguity: ambiguity_opts},
+        %CronExpression{extended: true, on_ambiguity: ambiguity_opts} = cron_expression,
         date,
         max_runs
       ) do
@@ -79,13 +83,19 @@ defmodule Crontab.Scheduler do
       iex> Crontab.Scheduler.get_next_run_date!(%Crontab.CronExpression{}, ~N[2002-01-13 23:00:07])
       ~N[2002-01-13 23:01:00]
 
-      iex> Crontab.Scheduler.get_next_run_date!(%Crontab.CronExpression{year: [1990]}, ~N[2002-01-13 23:00:07])
+      iex> Crontab.Scheduler.get_next_run_date!(
+      ...>   %Crontab.CronExpression{year: [1990]},
+      ...>   ~N[2002-01-13 23:00:07]
+      ...> )
       ** (RuntimeError) No compliant date was found for your interval.
 
-      iex> Crontab.Scheduler.get_next_run_date!(%Crontab.CronExpression{year: [{:/, :*, 9}]}, ~N[2002-01-13 23:00:07])
+      iex> Crontab.Scheduler.get_next_run_date!(
+      ...>   %Crontab.CronExpression{year: [{:/, :*, 9}]},
+      ...>   ~N[2002-01-13 23:00:07]
+      ...> )
       ~N[2007-01-01 00:00:00]
 
-      iex> Crontab.Scheduler.get_next_run_date! %Crontab.CronExpression{reboot: true}
+      iex> Crontab.Scheduler.get_next_run_date!(%Crontab.CronExpression{reboot: true})
       ** (RuntimeError) Special identifier @reboot is not supported.
 
   """
@@ -102,23 +112,45 @@ defmodule Crontab.Scheduler do
 
   ## Examples
 
-      iex> Enum.take(Crontab.Scheduler.get_next_run_dates(
-      ...>  %Crontab.CronExpression{extended: true}, ~N[2016-12-17 00:00:00]), 3)
+      iex> Enum.take(
+      ...>   Crontab.Scheduler.get_next_run_dates(
+      ...>     %Crontab.CronExpression{extended: true},
+      ...>     ~N[2016-12-17 00:00:00]
+      ...>   ),
+      ...>   3
+      ...> )
       [
         ~N[2016-12-17 00:00:00],
         ~N[2016-12-17 00:00:01],
         ~N[2016-12-17 00:00:02]
       ]
 
-      iex> Enum.take(Crontab.Scheduler.get_next_run_dates(%Crontab.CronExpression{}, ~N[2016-12-17 00:00:00]), 3)
+      iex> Enum.take(
+      ...>   Crontab.Scheduler.get_next_run_dates(
+      ...>     %Crontab.CronExpression{},
+      ...>     ~N[2016-12-17 00:00:00]
+      ...>   ),
+      ...>   3
+      ...> )
       [
         ~N[2016-12-17 00:00:00],
         ~N[2016-12-17 00:01:00],
         ~N[2016-12-17 00:02:00]
       ]
 
-      iex> Enum.take(Crontab.Scheduler.get_next_run_dates(%Crontab.CronExpression{
-      ...>   year: [2017], month: [1], day: [1], hour: [0], minute: [1]}, ~N[2016-12-17 00:00:00]), 3)
+      iex> Enum.take(
+      ...>   Crontab.Scheduler.get_next_run_dates(
+      ...>     %Crontab.CronExpression{
+      ...>       year: [2017],
+      ...>       month: [1],
+      ...>       day: [1],
+      ...>       hour: [0],
+      ...>       minute: [1]
+      ...>     },
+      ...>     ~N[2016-12-17 00:00:00]
+      ...>   ),
+      ...>   3
+      ...> )
       [~N[2017-01-01 00:01:00]]
 
       iex> Enum.take(Crontab.Scheduler.get_next_run_dates(%Crontab.CronExpression{reboot: true}), 3)
@@ -128,10 +160,10 @@ defmodule Crontab.Scheduler do
   @spec get_next_run_dates(CronExpression.t(), date) :: Enumerable.t()
   def get_next_run_dates(cron_expression, date \\ NaiveDateTime.utc_now())
 
-  def get_next_run_dates(cron_expr = %CronExpression{extended: false, on_ambiguity: opts}, date),
+  def get_next_run_dates(%CronExpression{extended: false, on_ambiguity: opts} = cron_expr, date),
     do: _get_next_run_dates(cron_expr, date, &DateHelper.shift(&1, 1, :minute, opts))
 
-  def get_next_run_dates(cron_expr = %CronExpression{extended: true, on_ambiguity: opts}, date),
+  def get_next_run_dates(%CronExpression{extended: true, on_ambiguity: opts} = cron_expr, date),
     do: _get_next_run_dates(cron_expr, date, &DateHelper.shift(&1, 1, :second, opts))
 
   @spec _get_next_run_dates(CronExpression.t(), date(), function) :: Enumerable.t()
@@ -150,14 +182,21 @@ defmodule Crontab.Scheduler do
 
   ## Examples
 
-      iex> Crontab.Scheduler.get_previous_run_date %Crontab.CronExpression{}, ~N[2002-01-13 23:00:07]
+      iex> Crontab.Scheduler.get_previous_run_date(
+      ...>   %Crontab.CronExpression{},
+      ...>   ~N[2002-01-13 23:00:07]
+      ...> )
       {:ok, ~N[2002-01-13 23:00:00]}
 
-      iex> Crontab.Scheduler.get_previous_run_date %Crontab.CronExpression{
-      ...> year: [{:/, :*, 9}]}, ~N[2002-01-13 23:00:07]
+      iex> Crontab.Scheduler.get_previous_run_date(
+      ...>   %Crontab.CronExpression{
+      ...>     year: [{:/, :*, 9}]
+      ...>   },
+      ...>   ~N[2002-01-13 23:00:07]
+      ...> )
       {:ok, ~N[1998-12-31 23:59:00]}
 
-      iex> Crontab.Scheduler.get_previous_run_date %Crontab.CronExpression{reboot: true}
+      iex> Crontab.Scheduler.get_previous_run_date(%Crontab.CronExpression{reboot: true})
       ** (RuntimeError) Special identifier @reboot is not supported.
 
   """
@@ -168,18 +207,18 @@ defmodule Crontab.Scheduler do
     do: raise("Special identifier @reboot is not supported.")
 
   def get_previous_run_date(
-        cron_expr = %CronExpression{extended: false, on_ambiguity: ambiguity_opts},
+        %CronExpression{extended: false, on_ambiguity: ambiguity_opts} = cron_expr,
         date,
         max_runs
       ) do
     case get_run_date(cron_expr, date, max_runs, :decrement, ambiguity_opts) do
       {:ok, date} -> {:ok, DateHelper.beginning_of(date, :minute)}
-      error = {:error, _} -> error
+      {:error, _} = error -> error
     end
   end
 
   def get_previous_run_date(
-        cron_expr = %CronExpression{extended: true, on_ambiguity: ambiguity_opts},
+        %CronExpression{extended: true, on_ambiguity: ambiguity_opts} = cron_expr,
         date,
         max_runs
       ) do
@@ -192,17 +231,27 @@ defmodule Crontab.Scheduler do
 
   ## Examples
 
-      iex> Crontab.Scheduler.get_previous_run_date! %Crontab.CronExpression{}, ~N[2002-01-13 23:00:07]
+      iex> Crontab.Scheduler.get_previous_run_date!(
+      ...>   %Crontab.CronExpression{},
+      ...>   ~N[2002-01-13 23:00:07]
+      ...> )
       ~N[2002-01-13 23:00:00]
 
-      iex> Crontab.Scheduler.get_previous_run_date!(%Crontab.CronExpression{year: [2100]}, ~N[2002-01-13 23:00:07])
+      iex> Crontab.Scheduler.get_previous_run_date!(
+      ...>   %Crontab.CronExpression{year: [2100]},
+      ...>   ~N[2002-01-13 23:00:07]
+      ...> )
       ** (RuntimeError) No compliant date was found for your interval.
 
-      iex> Crontab.Scheduler.get_previous_run_date! %Crontab.CronExpression{
-      ...> year: [{:/, :*, 9}]}, ~N[2002-01-13 23:00:07]
+      iex> Crontab.Scheduler.get_previous_run_date!(
+      ...>   %Crontab.CronExpression{
+      ...>     year: [{:/, :*, 9}]
+      ...>   },
+      ...>   ~N[2002-01-13 23:00:07]
+      ...> )
       ~N[1998-12-31 23:59:00]
 
-      iex> Crontab.Scheduler.get_previous_run_date! %Crontab.CronExpression{reboot: true}
+      iex> Crontab.Scheduler.get_previous_run_date!(%Crontab.CronExpression{reboot: true})
       ** (RuntimeError) Special identifier @reboot is not supported.
 
   """
@@ -223,26 +272,51 @@ defmodule Crontab.Scheduler do
 
   ## Examples
 
-      iex> Enum.take(Crontab.Scheduler.get_previous_run_dates(
-      ...>   %Crontab.CronExpression{extended: true}, ~N[2016-12-17 00:00:00]), 3)
+      iex> Enum.take(
+      ...>   Crontab.Scheduler.get_previous_run_dates(
+      ...>     %Crontab.CronExpression{extended: true},
+      ...>     ~N[2016-12-17 00:00:00]
+      ...>   ),
+      ...>   3
+      ...> )
       [
         ~N[2016-12-17 00:00:00],
         ~N[2016-12-16 23:59:59],
         ~N[2016-12-16 23:59:58]
       ]
 
-      iex> Enum.take(Crontab.Scheduler.get_previous_run_dates(%Crontab.CronExpression{}, ~N[2016-12-17 00:00:00]), 3)
+      iex> Enum.take(
+      ...>   Crontab.Scheduler.get_previous_run_dates(
+      ...>     %Crontab.CronExpression{},
+      ...>     ~N[2016-12-17 00:00:00]
+      ...>   ),
+      ...>   3
+      ...> )
       [
         ~N[2016-12-17 00:00:00],
         ~N[2016-12-16 23:59:00],
         ~N[2016-12-16 23:58:00]
       ]
 
-      iex> Enum.take(Crontab.Scheduler.get_previous_run_dates(%Crontab.CronExpression{
-      ...>   year: [2017], month: [1], day: [1], hour: [0], minute: [1]}, ~N[2016-12-17 00:00:00]), 3)
+      iex> Enum.take(
+      ...>   Crontab.Scheduler.get_previous_run_dates(
+      ...>     %Crontab.CronExpression{
+      ...>       year: [2017],
+      ...>       month: [1],
+      ...>       day: [1],
+      ...>       hour: [0],
+      ...>       minute: [1]
+      ...>     },
+      ...>     ~N[2016-12-17 00:00:00]
+      ...>   ),
+      ...>   3
+      ...> )
       []
 
-      iex> Enum.take(Crontab.Scheduler.get_previous_run_dates(%Crontab.CronExpression{reboot: true}), 3)
+      iex> Enum.take(
+      ...>   Crontab.Scheduler.get_previous_run_dates(%Crontab.CronExpression{reboot: true}),
+      ...>   3
+      ...> )
       ** (RuntimeError) Special identifier @reboot is not supported.
 
   """
@@ -250,14 +324,14 @@ defmodule Crontab.Scheduler do
   def get_previous_run_dates(cron_expression, date \\ NaiveDateTime.utc_now())
 
   def get_previous_run_dates(
-        cron_expr = %CronExpression{extended: false, on_ambiguity: ambiguity_opts},
+        %CronExpression{extended: false, on_ambiguity: ambiguity_opts} = cron_expr,
         date
       ) do
     _get_previous_run_dates(cron_expr, date, &DateHelper.shift(&1, -1, :minute, ambiguity_opts))
   end
 
   def get_previous_run_dates(
-        cron_expression = %CronExpression{extended: true, on_ambiguity: ambiguity_opts},
+        %CronExpression{extended: true, on_ambiguity: ambiguity_opts} = cron_expression,
         date
       ) do
     _get_previous_run_dates(
@@ -289,7 +363,7 @@ defmodule Crontab.Scheduler do
   end
 
   defp get_run_date(
-         cron_expression = %CronExpression{extended: false},
+         %CronExpression{extended: false} = cron_expression,
          date,
          max_runs,
          direction,
@@ -303,7 +377,7 @@ defmodule Crontab.Scheduler do
   end
 
   defp get_run_date(
-         cron_expression = %CronExpression{extended: true},
+         %CronExpression{extended: true} = cron_expression,
          date,
          max_runs,
          direction,
@@ -434,8 +508,7 @@ defmodule Crontab.Scheduler do
        |> DateHelper.end_of(:day)
        |> DateHelper.beginning_of(:second)}
 
-  defp correct_date(:year, %{year: 0}, :decrement, _),
-    do: {:error, :lower_bound}
+  defp correct_date(:year, %{year: 0}, :decrement, _), do: {:error, :lower_bound}
 
   defp correct_date(:year, date, :decrement, _ambiguity_opts),
     do:
@@ -446,7 +519,7 @@ defmodule Crontab.Scheduler do
        |> DateHelper.beginning_of(:second)}
 
   @spec clean_date(date, :seconds | :microseconds, ambiguity_opts) :: date
-  defp clean_date(date = %{microsecond: {0, _}}, :microseconds, _), do: date
+  defp clean_date(%{microsecond: {0, _}} = date, :microseconds, _), do: date
 
   defp clean_date(date, :microseconds, ambiguity_opts) do
     date

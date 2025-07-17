@@ -3,9 +3,9 @@ defmodule Crontab.SchedulerTest do
 
   use ExUnit.Case, async: true
 
-  doctest Crontab.Scheduler
-
   import Crontab.Scheduler
+
+  doctest Crontab.Scheduler
 
   test "check cron expression for year" do
     assert get_next_run_date(

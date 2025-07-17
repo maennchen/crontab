@@ -69,17 +69,33 @@ defmodule Crontab.CronExpression.Parser do
 
   ## Examples
 
-      iex> Crontab.CronExpression.Parser.parse "* * * * *"
+      iex> Crontab.CronExpression.Parser.parse("* * * * *")
       {:ok,
-        %Crontab.CronExpression{day: [:*], hour: [:*], minute: [:*],
-        month: [:*], weekday: [:*], year: [:*], on_ambiguity: []}}
+       %Crontab.CronExpression{
+         day: [:*],
+         hour: [:*],
+         minute: [:*],
+         month: [:*],
+         weekday: [:*],
+         year: [:*],
+         on_ambiguity: []
+       }}
 
-      iex> Crontab.CronExpression.Parser.parse "* * * * *", true
+      iex> Crontab.CronExpression.Parser.parse("* * * * *", true)
       {:ok,
-        %Crontab.CronExpression{extended: true, day: [:*], hour: [:*], minute: [:*],
-        month: [:*], weekday: [:*], year: [:*], second: [:*], on_ambiguity: []}}
+       %Crontab.CronExpression{
+         extended: true,
+         day: [:*],
+         hour: [:*],
+         minute: [:*],
+         month: [:*],
+         weekday: [:*],
+         year: [:*],
+         second: [:*],
+         on_ambiguity: []
+       }}
 
-      iex> Crontab.CronExpression.Parser.parse "fooo"
+      iex> Crontab.CronExpression.Parser.parse("fooo")
       {:error, "Can't parse fooo as minute."}
 
   """
@@ -104,15 +120,31 @@ defmodule Crontab.CronExpression.Parser do
 
   ## Examples
 
-      iex> Crontab.CronExpression.Parser.parse! "* * * * *"
-      %Crontab.CronExpression{day: [:*], hour: [:*], minute: [:*],
-        month: [:*], weekday: [:*], year: [:*], on_ambiguity: []}
+      iex> Crontab.CronExpression.Parser.parse!("* * * * *")
+      %Crontab.CronExpression{
+        day: [:*],
+        hour: [:*],
+        minute: [:*],
+        month: [:*],
+        weekday: [:*],
+        year: [:*],
+        on_ambiguity: []
+      }
 
-      iex> Crontab.CronExpression.Parser.parse! "* * * * *", true
-      %Crontab.CronExpression{extended: true, day: [:*], hour: [:*], minute: [:*],
-        month: [:*], weekday: [:*], year: [:*], second: [:*], on_ambiguity: []}
+      iex> Crontab.CronExpression.Parser.parse!("* * * * *", true)
+      %Crontab.CronExpression{
+        extended: true,
+        day: [:*],
+        hour: [:*],
+        minute: [:*],
+        month: [:*],
+        weekday: [:*],
+        year: [:*],
+        second: [:*],
+        on_ambiguity: []
+      }
 
-      iex> Crontab.CronExpression.Parser.parse! "fooo"
+      iex> Crontab.CronExpression.Parser.parse!("fooo")
       ** (RuntimeError) Can't parse fooo as minute.
 
   """
@@ -192,8 +224,8 @@ defmodule Crontab.CronExpression.Parser do
       [min, max] ->
         case {clean_value(interval, min), clean_value(interval, max)} do
           {{:ok, min_value}, {:ok, max_value}} -> {:ok, {:-, min_value, max_value}}
-          {error = {:error, _}, _} -> error
-          {_, error = {:error, _}} -> error
+          {{:error, _} = error, _} -> error
+          {_, {:error, _} = error} -> error
         end
 
       _ ->
@@ -236,7 +268,7 @@ defmodule Crontab.CronExpression.Parser do
         tokenize(interval, :complex_divider, "#{num}-#{max_value}/#{clean_divider}")
 
       # No valid range or single postive integer found
-      {error = {:error, _}, _, _} ->
+      {{:error, _} = error, _, _} ->
         error
     end
   end
@@ -397,7 +429,7 @@ defmodule Crontab.CronExpression.Parser do
           error -> error
         end
 
-      error = {:error, _} ->
+      {:error, _} = error ->
         error
     end
   end
@@ -418,7 +450,7 @@ defmodule Crontab.CronExpression.Parser do
             error
         end
 
-      error = {:error, _} ->
+      {:error, _} = error ->
         error
     end
   end

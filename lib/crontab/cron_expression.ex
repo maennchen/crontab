@@ -125,7 +125,8 @@ defmodule Crontab.CronExpression do
         day: [:*],
         month: [:*],
         weekday: [:*],
-        year: [:*]}
+        year: [:*]
+      }
 
       iex> ~e[*]ep
       %Crontab.CronExpression{
@@ -137,7 +138,8 @@ defmodule Crontab.CronExpression do
         day: [:*],
         month: [:*],
         weekday: [:*],
-        year: [:*]}
+        year: [:*]
+      }
 
       iex> ~e[1 2 3 4 5 6 7]eps
       %Crontab.CronExpression{
@@ -149,7 +151,8 @@ defmodule Crontab.CronExpression do
         day: [4],
         month: [5],
         weekday: [6],
-        year: [7]}
+        year: [7]
+      }
 
       iex> ~e[1 2 3 4 5 6 7]e
       %Crontab.CronExpression{
@@ -161,7 +164,8 @@ defmodule Crontab.CronExpression do
         day: [4],
         month: [5],
         weekday: [6],
-        year: [7]}
+        year: [7]
+      }
   """
   @spec sigil_e(binary, charlist) :: t
   def sigil_e(cron_expression, options \\ [?l]) do
@@ -182,30 +186,48 @@ defmodule Crontab.CronExpression do
 
   ## Examples
 
-      iex> Crontab.CronExpression.to_condition_list %Crontab.CronExpression{
-      ...> minute: [1], hour: [2], day: [3], month: [4], weekday: [5], year: [6]}
-      [ {:minute, [1]},
-        {:hour, [2]},
-        {:day, [3]},
-        {:month, [4]},
-        {:weekday, [5]},
-        {:year, [6]},
-        {:ambiguity_opts, []}]
-
-      iex> Crontab.CronExpression.to_condition_list %Crontab.CronExpression{
-      ...> extended: true, second: [0], minute: [1], hour: [2], day: [3], month: [4], weekday: [5], year: [6]}
-      [ {:second, [0]},
+      iex> Crontab.CronExpression.to_condition_list(%Crontab.CronExpression{
+      ...>   minute: [1],
+      ...>   hour: [2],
+      ...>   day: [3],
+      ...>   month: [4],
+      ...>   weekday: [5],
+      ...>   year: [6]
+      ...> })
+      [
         {:minute, [1]},
         {:hour, [2]},
         {:day, [3]},
         {:month, [4]},
         {:weekday, [5]},
         {:year, [6]},
-        {:ambiguity_opts, []}]
+        {:ambiguity_opts, []}
+      ]
+
+      iex> Crontab.CronExpression.to_condition_list(%Crontab.CronExpression{
+      ...>   extended: true,
+      ...>   second: [0],
+      ...>   minute: [1],
+      ...>   hour: [2],
+      ...>   day: [3],
+      ...>   month: [4],
+      ...>   weekday: [5],
+      ...>   year: [6]
+      ...> })
+      [
+        {:second, [0]},
+        {:minute, [1]},
+        {:hour, [2]},
+        {:day, [3]},
+        {:month, [4]},
+        {:weekday, [5]},
+        {:year, [6]},
+        {:ambiguity_opts, []}
+      ]
 
   """
   @spec to_condition_list(t) :: condition_list
-  def to_condition_list(interval = %__MODULE__{extended: false}) do
+  def to_condition_list(%__MODULE__{extended: false} = interval) do
     [
       {:minute, interval.minute},
       {:hour, interval.hour},
@@ -217,7 +239,7 @@ defmodule Crontab.CronExpression do
     ]
   end
 
-  def to_condition_list(interval = %__MODULE__{}) do
+  def to_condition_list(%__MODULE__{} = interval) do
     [{:second, interval.second} | to_condition_list(%{interval | extended: false})]
   end
 
@@ -230,19 +252,19 @@ defmodule Crontab.CronExpression do
 
     ## Examples
 
-        iex> IO.inspect %Crontab.CronExpression{}
+        iex> IO.inspect(%Crontab.CronExpression{})
         ~e[* * * * * *]
 
         iex> import Crontab.CronExpression
-        iex> IO.inspect %Crontab.CronExpression{extended: true}
+        ...> IO.inspect(%Crontab.CronExpression{extended: true})
         ~e[* * * * * * *]e
 
         iex> import Crontab.CronExpression
-        iex> IO.inspect %Crontab.CronExpression{extended: true, on_ambiguity: [:prior, :subsequent]}
+        ...> IO.inspect(%Crontab.CronExpression{extended: true, on_ambiguity: [:prior, :subsequent]})
         ~e[* * * * * * *]eps
     """
     @spec inspect(CronExpression.t(), any) :: String.t()
-    def inspect(cron_expression = %CronExpression{}, _options) do
+    def inspect(%CronExpression{} = cron_expression, _options) do
       prior = if(:prior in cron_expression.on_ambiguity, do: "p", else: "")
       subsequent = if(:subsequent in cron_expression.on_ambiguity, do: "s", else: "")
       extended = if(cron_expression.extended, do: "e", else: "")

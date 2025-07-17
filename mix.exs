@@ -38,12 +38,14 @@ defmodule Crontab.Mixfile do
 
   defp deps do
     [
+      {:doctest_formatter, "~> 0.4.0", only: [:dev, :test], runtime: false},
       {:ecto, "~> 1.0 or ~> 2.0 or ~> 3.0", optional: true},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:excoveralls, "~> 0.5", only: [:test], runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:credo, "~> 1.0", only: [:dev], runtime: false},
       {:mix_test_watch, "~> 1.1", only: [:dev, :test], runtime: false},
+      {:styler, "~> 1.5", only: [:dev, :test], runtime: false},
       {:tz, "~> 0.26", only: [:dev, :test]}
     ]
   end
