@@ -55,6 +55,8 @@ defmodule Crontab.CronExpression.Composer do
     compose_interval(tail, opts)
   end
 
+  defp compose_interval([{:ambiguity_opts, _} | tail], opts), do: compose_interval(tail, opts)
+
   defp compose_interval([{_, conditions} | tail], opts) do
     [
       Enum.map_join(conditions, ",", fn condition -> compose_condition(condition) end)

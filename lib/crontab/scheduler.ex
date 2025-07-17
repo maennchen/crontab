@@ -9,9 +9,11 @@ defmodule Crontab.Scheduler do
   alias Crontab.DateHelper
 
   @typep maybe(success, error) :: {:ok, success} | {:error, error}
+  @typep ambiguity_opts :: [CronExpression.ambiguity_opt()]
 
+  @type date :: DateTime.t() | NaiveDateTime.t()
   @type direction :: :increment | :decrement
-  @type result :: maybe(NaiveDateTime.t(), any)
+  @type result :: maybe(date, any)
 
   @max_runs Application.compile_env(:crontab, :max_runs, 10_000)
 
@@ -31,25 +33,41 @@ defmodule Crontab.Scheduler do
       ** (RuntimeError) Special identifier @reboot is not supported.
 
   """
-  @spec get_next_run_date(CronExpression.t(), NaiveDateTime.t(), integer) :: result
-  def get_next_run_date(
-        cron_expression,
-        date \\ DateTime.to_naive(DateTime.utc_now()),
-        max_runs \\ @max_runs
-      )
+  @spec get_next_run_date(CronExpression.t(), date, integer) :: result
+  def get_next_run_date(cron_expression, date \\ NaiveDateTime.utc_now(), max_runs \\ @max_runs)
 
   def get_next_run_date(%CronExpression{reboot: true}, _, _),
     do: raise("Special identifier @reboot is not supported.")
 
-  def get_next_run_date(cron_expression = %CronExpression{extended: false}, date, max_runs) do
-    case get_run_date(cron_expression, clean_date(date, :seconds), max_runs, :increment) do
+  def get_next_run_date(
+        cron_expression = %CronExpression{extended: false, on_ambiguity: ambiguity_opts},
+        date,
+        max_runs
+      ) do
+    case get_run_date(
+           cron_expression,
+           clean_date(date, :seconds, ambiguity_opts),
+           max_runs,
+           :increment,
+           ambiguity_opts
+         ) do
       {:ok, date} -> {:ok, date}
       error = {:error, _} -> error
     end
   end
 
-  def get_next_run_date(cron_expression = %CronExpression{extended: true}, date, max_runs) do
-    get_run_date(cron_expression, clean_date(date, :microseconds), max_runs, :increment)
+  def get_next_run_date(
+        cron_expression = %CronExpression{extended: true, on_ambiguity: ambiguity_opts},
+        date,
+        max_runs
+      ) do
+    get_run_date(
+      cron_expression,
+      clean_date(date, :microseconds, ambiguity_opts),
+      max_runs,
+      :increment,
+      ambiguity_opts
+    )
   end
 
   @doc """
@@ -71,12 +89,8 @@ defmodule Crontab.Scheduler do
       ** (RuntimeError) Special identifier @reboot is not supported.
 
   """
-  @spec get_next_run_date!(CronExpression.t(), NaiveDateTime.t(), integer) :: NaiveDateTime.t()
-  def get_next_run_date!(
-        cron_expression,
-        date \\ DateTime.to_naive(DateTime.utc_now()),
-        max_runs \\ @max_runs
-      ) do
+  @spec get_next_run_date!(CronExpression.t(), date, integer) :: date
+  def get_next_run_date!(cron_expression, date \\ NaiveDateTime.utc_now(), max_runs \\ @max_runs) do
     case get_next_run_date(cron_expression, date, max_runs) do
       {:ok, result} -> result
       {:error, error} -> raise error
@@ -111,18 +125,16 @@ defmodule Crontab.Scheduler do
       ** (RuntimeError) Special identifier @reboot is not supported.
 
   """
-  @spec get_next_run_dates(CronExpression.t(), NaiveDateTime.t()) :: Enumerable.t()
-  def get_next_run_dates(cron_expression, date \\ DateTime.to_naive(DateTime.utc_now()))
+  @spec get_next_run_dates(CronExpression.t(), date) :: Enumerable.t()
+  def get_next_run_dates(cron_expression, date \\ NaiveDateTime.utc_now())
 
-  def get_next_run_dates(cron_expression = %CronExpression{extended: false}, date) do
-    _get_next_run_dates(cron_expression, date, fn date -> NaiveDateTime.add(date, 1, :minute) end)
-  end
+  def get_next_run_dates(cron_expr = %CronExpression{extended: false, on_ambiguity: opts}, date),
+    do: _get_next_run_dates(cron_expr, date, &DateHelper.shift(&1, 1, :minute, opts))
 
-  def get_next_run_dates(cron_expression = %CronExpression{extended: true}, date) do
-    _get_next_run_dates(cron_expression, date, fn date -> NaiveDateTime.add(date, 1, :second) end)
-  end
+  def get_next_run_dates(cron_expr = %CronExpression{extended: true, on_ambiguity: opts}, date),
+    do: _get_next_run_dates(cron_expr, date, &DateHelper.shift(&1, 1, :second, opts))
 
-  @spec _get_next_run_dates(CronExpression.t(), NaiveDateTime.t(), function) :: Enumerable.t()
+  @spec _get_next_run_dates(CronExpression.t(), date(), function) :: Enumerable.t()
   defp _get_next_run_dates(cron_expression, date, advance_date) do
     Stream.unfold(date, fn previous_date ->
       case get_next_run_date(cron_expression, previous_date) do
@@ -149,25 +161,29 @@ defmodule Crontab.Scheduler do
       ** (RuntimeError) Special identifier @reboot is not supported.
 
   """
-  @spec get_previous_run_date(CronExpression.t(), NaiveDateTime.t(), integer) :: result
-  def get_previous_run_date(
-        cron_expression,
-        date \\ DateTime.to_naive(DateTime.utc_now()),
-        max_runs \\ @max_runs
-      )
+  @spec get_previous_run_date(CronExpression.t(), date, integer) :: result
+  def get_previous_run_date(cron_expr, date \\ NaiveDateTime.utc_now(), max_runs \\ @max_runs)
 
   def get_previous_run_date(%CronExpression{reboot: true}, _, _),
     do: raise("Special identifier @reboot is not supported.")
 
-  def get_previous_run_date(cron_expression = %CronExpression{extended: false}, date, max_runs) do
-    case get_run_date(cron_expression, date, max_runs, :decrement) do
+  def get_previous_run_date(
+        cron_expr = %CronExpression{extended: false, on_ambiguity: ambiguity_opts},
+        date,
+        max_runs
+      ) do
+    case get_run_date(cron_expr, date, max_runs, :decrement, ambiguity_opts) do
       {:ok, date} -> {:ok, DateHelper.beginning_of(date, :minute)}
       error = {:error, _} -> error
     end
   end
 
-  def get_previous_run_date(cron_expression = %CronExpression{extended: true}, date, max_runs) do
-    get_run_date(cron_expression, date, max_runs, :decrement)
+  def get_previous_run_date(
+        cron_expr = %CronExpression{extended: true, on_ambiguity: ambiguity_opts},
+        date,
+        max_runs
+      ) do
+    get_run_date(cron_expr, date, max_runs, :decrement, ambiguity_opts)
   end
 
   @doc """
@@ -190,11 +206,10 @@ defmodule Crontab.Scheduler do
       ** (RuntimeError) Special identifier @reboot is not supported.
 
   """
-  @spec get_previous_run_date!(CronExpression.t(), NaiveDateTime.t(), integer) ::
-          NaiveDateTime.t()
+  @spec get_previous_run_date!(CronExpression.t(), date, integer) :: date
   def get_previous_run_date!(
         cron_expression,
-        date \\ DateTime.to_naive(DateTime.utc_now()),
+        date \\ NaiveDateTime.utc_now(),
         max_runs \\ @max_runs
       ) do
     case get_previous_run_date(cron_expression, date, max_runs) do
@@ -231,19 +246,25 @@ defmodule Crontab.Scheduler do
       ** (RuntimeError) Special identifier @reboot is not supported.
 
   """
-  @spec get_previous_run_dates(CronExpression.t(), NaiveDateTime.t()) :: Enumerable.t()
-  def get_previous_run_dates(cron_expression, date \\ DateTime.to_naive(DateTime.utc_now()))
+  @spec get_previous_run_dates(CronExpression.t(), date) :: Enumerable.t()
+  def get_previous_run_dates(cron_expression, date \\ NaiveDateTime.utc_now())
 
-  def get_previous_run_dates(cron_expression = %CronExpression{extended: false}, date) do
-    _get_previous_run_dates(cron_expression, date, fn date ->
-      NaiveDateTime.add(date, -1, :minute)
-    end)
+  def get_previous_run_dates(
+        cron_expr = %CronExpression{extended: false, on_ambiguity: ambiguity_opts},
+        date
+      ) do
+    _get_previous_run_dates(cron_expr, date, &DateHelper.shift(&1, -1, :minute, ambiguity_opts))
   end
 
-  def get_previous_run_dates(cron_expression = %CronExpression{extended: true}, date) do
-    _get_previous_run_dates(cron_expression, date, fn date ->
-      NaiveDateTime.add(date, -1, :second)
-    end)
+  def get_previous_run_dates(
+        cron_expression = %CronExpression{extended: true, on_ambiguity: ambiguity_opts},
+        date
+      ) do
+    _get_previous_run_dates(
+      cron_expression,
+      date,
+      &DateHelper.shift(&1, -1, :second, ambiguity_opts)
+    )
   end
 
   @spec _get_previous_run_dates(CronExpression.t(), NaiveDateTime.t(), function) :: Enumerable.t()
@@ -258,30 +279,45 @@ defmodule Crontab.Scheduler do
 
   @spec get_run_date(
           CronExpression.t() | CronExpression.condition_list(),
-          NaiveDateTime.t(),
+          date,
           integer,
-          direction
+          direction,
+          ambiguity_opts
         ) :: result
-  defp get_run_date(_, _, 0, _) do
+  defp get_run_date(_, _, 0, _, _) do
     {:error, "No compliant date was found for your interval."}
   end
 
-  defp get_run_date(cron_expression = %CronExpression{extended: false}, date, max_runs, direction) do
+  defp get_run_date(
+         cron_expression = %CronExpression{extended: false},
+         date,
+         max_runs,
+         direction,
+         ambiguity_opts
+       ) do
     cron_expression
     |> CronExpression.to_condition_list()
+    |> Keyword.delete(:ambiguity_opts)
     |> Enum.reverse()
-    |> get_run_date(DateHelper.beginning_of(date, :minute), max_runs, direction)
+    |> get_run_date(DateHelper.beginning_of(date, :minute), max_runs, direction, ambiguity_opts)
   end
 
-  defp get_run_date(cron_expression = %CronExpression{extended: true}, date, max_runs, direction) do
+  defp get_run_date(
+         cron_expression = %CronExpression{extended: true},
+         date,
+         max_runs,
+         direction,
+         ambiguity_opts
+       ) do
     cron_expression
     |> CronExpression.to_condition_list()
+    |> Keyword.delete(:ambiguity_opts)
     |> Enum.reverse()
-    |> get_run_date(DateHelper.beginning_of(date, :second), max_runs, direction)
+    |> get_run_date(DateHelper.beginning_of(date, :second), max_runs, direction, ambiguity_opts)
   end
 
-  defp get_run_date(conditions, date, max_runs, direction) do
-    case search_and_correct_date(conditions, date, direction) do
+  defp get_run_date(conditions, date, max_runs, direction, ambiguity_opts) do
+    case search_and_correct_date(conditions, date, direction, ambiguity_opts) do
       {:ok, corrected_date} ->
         {:ok, corrected_date}
 
@@ -289,36 +325,28 @@ defmodule Crontab.Scheduler do
         {:error, "No compliant date was found for your interval."}
 
       {:error, {:not_found, corrected_date}} ->
-        get_run_date(conditions, corrected_date, max_runs - 1, direction)
+        get_run_date(conditions, corrected_date, max_runs - 1, direction, ambiguity_opts)
     end
   end
 
-  @spec search_and_correct_date(CronExpression.condition_list(), NaiveDateTime.t(), direction) ::
-          maybe(NaiveDateTime.t(), {:not_found, NaiveDateTime.t()} | :impossible)
+  @spec search_and_correct_date(CronExpression.condition_list(), date, direction, ambiguity_opts) ::
+          maybe(date, {:not_found, date} | :impossible)
 
-  defp search_and_correct_date(
-         [{:year, [target_year]} | _],
-         %NaiveDateTime{year: from_year},
-         :increment
-       )
+  defp search_and_correct_date([{:year, [target_year]} | _], %{year: from_year}, :increment, _)
        when is_integer(target_year) and target_year < from_year do
     {:error, :impossible}
   end
 
-  defp search_and_correct_date(
-         [{:year, [target_year]} | _],
-         %NaiveDateTime{year: from_year},
-         :decrement
-       )
+  defp search_and_correct_date([{:year, [target_year]} | _], %{year: from_year}, :decrement, _)
        when is_integer(target_year) and target_year > from_year do
     {:error, :impossible}
   end
 
-  defp search_and_correct_date([{interval, conditions} | tail], date, direction) do
-    if matches_date?(interval, conditions, date) do
-      search_and_correct_date(tail, date, direction)
+  defp search_and_correct_date([{interval, conditions} | tail], date, direction, ambiguity_opts) do
+    if matches_date?(interval, conditions, date, ambiguity_opts) do
+      search_and_correct_date(tail, date, direction, ambiguity_opts)
     else
-      case correct_date(interval, date, direction) do
+      case correct_date(interval, date, direction, ambiguity_opts) do
         {:ok, corrected_date} ->
           {:error, {:not_found, corrected_date}}
 
@@ -329,61 +357,68 @@ defmodule Crontab.Scheduler do
     end
   end
 
-  defp search_and_correct_date([], date, _), do: {:ok, date}
+  defp search_and_correct_date([], date, _, _), do: {:ok, date}
 
-  @spec correct_date(CronExpression.interval(), NaiveDateTime.t(), direction) ::
+  @spec correct_date(CronExpression.interval(), date, direction, ambiguity_opts) ::
           maybe(NaiveDateTime.t(), any)
 
-  defp correct_date(:second, date, :increment), do: {:ok, date |> NaiveDateTime.add(1, :second)}
+  defp correct_date(:second, date, :increment, ambiguity_opts),
+    do: {:ok, DateHelper.shift(date, 1, :second, ambiguity_opts)}
 
-  defp correct_date(:minute, date, :increment),
-    do: {:ok, date |> NaiveDateTime.add(1, :minute) |> DateHelper.beginning_of(:minute)}
+  defp correct_date(:minute, date, :increment, ambiguity_opts),
+    do:
+      {:ok,
+       date |> DateHelper.shift(1, :minute, ambiguity_opts) |> DateHelper.beginning_of(:minute)}
 
-  defp correct_date(:hour, date, :increment),
-    do: {:ok, date |> NaiveDateTime.add(1, :hour) |> DateHelper.beginning_of(:hour)}
+  defp correct_date(:hour, date, :increment, ambiguity_opts),
+    do:
+      {:ok, date |> DateHelper.shift(1, :hour, ambiguity_opts) |> DateHelper.beginning_of(:hour)}
 
-  defp correct_date(:day, date, :increment),
-    do: {:ok, date |> NaiveDateTime.add(1, :day) |> DateHelper.beginning_of(:day)}
+  defp correct_date(:day, date, :increment, ambiguity_opts),
+    do: {:ok, date |> DateHelper.shift(1, :day, ambiguity_opts) |> DateHelper.beginning_of(:day)}
 
-  defp correct_date(:month, date, :increment),
+  defp correct_date(:month, date, :increment, _ambiguity_opts),
     do: {:ok, date |> DateHelper.inc_month() |> DateHelper.beginning_of(:month)}
 
-  defp correct_date(:weekday, date, :increment),
-    do: {:ok, date |> NaiveDateTime.add(1, :day) |> DateHelper.beginning_of(:day)}
+  defp correct_date(:weekday, date, :increment, ambiguity_opts),
+    do: {:ok, date |> DateHelper.shift(1, :day, ambiguity_opts) |> DateHelper.beginning_of(:day)}
 
-  defp correct_date(:year, %NaiveDateTime{year: 9_999}, :increment), do: {:error, :upper_bound}
+  defp correct_date(:year, %{year: 9_999}, :increment, _ambiguity_opts),
+    do: {:error, :upper_bound}
 
-  defp correct_date(:year, date, :increment),
+  defp correct_date(:year, date, :increment, _ambiguity_opts),
     do: {:ok, date |> DateHelper.inc_year() |> DateHelper.beginning_of(:year)}
 
-  defp correct_date(:second, date, :decrement),
-    do: {:ok, date |> NaiveDateTime.add(-1, :second) |> DateHelper.beginning_of(:second)}
+  defp correct_date(:second, date, :decrement, ambiguity_opts),
+    do:
+      {:ok,
+       date |> DateHelper.shift(-1, :second, ambiguity_opts) |> DateHelper.beginning_of(:second)}
 
-  defp correct_date(:minute, date, :decrement),
+  defp correct_date(:minute, date, :decrement, ambiguity_opts),
     do:
       {:ok,
        date
-       |> NaiveDateTime.add(-1, :minute)
+       |> DateHelper.shift(-1, :minute, ambiguity_opts)
        |> DateHelper.end_of(:minute)
        |> DateHelper.beginning_of(:second)}
 
-  defp correct_date(:hour, date, :decrement),
+  defp correct_date(:hour, date, :decrement, ambiguity_opts),
     do:
       {:ok,
        date
-       |> NaiveDateTime.add(-1, :hour)
+       |> DateHelper.shift(-1, :hour, ambiguity_opts)
        |> DateHelper.end_of(:hour)
        |> DateHelper.beginning_of(:second)}
 
-  defp correct_date(:day, date, :decrement),
+  defp correct_date(:day, date, :decrement, ambiguity_opts),
     do:
       {:ok,
        date
-       |> NaiveDateTime.add(-1, :day)
+       |> DateHelper.shift(-1, :day, ambiguity_opts)
        |> DateHelper.end_of(:day)
        |> DateHelper.beginning_of(:second)}
 
-  defp correct_date(:month, date, :decrement),
+  defp correct_date(:month, date, :decrement, _ambiguity_opts),
     do:
       {:ok,
        date
@@ -391,17 +426,18 @@ defmodule Crontab.Scheduler do
        |> DateHelper.end_of(:month)
        |> DateHelper.beginning_of(:second)}
 
-  defp correct_date(:weekday, date, :decrement),
+  defp correct_date(:weekday, date, :decrement, ambiguity_opts),
     do:
       {:ok,
        date
-       |> NaiveDateTime.add(-1, :day)
+       |> DateHelper.shift(-1, :day, ambiguity_opts)
        |> DateHelper.end_of(:day)
        |> DateHelper.beginning_of(:second)}
 
-  defp correct_date(:year, %NaiveDateTime{year: 0}, :decrement), do: {:error, :lower_bound}
+  defp correct_date(:year, %{year: 0}, :decrement, _),
+    do: {:error, :lower_bound}
 
-  defp correct_date(:year, date, :decrement),
+  defp correct_date(:year, date, :decrement, _ambiguity_opts),
     do:
       {:ok,
        date
@@ -409,21 +445,21 @@ defmodule Crontab.Scheduler do
        |> DateHelper.end_of(:year)
        |> DateHelper.beginning_of(:second)}
 
-  @spec clean_date(NaiveDateTime.t(), :seconds | :microseconds) :: NaiveDateTime.t()
-  defp clean_date(date = %NaiveDateTime{microsecond: {0, _}}, :microseconds), do: date
+  @spec clean_date(date, :seconds | :microseconds, ambiguity_opts) :: date
+  defp clean_date(date = %{microsecond: {0, _}}, :microseconds, _), do: date
 
-  defp clean_date(date = %NaiveDateTime{}, :microseconds) do
+  defp clean_date(date, :microseconds, ambiguity_opts) do
     date
     |> Map.put(:microsecond, {0, 0})
-    |> NaiveDateTime.add(1, :second)
+    |> DateHelper.shift(1, :second, ambiguity_opts)
   end
 
-  defp clean_date(date = %NaiveDateTime{}, :seconds) do
-    clean_microseconds = clean_date(date, :microseconds)
+  defp clean_date(date, :seconds, ambiguity_opts) do
+    clean_microseconds = clean_date(date, :microseconds, ambiguity_opts)
 
     case clean_microseconds do
-      %NaiveDateTime{second: 0} -> clean_microseconds
-      _ -> NaiveDateTime.add(clean_microseconds, 1, :minute)
+      %{second: 0} -> clean_microseconds
+      _ -> DateHelper.shift(clean_microseconds, 1, :minute, ambiguity_opts)
     end
   end
 end

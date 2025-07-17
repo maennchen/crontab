@@ -8,6 +8,7 @@ defmodule Crontab.CronExpression do
   @type t :: %Crontab.CronExpression{
           extended: boolean,
           reboot: boolean,
+          on_ambiguity: [ambiguity_opt],
           second: [value(second)],
           minute: [value(minute)],
           hour: [value(hour)],
@@ -17,7 +18,9 @@ defmodule Crontab.CronExpression do
           year: [value(year)]
         }
 
-  @type interval :: :second | :minute | :hour | :day | :month | :weekday | :year
+  @type ambiguity_opt :: :prior | :subsequent
+
+  @type interval :: :second | :minute | :hour | :day | :month | :weekday | :year | :ambiguity_opts
 
   @typedoc deprecated: "Use Crontab.CronExpression.min_max/1 instead"
   @type min_max :: {:-, time_unit, time_unit}
@@ -63,7 +66,7 @@ defmodule Crontab.CronExpression do
   @typedoc deprecated: "Use Calendar.[second|minute|hour|day|month|day_of_week|year]/0 instead"
   @type time_unit :: second | minute | hour | day | month | weekday | year
 
-  @type condition(name, time_unit) :: {name, [value(time_unit)]}
+  @type condition(name, time_unit) :: {name, [value(time_unit) | ambiguity_opt]}
   @type condition ::
           condition(:second, Calendar.second())
           | condition(:minute, Calendar.minute())
@@ -72,6 +75,7 @@ defmodule Crontab.CronExpression do
           | condition(:month, Calendar.month())
           | condition(:weekday, Calendar.day_of_week())
           | condition(:year, Calendar.year())
+          | condition(:ambiguity_opts, [ambiguity_opt()])
 
   @type condition_list :: [condition]
 
@@ -89,9 +93,15 @@ defmodule Crontab.CronExpression do
       +-------------- :second Second             (range: 0-59)
 
   The `:extended` attribute defines if the second is taken into account.
+  When using localized DateTime, the `:on_ambiguity` attribute defines
+  whether the scheduler should return the prior or subsequent time when
+  the next run DateTime is ambiguous. `:on_ambiguity` defaults to `[]`
+  which means run DateTimes that fall within the ambiguous times would
+  be skipped. To run on both, set it as `[:prior, :subsequent]`.
   """
   defstruct extended: false,
             reboot: false,
+            on_ambiguity: [],
             second: [:*],
             minute: [:*],
             hour: [:*],
@@ -108,6 +118,7 @@ defmodule Crontab.CronExpression do
       iex> ~e[*]
       %Crontab.CronExpression{
         extended: false,
+        on_ambiguity: [],
         second: [:*],
         minute: [:*],
         hour: [:*],
@@ -116,9 +127,10 @@ defmodule Crontab.CronExpression do
         weekday: [:*],
         year: [:*]}
 
-      iex> ~e[*]e
+      iex> ~e[*]ep
       %Crontab.CronExpression{
         extended: true,
+        on_ambiguity: [:prior],
         second: [:*],
         minute: [:*],
         hour: [:*],
@@ -126,10 +138,23 @@ defmodule Crontab.CronExpression do
         month: [:*],
         weekday: [:*],
         year: [:*]}
+
+      iex> ~e[1 2 3 4 5 6 7]eps
+      %Crontab.CronExpression{
+        extended: true,
+        on_ambiguity: [:prior, :subsequent],
+        second: [1],
+        minute: [2],
+        hour: [3],
+        day: [4],
+        month: [5],
+        weekday: [6],
+        year: [7]}
 
       iex> ~e[1 2 3 4 5 6 7]e
       %Crontab.CronExpression{
         extended: true,
+        on_ambiguity: [],
         second: [1],
         minute: [2],
         hour: [3],
@@ -139,9 +164,18 @@ defmodule Crontab.CronExpression do
         year: [7]}
   """
   @spec sigil_e(binary, charlist) :: t
-  def sigil_e(cron_expression, options)
-  def sigil_e(cron_expression, [?e]), do: Parser.parse!(cron_expression, true)
-  def sigil_e(cron_expression, _options), do: Parser.parse!(cron_expression, false)
+  def sigil_e(cron_expression, options \\ [?l]) do
+    Parser.parse!(
+      cron_expression,
+      ?e in options,
+      cond do
+        ?p in options and ?s in options -> [:prior, :subsequent]
+        ?p in options -> [:prior]
+        ?s in options -> [:subsequent]
+        true -> []
+      end
+    )
+  end
 
   @doc """
   Convert `Crontab.CronExpression` struct to tuple List.
@@ -155,7 +189,8 @@ defmodule Crontab.CronExpression do
         {:day, [3]},
         {:month, [4]},
         {:weekday, [5]},
-        {:year, [6]}]
+        {:year, [6]},
+        {:ambiguity_opts, []}]
 
       iex> Crontab.CronExpression.to_condition_list %Crontab.CronExpression{
       ...> extended: true, second: [0], minute: [1], hour: [2], day: [3], month: [4], weekday: [5], year: [6]}
@@ -165,7 +200,8 @@ defmodule Crontab.CronExpression do
         {:day, [3]},
         {:month, [4]},
         {:weekday, [5]},
-        {:year, [6]}]
+        {:year, [6]},
+        {:ambiguity_opts, []}]
 
   """
   @spec to_condition_list(t) :: condition_list
@@ -176,7 +212,8 @@ defmodule Crontab.CronExpression do
       {:day, interval.day},
       {:month, interval.month},
       {:weekday, interval.weekday},
-      {:year, interval.year}
+      {:year, interval.year},
+      {:ambiguity_opts, interval.on_ambiguity}
     ]
   end
 
@@ -200,14 +237,16 @@ defmodule Crontab.CronExpression do
         iex> IO.inspect %Crontab.CronExpression{extended: true}
         ~e[* * * * * * *]e
 
+        iex> import Crontab.CronExpression
+        iex> IO.inspect %Crontab.CronExpression{extended: true, on_ambiguity: [:prior, :subsequent]}
+        ~e[* * * * * * *]eps
     """
     @spec inspect(CronExpression.t(), any) :: String.t()
-    def inspect(cron_expression = %CronExpression{extended: false}, _options) do
-      "~e[" <> Composer.compose(cron_expression) <> "]"
-    end
-
-    def inspect(cron_expression = %CronExpression{extended: true}, _options) do
-      "~e[" <> Composer.compose(cron_expression) <> "]e"
+    def inspect(cron_expression = %CronExpression{}, _options) do
+      prior = if(:prior in cron_expression.on_ambiguity, do: "p", else: "")
+      subsequent = if(:subsequent in cron_expression.on_ambiguity, do: "s", else: "")
+      extended = if(cron_expression.extended, do: "e", else: "")
+      "~e[" <> Composer.compose(cron_expression) <> "]#{extended}#{prior}#{subsequent}"
     end
   end
 end

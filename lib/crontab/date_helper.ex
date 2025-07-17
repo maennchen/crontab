@@ -1,6 +1,8 @@
 defmodule Crontab.DateHelper do
   @moduledoc false
+  alias Crontab.CronExpression, as: CronExpr
 
+  @typep ambiguity_opts :: [CronExpr.ambiguity_opt()]
   @type unit :: :year | :month | :day | :hour | :minute | :second | :microsecond
 
   @type date :: NaiveDateTime.t() | DateTime.t()
@@ -115,14 +117,14 @@ defmodule Crontab.DateHelper do
   @spec next_weekday_to(date :: date) :: Calendar.day()
   def next_weekday_to(date) do
     weekday = Date.day_of_week(date)
-    next_day = add(date, 1, :day)
-    previous_day = add(date, -1, :day)
+    next_day = shift(date, 1, :day)
+    previous_day = shift(date, -1, :day)
 
     cond do
       weekday == 7 && next_day.month == date.month -> next_day.day
-      weekday == 7 -> add(date, -2, :day).day
+      weekday == 7 -> shift(date, -2, :day).day
       weekday == 6 && previous_day.month == date.month -> previous_day.day
-      weekday == 6 -> add(date, 2, :day).day
+      weekday == 6 -> shift(date, 2, :day).day
       true -> date.day
     end
   end
@@ -140,14 +142,14 @@ defmodule Crontab.DateHelper do
 
   """
   @spec inc_year(date) :: date when date: date
-  def inc_year(date = %{month: 2, day: 29}), do: add(date, 365, :day)
+  def inc_year(date = %{month: 2, day: 29}), do: shift(date, 365, :day)
 
   def inc_year(date = %{month: month}) do
-    candidate = add(date, 365, :day)
+    candidate = shift(date, 365, :day)
     date_leap_year_before_mar? = Date.leap_year?(date) and month < 3
     candidate_leap_year_after_feb? = Date.leap_year?(candidate) and month > 2
     adjustment = if candidate_leap_year_after_feb? or date_leap_year_before_mar?, do: 1, else: 0
-    add(candidate, adjustment, :day)
+    shift(candidate, adjustment, :day)
   end
 
   @doc """
@@ -163,14 +165,14 @@ defmodule Crontab.DateHelper do
 
   """
   @spec dec_year(date) :: date when date: date
-  def dec_year(date = %{month: 2, day: 29}), do: add(date, -366, :day)
+  def dec_year(date = %{month: 2, day: 29}), do: shift(date, -366, :day)
 
   def dec_year(date = %{month: month}) do
-    candidate = add(date, -365, :day)
+    candidate = shift(date, -365, :day)
     date_leap_year_after_mar? = Date.leap_year?(date) and month > 2
     candidate_leap_year_before_feb? = Date.leap_year?(candidate) and month < 3
     adjustment = if date_leap_year_after_mar? or candidate_leap_year_before_feb?, do: -1, else: 0
-    add(candidate, adjustment, :day)
+    shift(candidate, adjustment, :day)
   end
 
   @doc """
@@ -191,7 +193,7 @@ defmodule Crontab.DateHelper do
       Date.new!(year, month, day)
       |> Date.days_in_month()
 
-    add(date, days + 1 - day, :day)
+    shift(date, days + 1 - day, :day)
   end
 
   @doc """
@@ -212,7 +214,7 @@ defmodule Crontab.DateHelper do
   @spec dec_month(date) :: date when date: date
   def dec_month(date = %{year: year, month: month, day: day}) do
     days_in_last_month = Date.new!(year, month, 1) |> Date.add(-1) |> Date.days_in_month()
-    add(date, -(day + max(days_in_last_month - day, 0)), :day)
+    shift(date, -(day + max(days_in_last_month - day, 0)), :day)
   end
 
   @spec _beginning_of(date, [{unit, {any, any}}]) :: date when date: date
@@ -269,7 +271,7 @@ defmodule Crontab.DateHelper do
 
     if modifier == 0,
       do: date.day,
-      else: find_nth_weekday(add(date, 1, :day), month, weekday, modifier)
+      else: find_nth_weekday(shift(date, 1, :day), month, weekday, modifier)
   end
 
   defp find_nth_weekday(_, _, _, _), do: nil
@@ -277,7 +279,7 @@ defmodule Crontab.DateHelper do
   @spec last_weekday_of_month(date :: date(), position :: :end) :: Calendar.day()
   defp last_weekday_of_month(date = %{day: day}, :end) do
     if Date.day_of_week(date) > 5 do
-      last_weekday_of_month(add(date, -1, :day), :end)
+      last_weekday_of_month(shift(date, -1, :day), :end)
     else
       day
     end
@@ -289,25 +291,55 @@ defmodule Crontab.DateHelper do
     if Date.day_of_week(date) == weekday do
       day
     else
-      last_weekday(add(date, -1, :day), weekday, :end)
+      last_weekday(shift(date, -1, :day), weekday, :end)
     end
   end
 
   @doc false
-  def add(datetime = %NaiveDateTime{}, amt, unit), do: NaiveDateTime.add(datetime, amt, unit)
+  @spec shift(date, integer, unit, ambiguity_opts) :: date
+  def shift(dt, amt, unit, ambiguity_opts \\ [])
 
-  def add(datetime = %DateTime{}, amt, unit) do
-    candidate = DateTime.add(datetime, amt, unit)
-    adjustment = datetime.std_offset - candidate.std_offset
-    adjusted = DateTime.add(candidate, adjustment, :second)
+  def shift(dt = %NaiveDateTime{}, amt, unit, _), do: NaiveDateTime.add(dt, amt, unit)
 
-    if adjusted.std_offset != candidate.std_offset do
-      candidate
-    else
-      case DateTime.from_naive(DateTime.to_naive(adjusted), adjusted.time_zone) do
-        {:ambiguous, _, target} -> target
-        {:ok, target} -> target
-      end
+  def shift(dt, amt, unit, _) when unit == :day do
+    candidate = DateTime.add(dt, amt, unit)
+
+    cond do
+      dt.std_offset == candidate.std_offset ->
+        candidate
+
+      dt.std_offset < candidate.std_offset ->
+        DateTime.add(candidate, -candidate.std_offset, :second)
+
+      true ->
+        DateTime.add(candidate, dt.std_offset, :second)
     end
   end
+
+  def shift(dt, amt, unit, ambiguity_opts) do
+    case DateTime.from_naive(DateTime.add(dt, amt, unit), dt.time_zone) do
+      {:ambiguous, earlier, later} ->
+        resolve_ambiguity(
+          DateTime.before?(dt, earlier),
+          earlier,
+          later,
+          amt,
+          unit,
+          ambiguity_opts
+        )
+
+      {:ok, candidate} ->
+        candidate
+    end
+  end
+
+  def resolve_ambiguity(_, _, later, _, _, [:subsequent]), do: later
+  def resolve_ambiguity(true, earlier, _, _, _, [:prior, :subsequent]), do: earlier
+  def resolve_ambiguity(false, _, later, _, _, [:prior, :subsequent]), do: later
+  def resolve_ambiguity(true, earlier, _, _, _, [:prior]), do: earlier
+
+  def resolve_ambiguity(false, _, later, amt, unit, opts = [:prior]),
+    do: shift(later, amt, unit, opts)
+
+  def resolve_ambiguity(_, _, later, amt, unit, []), do: shift(later, amt, unit, [])
 end
