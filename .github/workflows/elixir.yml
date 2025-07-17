@@ -8,14 +8,34 @@ on:
     tags:
       - "v*"
 
-env:
-  BUILD_EMBEDDED: true
-  DIALYZER_PLT_PRIV: true
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  DEFAULT_ELIXIR_VERSION: 1.17
-  DEFAULT_OTP_VERSION: 27.1
-
 jobs:
+  detectToolVersions:
+    name: "Detect Tool Versions"
+
+    runs-on: ubuntu-latest
+
+    outputs:
+      otpVersion: "${{ steps.toolVersions.outputs.OTP_VERSION }}"
+      elixirVersion: "${{ steps.toolVersions.outputs.ELIXIR_VERSION }}"
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: "Read .tool-versions"
+        id: toolVersions
+        run: |
+          OTP_VERSION="$(cat .tool-versions | grep erlang | cut -d' ' -f2-)"
+          echo OTP: $OTP_VERSION
+          echo "OTP_VERSION=${OTP_VERSION}" >> $GITHUB_OUTPUT
+
+          ELIXIR_VERSION="$(cat .tool-versions | grep elixir | cut -d' ' -f2-)"
+          echo Rebar: $ELIXIR_VERSION
+          echo "ELIXIR_VERSION=${ELIXIR_VERSION}" >> $GITHUB_OUTPUT
+
   format:
     name: Check Formatting
 
@@ -29,8 +49,8 @@ jobs:
       - uses: erlef/setup-elixir@v1
         id: setupBEAM
         with:
-          otp-version: "${{ env.DEFAULT_OTP_VERSION }}"
-          elixir-version: "${{ env.DEFAULT_ELIXIR_VERSION }}"
+          version-file: .tool-versions
+          version-type: strict
       - uses: actions/cache@v4
         with:
           path: deps
@@ -41,7 +61,9 @@ jobs:
       - run: mix format --check-formatted
 
   test:
-    name: Run Tests & Submit Coverage
+    name: Run Tests & Submit Coverage (${{ matrix.name }})
+
+    needs: ["detectToolVersions"]
 
     env:
       MIX_ENV: test
@@ -50,19 +72,22 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - otp: "23.3"
-            elixir: "1.14"
-            runs-on: ubuntu-20.04
-          - otp: "26.2"
-            elixir: "1.16"
+          # Lowest Supported
+          - otp: "24.2"
+            elixir: "1.15"
             runs-on: ubuntu-22.04
-          - otp: "27.1"
-            elixir: "main"
-            runs-on: ubuntu-latest
-          - runs-on: ubuntu-22.04
-            # otp: '${{ env.DEFAULT_OTP_VERSION }}'
-            # elixir: '${{ env.DEFAULT_ELIXIR_VERSION }}'
+            name: "lowest"
+          # Latest Supported
+          - otp: "${{ needs.detectToolVersions.outputs.otpVersion }}"
+            elixir: "${{ needs.detectToolVersions.outputs.elixirVersion }}"
+            runs-on: ubuntu-24.04
+            name: "latest"
             enable_coverage_export: "true"
+          # Test Main
+          - otp: "${{ needs.detectToolVersions.outputs.otpVersion }}"
+            elixir: "main"
+            runs-on: ubuntu-24.04
+            name: "main"
 
     runs-on: ${{ matrix.runs-on }}
 
@@ -71,8 +96,8 @@ jobs:
       - uses: erlef/setup-elixir@v1
         id: setupBEAM
         with:
-          otp-version: ${{ matrix.otp || env.DEFAULT_OTP_VERSION }}
-          elixir-version: ${{ matrix.elixir || env.DEFAULT_ELIXIR_VERSION }}
+          otp-version: ${{ matrix.otp }}
+          elixir-version: ${{ matrix.elixir }}
       - uses: actions/cache@v4
         with:
           path: deps
@@ -108,8 +133,8 @@ jobs:
       - uses: erlef/setup-elixir@v1
         id: setupBEAM
         with:
-          otp-version: "${{ env.DEFAULT_OTP_VERSION }}"
-          elixir-version: "${{ env.DEFAULT_ELIXIR_VERSION }}"
+          version-file: .tool-versions
+          version-type: strict
       - uses: actions/cache@v4
         with:
           path: deps
@@ -134,14 +159,15 @@ jobs:
 
     env:
       MIX_ENV: dev
+      DIALYZER_PLT_PRIV: true
 
     steps:
       - uses: actions/checkout@v4
       - uses: erlef/setup-elixir@v1
         id: setupBEAM
         with:
-          otp-version: "${{ env.DEFAULT_OTP_VERSION }}"
-          elixir-version: "${{ env.DEFAULT_ELIXIR_VERSION }}"
+          version-file: .tool-versions
+          version-type: strict
       - uses: actions/cache@v4
         with:
           path: deps
@@ -178,14 +204,15 @@ jobs:
 
     env:
       MIX_ENV: dev
+      DIALYZER_PLT_PRIV: true
 
     steps:
       - uses: actions/checkout@v4
       - uses: erlef/setup-elixir@v1
         id: setupBEAM
         with:
-          otp-version: "${{ env.DEFAULT_OTP_VERSION }}"
-          elixir-version: "${{ env.DEFAULT_ELIXIR_VERSION }}"
+          version-file: .tool-versions
+          version-type: strict
       - uses: actions/cache@v4
         with:
           path: deps
@@ -220,8 +247,8 @@ jobs:
       - uses: erlef/setup-elixir@v1
         id: setupBEAM
         with:
-          otp-version: "${{ env.DEFAULT_OTP_VERSION }}"
-          elixir-version: "${{ env.DEFAULT_ELIXIR_VERSION }}"
+          version-file: .tool-versions
+          version-type: strict
       - uses: actions/cache@v4
         with:
           path: deps
