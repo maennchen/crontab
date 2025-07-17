@@ -75,7 +75,7 @@ defmodule Crontab.CronExpression do
           | condition(:month, Calendar.month())
           | condition(:weekday, Calendar.day_of_week())
           | condition(:year, Calendar.year())
-          | condition(:ambiguity_opts, ambiguity_opt)
+          | condition(:ambiguity_opts, [ambiguity_opt()])
 
   @type condition_list :: [condition]
 
