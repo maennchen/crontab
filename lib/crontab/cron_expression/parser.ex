@@ -349,7 +349,7 @@ defmodule Crontab.CronExpression.Parser do
       {number, ""} ->
         {:ok, number}
 
-      :error ->
+      _ ->
         {:error, "Can't parse " <> value <> " as interval " <> Atom.to_string(interval) <> "."}
     end
   end

@@ -374,6 +374,10 @@ defmodule Crontab.CronExpression.ParserTest do
     assert parse("*/0") == {:error, "Can't parse 0 as increment."}
   end
 
+  test "parse invalid year expression gives error" do
+    assert parse("* * * * * 1x") == {:error, "Can't parse 1x as interval year."}
+  end
+
   describe "parse/2 non-range step value" do
     setup do: %{now: ~N[2024-01-01 00:00:01]}
 
