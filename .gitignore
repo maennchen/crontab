@@ -25,9 +25,6 @@ crontab-*.tar
 # Temporary files for e.g. tests.
 /tmp/
 
-# Ignore Mix Lock since this is a lib.
-/mix.lock
-
 # Dialyzer
 /priv/plts/*.plt
 /priv/plts/*.plt.hash
