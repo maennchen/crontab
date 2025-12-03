@@ -243,7 +243,7 @@ defmodule Crontab.DateHelper do
       @units
       |> Enum.reduce([], fn {key, value}, acc ->
         cond do
-          Enum.count(acc) > 0 ->
+          acc != [] ->
             [{key, value} | acc]
 
           key == unit ->
