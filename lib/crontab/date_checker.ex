@@ -252,5 +252,4 @@ defmodule Crontab.DateChecker do
 
   defp get_interval_value(:month, %{month: month}), do: [month]
   defp get_interval_value(:year, %{year: year}), do: [year]
-  defp get_interval_value(:ambiguity_opts, %{ambiguity_opts: ambiguity_opts}), do: ambiguity_opts
 end
