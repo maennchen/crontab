@@ -100,7 +100,12 @@ defmodule Crontab.Scheduler do
 
   """
   @spec get_next_run_date!(CronExpression.t(), date, integer) :: date
-  def get_next_run_date!(cron_expression, date \\ NaiveDateTime.utc_now(), max_runs \\ @max_runs) do
+  def get_next_run_date!(cron_expression, date \\ NaiveDateTime.utc_now(), max_runs \\ @max_runs)
+
+  def get_next_run_date!(%CronExpression{reboot: true}, _, _),
+    do: raise("Special identifier @reboot is not supported.")
+
+  def get_next_run_date!(cron_expression, date, max_runs) do
     case get_next_run_date(cron_expression, date, max_runs) do
       {:ok, result} -> result
       {:error, error} -> raise error
@@ -260,7 +265,12 @@ defmodule Crontab.Scheduler do
         cron_expression,
         date \\ NaiveDateTime.utc_now(),
         max_runs \\ @max_runs
-      ) do
+      )
+
+  def get_previous_run_date!(%CronExpression{reboot: true}, _, _),
+    do: raise("Special identifier @reboot is not supported.")
+
+  def get_previous_run_date!(cron_expression, date, max_runs) do
     case get_previous_run_date(cron_expression, date, max_runs) do
       {:ok, result} -> result
       {:error, error} -> raise error
