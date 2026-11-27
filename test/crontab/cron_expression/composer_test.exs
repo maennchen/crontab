@@ -18,4 +18,10 @@ defmodule Crontab.CronExpression.ComposerTest do
     cron_expression = Parser.parse!(specific_cron)
     assert "*/15 9-17 5-19 2-8 7" == Composer.compose(cron_expression, %{skip_year: true})
   end
+
+  test "works with offset" do
+    specific_cron = "* * L-10 * *"
+    cron_expression = Parser.parse!(specific_cron)
+    assert "* * L-10 * *" == Composer.compose(cron_expression, %{skip_year: true})
+  end
 end

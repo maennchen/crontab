@@ -71,6 +71,17 @@ defmodule Crontab.DateCheckerTest do
     assert matches_date?(:year, [{:/, :*, 3}], base_date, []) == false
   end
 
+  test "day offsets work for different months" do
+    assert matches_date?(:day, [{:offset, 5}], ~U[2003-04-25 12:00:00Z], []) == true
+    assert matches_date?(:day, [{:offset, 5}], ~U[2003-04-26 12:00:00Z], []) == false
+
+    assert matches_date?(:day, [{:offset, 10}], ~U[2003-03-21 12:00:00Z], []) == true
+    assert matches_date?(:day, [{:offset, 10}], ~U[2003-03-20 12:00:00Z], []) == false
+
+    assert matches_date?(:day, [{:offset, 1}], ~U[2003-02-27 12:00:00Z], []) == true
+    assert matches_date?(:day, [{:offset, 1}], ~U[2003-02-28 12:00:00Z], []) == false
+  end
+
   test "fail on @reboot" do
     base_date = ~N[2003-04-17 04:04:08]
 

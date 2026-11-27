@@ -139,6 +139,22 @@ defmodule Crontab.DateChecker do
   end
 
   defp matches_specific_date?(
+         :day,
+         [head_value | tail_values],
+         {:offset, value} = condition,
+         execution_date,
+         ambiguity_opts
+       ) do
+    last_day = Date.days_in_month(execution_date)
+
+    if head_value == last_day - value do
+      true
+    else
+      matches_specific_date?(:day, tail_values, condition, execution_date, ambiguity_opts)
+    end
+  end
+
+  defp matches_specific_date?(
          :weekday,
          [0 | tail_values],
          {:/, _, _} = condition,

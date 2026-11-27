@@ -35,6 +35,7 @@ defmodule Crontab.CronExpression.Parser do
   @minute_values 0..59
   @hour_values 0..23
   @day_of_month_values 1..31
+  @day_of_month_offset_values 1..30
 
   @weekday_values %{
     MON: 1,
@@ -208,12 +209,32 @@ defmodule Crontab.CronExpression.Parser do
   defp tokenize(interval, other) do
     cond do
       String.contains?(other, "/") -> tokenize(interval, :complex_divider, other)
+      Regex.match?(~r/^L-\d+$/, other) -> tokenize(interval, :L, other)
       Regex.match?(~r/^.+-.+$/, other) -> tokenize(interval, :-, other)
       true -> tokenize(interval, :single_value, other)
     end
   end
 
-  @spec tokenize(CronExpression.interval(), :- | :single_value | :complex_divider) ::
+  @spec tokenize(CronExpression.interval(), :L, binary) ::
+          {:ok, CronExpression.value()} | {:error, binary}
+  defp tokenize(:day, :L, whole_string) do
+    ["L", arg] = String.split(whole_string, "-")
+
+    case clean_integer_within_range(
+           arg,
+           "day of month offset",
+           @day_of_month_offset_values
+         ) do
+      {:ok, value} -> {:ok, {:offset, value}}
+      {:error, _} = error -> error
+    end
+  end
+
+  defp tokenize(_interval, :L, whole_string) do
+    {:error, "Offset #{whole_string} is only supported for a day."}
+  end
+
+  @spec tokenize(CronExpression.interval(), :- | :single_value | :complex_divider, binary) ::
           {:ok, CronExpression.value()} | {:error, binary}
   defp tokenize(interval, :-, whole_string) do
     case String.split(whole_string, "-") do

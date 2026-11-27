@@ -12,7 +12,7 @@ defmodule Crontab.CronExpression do
           second: [value(second)],
           minute: [value(minute)],
           hour: [value(hour)],
-          day: [value(day)],
+          day: [day_value()],
           month: [value(month)],
           weekday: [value(weekday)],
           year: [value(year)]
@@ -30,7 +30,7 @@ defmodule Crontab.CronExpression do
           value(Calendar.second())
           | value(Calendar.minute())
           | value(Calendar.hour())
-          | value(Calendar.day())
+          | day_value()
           | value(Calendar.month())
           | value(Calendar.day_of_week())
           | value(Calendar.year())
@@ -47,6 +47,8 @@ defmodule Crontab.CronExpression do
           | min_max(time_unit)
           | {:W, time_unit | :L}
           | {:"#", time_unit, pos_integer}
+
+  @type day_value :: value(Calendar.day()) | {:offset, 1..30}
 
   @typedoc deprecated: "Use Calendar.second/0 instead"
   @type second :: Calendar.second()
@@ -67,11 +69,12 @@ defmodule Crontab.CronExpression do
   @type time_unit :: second | minute | hour | day | month | weekday | year
 
   @type condition(name, time_unit) :: {name, [value(time_unit) | ambiguity_opt]}
+  @type day_condition :: {:day, [day_value() | ambiguity_opt]}
   @type condition ::
           condition(:second, Calendar.second())
           | condition(:minute, Calendar.minute())
           | condition(:hour, Calendar.hour())
-          | condition(:day, Calendar.day())
+          | day_condition()
           | condition(:month, Calendar.month())
           | condition(:weekday, Calendar.day_of_week())
           | condition(:year, Calendar.year())

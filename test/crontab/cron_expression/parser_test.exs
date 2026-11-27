@@ -221,6 +221,30 @@ defmodule Crontab.CronExpression.ParserTest do
               }}
   end
 
+  test ~s(parse "* * L-1 * *" gives [{:offset, 1}]) do
+    assert parse("* * L-1 * *") ==
+             {:ok,
+              %Crontab.CronExpression{
+                day: [{:offset, 1}],
+                hour: [:*],
+                minute: [:*],
+                month: [:*],
+                weekday: [:*],
+                year: [:*]
+              }}
+
+    assert parse("* * L-30 * *") ==
+             {:ok,
+              %Crontab.CronExpression{
+                day: [{:offset, 30}],
+                hour: [:*],
+                minute: [:*],
+                month: [:*],
+                weekday: [:*],
+                year: [:*]
+              }}
+  end
+
   test "parse second followed by string gives error" do
     assert parse("42invalid * * * *", true) == {:error, "Can't parse 42invalid as second."}
   end
@@ -376,6 +400,23 @@ defmodule Crontab.CronExpression.ParserTest do
 
   test "parse invalid year expression gives error" do
     assert parse("* * * * * 1x") == {:error, "Can't parse 1x as interval year."}
+  end
+
+  test "offset is not supported in non-day fields" do
+    for expr <- [
+          "L-3 * * * *",
+          "* L-3 * * *",
+          "* * * L-3 *",
+          "* * * * L-3",
+          "* * * * * L-3"
+        ] do
+      assert parse(expr) == {:error, "Offset L-3 is only supported for a day."}
+    end
+  end
+
+  test "incorrect offset value gives error" do
+    assert parse("* * L-31 * *") == {:error, "Can't parse 31 as day of month offset."}
+    assert parse("* * L-0 * *") == {:error, "Can't parse 0 as day of month offset."}
   end
 
   describe "parse/2 non-range step value" do
