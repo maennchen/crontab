@@ -33,6 +33,7 @@ Seconds are only present in a cron expression if `extended` is enabled.
 | `/`      | divide a value into steps                                    | everywhere        |
 | `#`      | nth occurance                                                | `weekday`         |
 | `L`      | last occurance                                               | `weekday` / `day` |
+| `L-n`    | nth day before the last day of the month (1-30)              | `day`             |
 | `W`      | specifies the `weekday` nearest the given `day` of the month | `day`             |
 | `LW`     | last `weekday` of the month                                  | `day`             |
 

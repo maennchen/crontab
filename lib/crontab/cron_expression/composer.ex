@@ -87,5 +87,7 @@ defmodule Crontab.CronExpression.Composer do
   defp compose_condition({:-, min, max}),
     do: Integer.to_string(min) <> "-" <> Integer.to_string(max)
 
+  defp compose_condition({:offset, value}), do: "L-" <> Integer.to_string(value)
+
   defp compose_condition(number) when is_number(number), do: Integer.to_string(number)
 end
